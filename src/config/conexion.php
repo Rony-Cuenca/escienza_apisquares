@@ -1,15 +1,10 @@
 <?php
-
-
 class Conexion {
-    public static function getConexion() {
-        try {
-            $pdo = new PDO("mysql:host=localhost;dbname=db_apisquares;", "root", "");
-            $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            return $pdo;
-        } catch (PDOException $e) {
-            die("Error de conexión: " . $e->getMessage());
+    public static function conectar() {
+        $conn = new mysqli('localhost', 'root', '', 'db_apisquares');
+        if ($conn->connect_error) {
+            die("Error de conexión: ". $conn->connect_error);
         }
+        return $conn;
     }
 }
-
