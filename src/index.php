@@ -1,9 +1,23 @@
 <?php
+session_start();
+
+if (
+    !isset($_SESSION['id_cliente']) &&
+    !(isset($_GET['controller']) && $_GET['controller'] === 'auth' && $_GET['action'] === 'login')
+) {
+    header('Location: index.php?controller=auth&action=login');
+    exit;
+}
+
 $controller = $_GET['controller'] ?? 'home';
 $action = $_GET['action'] ?? 'index';
 $controlador = null;
 
 switch ($controller) {
+    case 'auth':
+        require_once 'controller/AuthController.php';
+        $controlador = new AuthController();
+        break;
     case 'usuario':
         require_once 'controller/UsuarioController.php';
         $controlador = new UsuarioController();
@@ -13,17 +27,20 @@ switch ($controller) {
         $controlador = new ClienteController();
         break;
     case 'home':
-        // Dashboard-Home principal
     default:
         $contenido = 'view/components/home.php';
         require 'view/layout.php';
-        return; // Evita que intente ejecutar una acción no válida
+        return;
 }
 
-// Validación de existencia de controlador y método
 if ($controlador && method_exists($controlador, $action)) {
-    $id = $_GET['id'] ?? null;
-    $controlador->$action($id);
+    if (isset($_GET['id'])) {
+        $controlador->$action($_GET['id']);
+    } else {
+        $controlador->$action();
+    }
 } else {
-    die("Controlador o acción no válidos");
+    header('HTTP/1.0 404 Not Found');
+    echo '404 Not Found';
+    exit;
 }
