@@ -26,6 +26,10 @@ switch ($controller) {
         require_once 'controller/ClienteController.php';
         $controlador = new ClienteController();
         break;
+    case 'cuadres':
+        require_once 'controller/CuadresController.php';
+        $controlador = new CuadresController();
+        break;
     case 'home':
     default:
         $contenido = 'view/components/home.php';
