@@ -155,9 +155,9 @@ class CuadresController {
                     $serie = explode('-', $valorSerie)[0];
 
                     $TGraNubox = $hoja->getCell('AE' . $filaInicio)->getValue();
-                    $TExoNubox = $hoja->getCell('AG' . $filaInicio)->getValue();
-                    $TInaNubox = $hoja->getCell('AB' . $filaInicio)->getValue();
-                    $TIGVNubox = $hoja->getCell('AC' . $filaInicio)->getValue();
+                    $TExoNubox = $hoja->getCell('AB' . $filaInicio)->getValue();
+                    $TInaNubox = $hoja->getCell('AC' . $filaInicio)->getValue();
+                    $TIGVNubox = $hoja->getCell('AG' . $filaInicio)->getValue();
 
                     // Inicializar valores si es la primera vez que se ve la serie
                     if (!isset($DataSerieGraNubox[$serie])) {
