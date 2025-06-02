@@ -11,14 +11,13 @@
 <?php endif; ?>
 
 <?php if (!empty($ResultsSIRE) || !empty($ResultsNUBOX)): ?>
-    <div class="flex flex-col md:flex-row justify-center gap-8 mx-auto max-w-7xl px-4">
-
+    <div class="flex flex-col xl:flex-row gap-8 mx-auto w-full px-4 mt-8">
         <?php if (!empty($ResultsSIRE)): ?>
-            <div class="flex-1 bg-white rounded-lg shadow-md overflow-hidden mt-8">
+            <div class="w-full xl:w-1/2 bg-white rounded-lg shadow-md overflow-hidden">
                 <div class="p-4">
                     <h3 class="text-2xl text-center font-semibold text-gray-900 mb-4">Resumen de Series - SIRE</h3>
                     <div class="overflow-x-auto">
-                        <table class="w-full table-fixed text-sm text-gray-900">
+                        <table class="w-full whitespace-nowrap">
                             <thead class="bg-gray-50 text-xs uppercase">
                                 <tr>
                                     <th class="px-4 py-2 text-left font-medium">Serie</th>
@@ -50,11 +49,11 @@
         <?php endif; ?>
 
         <?php if (!empty($ResultsNUBOX)): ?>
-            <div class="flex-1 bg-white rounded-lg shadow-md overflow-hidden mt-8">
+            <div class="w-full xl:w-1/2 bg-white rounded-lg shadow-md overflow-hidden">
                 <div class="p-4">
                     <h3 class="text-2xl text-center font-semibold text-gray-900 mb-4">Resumen de Series - NUBOX360</h3>
                     <div class="overflow-x-auto">
-                        <table class="w-full table-fixed text-sm text-gray-900">
+                        <table class="w-full whitespace-nowrap">
                             <thead class="bg-gray-50 text-xs uppercase">
                                 <tr>
                                     <th class="px-4 py-2 text-left font-medium">Serie</th>

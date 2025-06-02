@@ -16,7 +16,9 @@
         <?php require $contenido; ?>
       </div>
     <?php else: ?>
-      <?php require $contenido; ?>
+      <div class="w-full">
+        <?php require $contenido; ?>
+      </div>
     <?php endif; ?>
   </main>
   <?php require 'view/ui/footer.php'; ?>

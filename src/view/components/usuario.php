@@ -32,7 +32,7 @@ while ($suc = $resSuc->fetch_assoc()) {
 }
 ?>
 
-<div class="flex flex-col items-center min-h-[calc(100vh-120px)] w-full px-2 pt-6 pb-2">
+<div class="flex flex-col items-center w-full px-2 pt-6 pb-2">
     <div class="w-full max-w-7xl">
         <div class="mb-4 flex justify-end">
             <button id="btnNuevoUsuario"

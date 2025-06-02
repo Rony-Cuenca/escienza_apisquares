@@ -131,12 +131,27 @@ class CuadresController {
             try {
                 // Inicializar variables para almacenar datos
                 $nombTemp = $_FILES['exe_nubox']['tmp_name'];
-                $datos = [];
-                $filaInicio = 9;
                 
                 // Cargar el archivo XLSX
                 $spreadsheet = IOFactory::load($nombTemp);
                 $hoja = $spreadsheet->getActiveSheet();
+
+                // Obtener el encabezado (primera fila)
+                $headerRow = 8;
+                $header = [];
+                $col = 1;
+                while ($hoja->getCellByColumnAndRow($col, $headerRow)->getValue() !== null) {
+                    $header[] = $hoja->getCellByColumnAndRow($col, $headerRow)->getValue();
+                    $col++;
+                }
+
+                // Buscar las columnas necesarias
+                $colSerie = array_search('Número', $header);
+                $colGravado = array_search('Total Gravado', $header);
+                $colExonerado = array_search('Total Exonerado', $header);
+                $colInafecto = array_search('Total Inafecto', $header);
+                $colIGV = array_search('Total IGV', $header);
+
 
                 // Inicializar variables para almacenar datos por serie
                 $DataSerieGraNubox = [];
@@ -144,40 +159,49 @@ class CuadresController {
                 $DataSerieInaNubox = [];
                 $DataSerieIGVNubox = [];
                 $conteoSeriesNubox = [];
+                
+                // Empezar desde la fila 2 (después del encabezado)
+                $FIni = 9;
+                if ($colSerie != false && $colGravado != false && $colExonerado != false && 
+                    $colInafecto != false && $colIGV != false) {
+                                   
+                    while (true) {
+                        $valorSerie = $hoja->getCellByColumnAndRow($colSerie + 1, $FIni)->getValue();
+                        // Si ya no hay número, se asume fin de datos
+                        if (empty($valorSerie)) {
+                            break;
+                        }
 
-                while (true) {
-                    $valorSerie = $hoja->getCell('D' . $filaInicio)->getValue();
-                    
-                    // Si ya no hay número, se asume fin de datos
-                    if (empty($valorSerie)) break;
+                        // Extraer solo la parte antes del guion
+                        $serie = explode('-', $valorSerie)[0];
 
-                    // Extraer solo la parte antes del guion
-                    $serie = explode('-', $valorSerie)[0];
+                        $TGraNubox = $hoja->getCellByColumnAndRow($colGravado + 1, $FIni)->getValue();
+                        $TExoNubox = $hoja->getCellByColumnAndRow($colExonerado + 1, $FIni)->getValue();
+                        $TInaNubox = $hoja->getCellByColumnAndRow($colInafecto + 1, $FIni)->getValue();
+                        $TIGVNubox = $hoja->getCellByColumnAndRow($colIGV + 1, $FIni)->getValue();
 
-                    $TGraNubox = $hoja->getCell('AE' . $filaInicio)->getValue();
-                    $TExoNubox = $hoja->getCell('AB' . $filaInicio)->getValue();
-                    $TInaNubox = $hoja->getCell('AC' . $filaInicio)->getValue();
-                    $TIGVNubox = $hoja->getCell('AG' . $filaInicio)->getValue();
+                        // Inicializar valores si es la primera vez que se ve la serie
+                        if (!isset($DataSerieGraNubox[$serie])) {
+                            $DataSerieGraNubox[$serie] = 0;
+                            $DataSerieExoNubox[$serie] = 0;
+                            $DataSerieInaNubox[$serie] = 0;
+                            $DataSerieIGVNubox[$serie] = 0;
+                            $conteoSeriesNubox[$serie] = 0;
+                        }
 
-                    // Inicializar valores si es la primera vez que se ve la serie
-                    if (!isset($DataSerieGraNubox[$serie])) {
-                        $DataSerieGraNubox[$serie] = 0;
-                        $DataSerieExoNubox[$serie] = 0;
-                        $DataSerieInaNubox[$serie] = 0;
-                        $DataSerieIGVNubox[$serie] = 0;
-                        $conteoSeriesNubox[$serie] = 0;
+                        // Acumular valores por serie
+                        $DataSerieGraNubox[$serie] += $TGraNubox;
+                        $DataSerieExoNubox[$serie] += $TExoNubox;
+                        $DataSerieInaNubox[$serie] += $TInaNubox;
+                        $DataSerieIGVNubox[$serie] += $TIGVNubox;
+                        $conteoSeriesNubox[$serie]++;
+
+                        $FIni++;
                     }
 
-                    // Acumular valores por serie
-                    $DataSerieGraNubox[$serie] += $TGraNubox;
-                    $DataSerieExoNubox[$serie] += $TExoNubox;
-                    $DataSerieInaNubox[$serie] += $TInaNubox;
-                    $DataSerieIGVNubox[$serie] += $TIGVNubox;
-                    $conteoSeriesNubox[$serie]++;
-
-                    $filaInicio++;
-                }
-
+                } else {
+                    $ErrorNUBOX = "No se encontraron las columnas necesarias en el archivo";
+                }    
                 // Ordenar las series
                 ksort($DataSerieGraNubox);
                 
