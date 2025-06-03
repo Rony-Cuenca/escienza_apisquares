@@ -1,5 +1,14 @@
 {
+    "name": "escienza/apisquares",
+    "description": "Proyecto Escienza Apisquares",
+    "type": "project",
     "require": {
+        "php": ">=8.1",
         "phpoffice/phpspreadsheet": "^1.29"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
     }
 }

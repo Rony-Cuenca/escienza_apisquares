@@ -1,6 +1,6 @@
 <div class="flex flex-col items-center w-full px-2 pt-6 pb-2">
     <div class="w-full">
-        <div class="mx-auto bg-white rounded-lg shadow-lg overflow-hidden max-w-7xl">
+        <div class="mx-auto bg-white rounded-lg shadow-lg overflow-hidden max-w-7xlº    ">
             <div class="p-8">
                 <h2 class="text-4xl font-semibold text-gray-900 text-center mb-8 uppercase">Comparación de Reportes</h2>
                 <form action="index.php?controller=cuadres&action=cuadre" method="post" enctype="multipart/form-data">
