@@ -1,10 +1,9 @@
-
 <div class="flex flex-col items-center w-full px-2 pt-6 pb-2">
     <div class="w-full">
         <div class="mx-auto bg-white rounded-lg shadow-lg overflow-hidden max-w-7xlº    ">
             <div class="p-8">
                 <h2 class="text-4xl font-semibold text-gray-900 text-center mb-8 uppercase">Comparación de Reportes</h2>
-                <form action="index.php?controller=cuadres&action=cuadre&user=<?php echo $_SESSION['id_usuario'] ?>" method="post" enctype="multipart/form-data">
+                <form action="index.php?controller=cuadres&action=cuadre" method="post" enctype="multipart/form-data">
                     <div class="flex gap-4 mb-6">
                         <div class="flex-1">
                             <label class="block font-medium mb-1">Archivo SIRE</label>
