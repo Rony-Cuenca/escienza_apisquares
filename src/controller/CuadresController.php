@@ -17,17 +17,45 @@ class CuadresController {
     
         $ResultsNUBOX = [];
         $ErrorNUBOX = null;
+        
+        $RUCSIRE = null;
+        $RUCNUBOX = null;
     
         if (isset($_FILES['exe_sire']) && $_FILES['exe_sire']['error'] == 0) {
             // Procesar archivo SIRE
-            extract($this->sire($_FILES['exe_sire'], $_GET['user']));
+            $nombTemp = $_FILES['exe_sire']['tmp_name'];
+            
+            if (($handle = fopen($nombTemp, "r")) != false) {
+                $header = fgetcsv($handle);
+                if ($header !== false && isset($header[0])) {
+                    // Check for UTF-8 BOM (EF BB BF) and remove it
+                    if (substr($header[0], 0, 3) == "\xEF\xBB\xBF") {
+                        $header[0] = substr($header[0], 3);
+                    }
+                }
+                $colRUC = array_search('Ruc', $header);
+
+                $dataRow = fgetcsv($handle);
+                $RUCSIRE = trim($dataRow[$colRUC]);
+                fclose($handle);
+            } else {
+                $ErrorSIRE = "No se pudo abrir el archivo SIRE.";
+            }
         }
     
         if (isset($_FILES['exe_nubox']) && $_FILES['exe_nubox']['error'] == 0) {
             // Procesar archivo NUBOX
+            $nombTemp = $_FILES['exe_nubox']['tmp_name'];
+            $spreadsheet = IOFactory::load($nombTemp);
+            $hoja = $spreadsheet->getActiveSheet();
+            $RUCNUBOX = $hoja->getCell('B4')->getValue();
+        }
+
+        if ($RUCSIRE == $RUCNUBOX) {
+            extract($this->sire($_FILES['exe_sire'], $_GET['user']));
             extract($this->nubox($_FILES['exe_nubox'], $_GET['user']));
         }
-    
+
         $contenido = 'view/components/cuadre.php';
         require 'view/layout.php';
     }

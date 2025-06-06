@@ -13,7 +13,7 @@
                                 <label for="sire" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-r-lg border border-l-0 hover:bg-gray-300">
                                     Seleccionar archivo
                                 </label>
-                                <input type="file" name="exe_sire" id="sire" accept=".csv" class="hidden" onchange="update(this, 'file-sire')">
+                                <input type="file" name="exe_sire" id="sire" accept=".csv" class="hidden" onchange="update(this, 'file-sire')" required>
                             </div>
                         </div>
                         <div class="flex-1">
@@ -23,7 +23,7 @@
                                 <label for="nubox" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-r-lg border border-l-0 hover:bg-gray-300">
                                     Seleccionar archivo
                                 </label>
-                                <input type="file" name="exe_nubox" id="nubox" accept=".xlsx" class="hidden" onchange="update(this, 'file-nubox')">
+                                <input type="file" name="exe_nubox" id="nubox" accept=".xlsx" class="hidden" onchange="update(this, 'file-nubox')" required>
                             </div>
                         </div>
                         <div class="flex-1">
