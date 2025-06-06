@@ -1,6 +1,8 @@
 <?php
 use PhpOffice\PhpSpreadsheet\IOFactory;
 require __DIR__ . '/../../vendor/autoload.php';
+require_once __DIR__ . '/../model/Cuadre.php';
+require_once __DIR__ . '/../model/Usuario.php';
 
 
 class CuadresController {
@@ -15,17 +17,45 @@ class CuadresController {
     
         $ResultsNUBOX = [];
         $ErrorNUBOX = null;
+        
+        $RUCSIRE = null;
+        $RUCNUBOX = null;
     
         if (isset($_FILES['exe_sire']) && $_FILES['exe_sire']['error'] == 0) {
             // Procesar archivo SIRE
-            extract($this->sire($_FILES['exe_sire']));
+            $nombTemp = $_FILES['exe_sire']['tmp_name'];
+            
+            if (($handle = fopen($nombTemp, "r")) != false) {
+                $header = fgetcsv($handle);
+                if ($header !== false && isset($header[0])) {
+                    // Check for UTF-8 BOM (EF BB BF) and remove it
+                    if (substr($header[0], 0, 3) == "\xEF\xBB\xBF") {
+                        $header[0] = substr($header[0], 3);
+                    }
+                }
+                $colRUC = array_search('Ruc', $header);
+
+                $dataRow = fgetcsv($handle);
+                $RUCSIRE = trim($dataRow[$colRUC]);
+                fclose($handle);
+            } else {
+                $ErrorSIRE = "No se pudo abrir el archivo SIRE.";
+            }
         }
     
         if (isset($_FILES['exe_nubox']) && $_FILES['exe_nubox']['error'] == 0) {
             // Procesar archivo NUBOX
-            extract($this->nubox($_FILES['exe_nubox']));
+            $nombTemp = $_FILES['exe_nubox']['tmp_name'];
+            $spreadsheet = IOFactory::load($nombTemp);
+            $hoja = $spreadsheet->getActiveSheet();
+            $RUCNUBOX = $hoja->getCell('B4')->getValue();
         }
-    
+
+        if ($RUCSIRE == $RUCNUBOX) {
+            extract($this->sire($_FILES['exe_sire'], $_GET['user']));
+            extract($this->nubox($_FILES['exe_nubox'], $_GET['user']));
+        }
+
         $contenido = 'view/components/cuadre.php';
         require 'view/layout.php';
     }
@@ -33,6 +63,7 @@ class CuadresController {
     public function sire() {
         $ErrorSIRE = null;
         $ResultsSIRE = [];
+        $reporte = 2;
         
         // Verificar si se subió el archivo CSV
         if (isset($_FILES['exe_sire']) && $_FILES['exe_sire']['error'] == 0) {
@@ -93,6 +124,8 @@ class CuadresController {
                             $TInaSIRE = $DataSerieInaSIRE[$serie];
                             $TIGVSIRE = $DataSerieIGVSIRE[$serie];
                             $TTotalSIRE = $totalBI + $TExoSIRE + $TInaSIRE + $TIGVSIRE;
+
+                            $this->guardarCuadre($serie,$conteoSeriesSIRE[$serie],$totalBI,$TExoSIRE,$TInaSIRE,$TIGVSIRE,$TTotalSIRE,$reporte);
                                 
                             $ResultsSIRE[] = [
                                 'serie' => $serie,
@@ -125,6 +158,7 @@ class CuadresController {
     public function nubox() {
         $ErrorNUBOX = null;
         $ResultsNUBOX = [];
+        $reporte = 1;
         
         // Verificar si se subió el archivo XLSX de Nubox
         if (isset($_FILES['exe_nubox']) && $_FILES['exe_nubox']['error'] == 0) {
@@ -211,6 +245,8 @@ class CuadresController {
                     $totalInaNubox = $DataSerieInaNubox[$serie];
                     $totalIGVNubox = $DataSerieIGVNubox[$serie];
                     $totalTotal = $totalGraNubox + $totalExoNubox + $totalInaNubox + $totalIGVNubox;
+
+                    $this->guardarCuadre($serie,$conteoSeriesNubox[$serie],$totalGraNubox,$totalExoNubox,$totalInaNubox,$totalIGVNubox,$totalTotal,$reporte);
                         
                     $ResultsNUBOX[] = [
                         'serie' => $serie,
@@ -231,6 +267,37 @@ class CuadresController {
 
         // Pasar los resultados a la vista
         return compact('ErrorNUBOX', 'ResultsNUBOX');
+    }
+
+    public function guardarCuadre($serie,$conteo,$Gravada,$Exonerada,$Inafecto,$IGV,$Total,$reporte) {
+        $user = Usuario::obtenerId($_GET['user']);
+        
+        $user_create = $user['usuario'];
+        $user_update = $user['usuario'];
+        $id_sucursal = $user['id_sucursal'];
+        
+        $data = [
+            'serie' => $serie,
+            'cantidad_compr' => $conteo,
+            'suma_gravada' => $Gravada,
+            'suma_exonerada' => $Exonerada,
+            'suma_inafecto' => $Inafecto,
+            'suma_igv' => $IGV,
+            'monto_total' => $Total,
+            'id_reporte' => $reporte,
+            'user_create' => $user_create,
+            'user_update' => $user_update,
+            'id_sucursal' => $id_sucursal,
+            'estado' => 1
+        ];
+
+        foreach ($data as $key => $value) {
+            if ($value = false) {
+                throw new Exception("Dato inválido en campo $key");
+            }
+        }
+
+        Cuadre::Insertar($data);
     }
 }
 

@@ -1,9 +1,10 @@
+
 <div class="flex flex-col items-center w-full px-2 pt-6 pb-2">
     <div class="w-full">
         <div class="mx-auto bg-white rounded-lg shadow-lg overflow-hidden max-w-7xlº    ">
             <div class="p-8">
                 <h2 class="text-4xl font-semibold text-gray-900 text-center mb-8 uppercase">Comparación de Reportes</h2>
-                <form action="index.php?controller=cuadres&action=cuadre" method="post" enctype="multipart/form-data">
+                <form action="index.php?controller=cuadres&action=cuadre&user=<?php echo $_SESSION['id_usuario'] ?>" method="post" enctype="multipart/form-data">
                     <div class="flex gap-4 mb-6">
                         <div class="flex-1">
                             <label class="block font-medium mb-1">Archivo SIRE</label>
@@ -12,7 +13,7 @@
                                 <label for="sire" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-r-lg border border-l-0 hover:bg-gray-300">
                                     Seleccionar archivo
                                 </label>
-                                <input type="file" name="exe_sire" id="sire" accept=".csv" class="hidden" onchange="update(this, 'file-sire')">
+                                <input type="file" name="exe_sire" id="sire" accept=".csv" class="hidden" onchange="update(this, 'file-sire')" required>
                             </div>
                         </div>
                         <div class="flex-1">
@@ -22,7 +23,7 @@
                                 <label for="nubox" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-r-lg border border-l-0 hover:bg-gray-300">
                                     Seleccionar archivo
                                 </label>
-                                <input type="file" name="exe_nubox" id="nubox" accept=".xlsx" class="hidden" onchange="update(this, 'file-nubox')">
+                                <input type="file" name="exe_nubox" id="nubox" accept=".xlsx" class="hidden" onchange="update(this, 'file-nubox')" required>
                             </div>
                         </div>
                         <div class="flex-1">
