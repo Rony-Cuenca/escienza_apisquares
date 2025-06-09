@@ -1,17 +1,34 @@
 <?php
+require_once 'controller/AuthController.php';
+
 session_start();
 
-if (
-    !isset($_SESSION['id_cliente']) &&
-    !(isset($_GET['controller']) && $_GET['controller'] === 'auth' && $_GET['action'] === 'login')
-) {
-    header('Location: index.php?controller=auth&action=login');
-    exit;
+$controller = $_GET['controller'] ?? null;
+$action = $_GET['action'] ?? null;
+$controlador = null;
+
+if (!isset($_SESSION['id_cliente'])) {
+    if ($controller !== 'auth' || $action !== 'login') {
+        header('Location: index.php?controller=auth&action=login');
+        exit;
+    }
+} else {
+    if ($controller === 'auth' && $action === 'login') {
+        header('Location: index.php?controller=home');
+        exit;
+    }
+    if ($controller === null) {
+        header('Location: index.php?controller=home');
+        exit;
+    }
 }
 
-$controller = $_GET['controller'] ?? 'home';
-$action = $_GET['action'] ?? 'index';
-$controlador = null;
+$controller = $controller ?? (isset($_SESSION['id_cliente']) ? 'home' : 'auth');
+$action = $action ?? (isset($_SESSION['id_cliente']) ? 'index' : 'login');
+
+if ($controller !== 'auth') {
+    AuthController::verificarSesionActiva();
+}
 
 switch ($controller) {
     case 'auth':
@@ -31,20 +48,23 @@ switch ($controller) {
         $controlador = new CuadresController();
         break;
     case 'home':
+        break;
     default:
-        $contenido = 'view/components/home.php';
-        require 'view/layout.php';
-        return;
+        header('Location: index.php?controller=auth&action=login&error=Controlador no encontrado');
+        exit;
 }
 
-if ($controlador && method_exists($controlador, $action)) {
-    if (isset($_GET['id'])) {
-        $controlador->$action($_GET['id']);
+if ($controlador) {
+    if (method_exists($controlador, $action)) {
+        if ($action === 'cambiarEstado') {
+            $id = $_GET['id'] ?? null;
+            $estado = $_GET['estado'] ?? null;
+            $controlador->$action($id, $estado);
+        } else {
+            $controlador->$action();
+        }
     } else {
-        $controlador->$action();
+        header('Location: index.php?controller=auth&action=login&error=Acción no encontrada');
+        exit;
     }
-} else {
-    header('HTTP/1.0 404 Not Found');
-    echo '404 Not Found';
-    exit;
 }
