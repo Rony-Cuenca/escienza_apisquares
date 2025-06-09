@@ -8,20 +8,19 @@
   <title>Escienza - Cuadres</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
+
 <body class="min-h-screen flex flex-col">
-  <main class="flex-1">
-    <?php if (isset($_SESSION['id_cliente'])): ?>
-      <?php require 'view/ui/navbar.php'; ?>
-      <div class="w-full">
-        <?php require $contenido; ?>
-      </div>
-    <?php else: ?>
-      <div class="w-full">
-        <?php require $contenido; ?>
-      </div>
-    <?php endif; ?>
+  <?php if (isset($_SESSION['id_cliente'])): ?>
+    <?php require 'view/ui/navbar.php'; ?>
+  <?php endif; ?>
+  <main class="flex-1 w-full">
+    <div class="w-full">
+      <?php require $contenido; ?>
+    </div>
   </main>
-  <?php require 'view/ui/footer.php'; ?>
+  <?php if (isset($_SESSION['id_cliente'])): ?>
+    <?php require 'view/ui/footer.php'; ?>
+  <?php endif; ?>
 </body>
 
 </html>

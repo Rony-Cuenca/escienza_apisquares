@@ -8,9 +8,7 @@ class AuthController
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $usuario = $_POST['usuario'] ?? '';
             $contrasena = $_POST['contrasena'] ?? '';
-
             $user = Usuario::autenticar($usuario, $contrasena);
-
             if ($user) {
                 $_SESSION['id_cliente'] = $user['id_cliente'];
                 $_SESSION['usuario'] = $user['usuario'];

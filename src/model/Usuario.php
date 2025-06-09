@@ -19,6 +19,78 @@ class Usuario
         return false;
     }
 
+    public static function insertar($usuario, $rol, $id_sucursal, $estado, $id_cliente, $hashed_password)
+    {
+        $conn = Conexion::conectar();
+        $user_create = 'admin';
+        $user_update = 'admin';
+        $sql = "INSERT INTO usuario (usuario, contraseña, rol, user_create, user_update, id_cliente, id_sucursal, estado)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("sssssiis", $usuario, $hashed_password, $rol, $user_create, $user_update, $id_cliente, $id_sucursal, $estado);
+        return $stmt->execute();
+    }
+
+    public static function actualizar($id, $usuario, $rol, $id_sucursal, $estado, $id_cliente, $hashed_password = null)
+    {
+        $conn = Conexion::conectar();
+        $user_update = 'admin';
+
+        if ($hashed_password) {
+            $sql = "UPDATE usuario SET usuario=?, contraseña=?, rol=?, id_sucursal=?, estado=?, id_cliente=?, user_update=? WHERE id=?";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("sssiiisi", $usuario, $hashed_password, $rol, $id_sucursal, $estado, $id_cliente, $user_update, $id);
+        } else {
+            $sql = "UPDATE usuario SET usuario=?, rol=?, id_sucursal=?, estado=?, id_cliente=?, user_update=? WHERE id=?";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("ssiiisi", $usuario, $rol, $id_sucursal, $estado, $id_cliente, $user_update, $id);
+        }
+
+        return $stmt->execute();
+    }
+    public static function obtenerId($id)
+    {
+        $conn = Conexion::conectar();
+        $sql = "SELECT * FROM usuario WHERE id = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        return $res->fetch_assoc();
+    }
+
+    public static function cambiarEstado($id, $estado)
+    {
+        $conn = Conexion::conectar();
+        $sql = "UPDATE usuario SET estado = ? WHERE id = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("ii", $estado, $id);
+        return $stmt->execute();
+    }
+
+    public static function obtenerCorreoCliente($id_cliente)
+    {
+        $conn = Conexion::conectar();
+        $sql = "SELECT correo FROM cliente WHERE id = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i", $id_cliente);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        $row = $res->fetch_assoc();
+        return $row['correo'] ?? null;
+    }
+
+    public static function obtenerSucursalesPorCliente($id_cliente)
+    {
+        $conn = Conexion::conectar();
+        $sql = "SELECT id, razon_social FROM sucursal WHERE id_cliente = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i", $id_cliente);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        return $res->fetch_all(MYSQLI_ASSOC);
+    }
+
     public static function obtenerPaginado($id_cliente, $limit, $offset, $sort, $dir)
     {
         $conn = Conexion::conectar();
@@ -51,58 +123,5 @@ class Usuario
         $res = $stmt->get_result();
         $row = $res->fetch_assoc();
         return $row['total'];
-    }
-
-    public static function obtenerPorCliente($id_cliente)
-    {
-        $conn = Conexion::conectar();
-        $sql = "SELECT * FROM usuario WHERE id_cliente = ?";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("i", $id_cliente);
-        $stmt->execute();
-        $res = $stmt->get_result();
-        return $res->fetch_all(MYSQLI_ASSOC);
-    }
-
-    public static function obtenerId($id)
-    {
-        $conn = Conexion::conectar();
-        $sql = "SELECT * FROM usuario WHERE id = ?";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("i", $id);
-        $stmt->execute();
-        $res = $stmt->get_result();
-        return $res->fetch_assoc();
-    }
-
-    public static function cambiarEstado($id, $estado)
-    {
-        $conn = Conexion::conectar();
-        $sql = "UPDATE usuario SET estado = ? WHERE id = ?";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("ii", $estado, $id);
-        return $stmt->execute();
-    }
-
-    public static function insertar($usuario, $rol, $id_sucursal, $estado, $id_cliente)
-    {
-        $conn = Conexion::conectar();
-        $contraseña = '123456'; // Contraseña por defecto
-        $user_create = 'admin';
-        $user_update = 'admin';
-        $sql = "INSERT INTO usuario (usuario, contraseña, rol, user_create, user_update, id_cliente, id_sucursal, estado)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("ssssssii", $usuario, $contraseña, $rol, $user_create, $user_update, $id_cliente, $id_sucursal, $estado);
-        return $stmt->execute();
-    }
-
-    public static function actualizar($id, $usuario, $rol, $id_sucursal, $estado, $id_cliente)
-    {
-        $conn = Conexion::conectar();
-        $sql = "UPDATE usuario SET usuario=?, rol=?, id_sucursal=?, estado=?, id_cliente=? WHERE id=?";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("ssiiii", $usuario, $rol, $id_sucursal, $estado, $id_cliente, $id);
-        return $stmt->execute();
     }
 }
