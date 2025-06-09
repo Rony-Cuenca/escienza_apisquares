@@ -31,6 +31,9 @@ switch ($controller) {
         $controlador = new CuadresController();
         break;
     case 'home':
+        require_once 'controller/HomeController.php';
+        $controlador = new HomeController();
+        break;
     default:
         $contenido = 'view/components/home.php';
         require 'view/layout.php';
