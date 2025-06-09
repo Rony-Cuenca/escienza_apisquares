@@ -3,13 +3,22 @@
         'name' => 'escienza/apisquares',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => 'd8e94f22a825184372f26fe4c82f5ce5d488f53f',
+        'reference' => '9f29093052a9ce3a6e161cd7af8540b971579655',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
         'dev' => true,
     ),
     'versions' => array(
+        'box/spout' => array(
+            'pretty_version' => 'v3.3.0',
+            'version' => '3.3.0.0',
+            'reference' => '9bdb027d312b732515b884a341c0ad70372c6295',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../box/spout',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
         'composer/pcre' => array(
             'pretty_version' => '3.3.2',
             'version' => '3.3.2.0',
@@ -22,7 +31,7 @@
         'escienza/apisquares' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => 'd8e94f22a825184372f26fe4c82f5ce5d488f53f',
+            'reference' => '9f29093052a9ce3a6e161cd7af8540b971579655',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),

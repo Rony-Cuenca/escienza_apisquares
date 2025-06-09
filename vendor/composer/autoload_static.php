@@ -31,6 +31,10 @@ class ComposerStaticInit6507c6a9aaaf9726ae517f62398a30ed
             'Composer\\Pcre\\' => 14,
             'Complex\\' => 8,
         ),
+        'B' => 
+        array (
+            'Box\\Spout\\' => 10,
+        ),
         'A' => 
         array (
             'App\\' => 4,
@@ -70,6 +74,10 @@ class ComposerStaticInit6507c6a9aaaf9726ae517f62398a30ed
         'Complex\\' => 
         array (
             0 => __DIR__ . '/..' . '/markbaker/complex/classes/src',
+        ),
+        'Box\\Spout\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/box/spout/src/Spout',
         ),
         'App\\' => 
         array (
