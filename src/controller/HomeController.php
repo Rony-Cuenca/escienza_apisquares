@@ -1,23 +1,20 @@
 <?php
 require_once 'config/conexion.php';
+require_once 'model/Usuario.php';
 
 class HomeController
 {
     public function index()
     {
         $conn = Conexion::conectar();
+       if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+    $id_cliente = $_SESSION['id_cliente'] ?? 1;
+    echo "ID CLIENTE: $id_cliente";
 
-        // Obtener sucursales
-        $sucursales = [];
-        $sqlSuc = "SELECT id, razon_social FROM sucursal WHERE id_cliente = ?";
-        $stmt = $conn->prepare($sqlSuc);
-        $id_cliente = 1; // Cambia esto según tu lógica
-        $stmt->bind_param("i", $id_cliente);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        while ($row = $result->fetch_assoc()) {
-            $sucursales[] = $row;
-        }
+    // Obtener sucursales usando el modelo Usuario
+    $sucursales = Usuario::obtenerSucursalesPorCliente($id_cliente);
 
         // Obtener años disponibles
         $anios = [];
