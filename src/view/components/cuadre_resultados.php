@@ -1,13 +1,58 @@
-<?php if (!empty($ErrorSIRE)): ?>
-    <div class="bg-red-100 border border-red-400 text-red-700 px-4 mt-10 py-3 rounded relative mb-6" role="alert">
-        <span class="block sm:inline"><?php echo htmlspecialchars($ErrorSIRE); ?></span>
+<?php if (!empty($ErrorSIRE) || !empty($ErrorNUBOX)): ?>
+    <div id="errorModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-8 max-w-sm w-full mx-4 text-center shadow-lg">
+            <div class="flex flex-col items-center">
+                <div class="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-4">
+                    <svg class="w-12 h-12 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-lg font-semibold mb-4 text-gray-900">
+                        <?php 
+                        if (!empty($ErrorSIRE)) {
+                            echo htmlspecialchars($ErrorSIRE);
+                        } else {
+                            echo htmlspecialchars($ErrorNUBOX);
+                        }
+                        ?>
+                    </h3>
+                </div>
+            </div>
+            <div class="mt-4">
+                <button onclick="closeModal()" class="w-full bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
+                    Cerrar
+                </button>
+            </div>
+        </div>
     </div>
-<?php endif; ?>
+    <style>
+        #errorModal {
+            display: none;
+        }
+        #errorModal.show {
+            display: flex;
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const modal = document.getElementById('errorModal');
+            modal.classList.add('show');
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    closeModal();
+                }
+            });
+        });
 
-<?php if (!empty($ErrorNUBOX)): ?>
-    <div class="bg-red-100 border border-red-400 text-red-700 px-4 mt-10 py-3 rounded relative mb-6" role="alert">
-        <span class="block sm:inline"><?php echo htmlspecialchars($ErrorNUBOX); ?></span>
-    </div>
+        function closeModal() {
+            const modal = document.getElementById('errorModal');
+            modal.classList.remove('show');
+            setTimeout(() => {
+                modal.remove();
+            }, 300);
+        }
+    </script>
 <?php endif; ?>
 
 <?php if (!empty($ResultsSIRE) || !empty($ResultsNUBOX)): ?>

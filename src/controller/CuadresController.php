@@ -45,16 +45,30 @@ class CuadresController {
     
         if (isset($_FILES['exe_nubox']) && $_FILES['exe_nubox']['error'] == 0) {
             // Procesar archivo NUBOX
-            $nombTemp = $_FILES['exe_nubox']['tmp_name'];
-            $spreadsheet = IOFactory::load($nombTemp);
-            $hoja = $spreadsheet->getActiveSheet();
-            $RUCNUBOX = $hoja->getCell('B4')->getValue();
+            try {
+                $nombTemp = $_FILES['exe_nubox']['tmp_name'];
+                $spreadsheet = IOFactory::load($nombTemp);
+                $hoja = $spreadsheet->getActiveSheet();
+                $RUCNUBOX = $hoja->getCell('B4')->getValue();
+            } catch (Exception $e) {
+                $ErrorNUBOX = "No se pudo abrir el archivo NUBOX.";
+            }
         }
 
-        if ($RUCSIRE == $RUCNUBOX) {
-            extract($this->sire($_FILES['exe_sire'], $_GET['user']));
-            extract($this->nubox($_FILES['exe_nubox'], $_GET['user']));
+        if (!empty($RUCNUBOX) && !empty($RUCSIRE)) {
+            if ($RUCSIRE == $RUCNUBOX) {
+                extract($this->sire($_FILES['exe_sire'], $_GET['user']));
+                extract($this->nubox($_FILES['exe_nubox'], $_GET['user']));
+            } else {
+                $ErrorSIRE = "Los RUC de los archivos no coinciden.";
+            }
+        } elseif (empty($RUCNUBOX)) {
+            $ErrorNUBOX = "No se encontró el RUC en el archivo NUBOX.";
+        } elseif (empty($RUCSIRE)) {
+            $ErrorSIRE = "No se encontró el RUC en el archivo SIRE.";
         }
+
+        
 
         $contenido = 'view/components/cuadre.php';
         require 'view/layout.php';
