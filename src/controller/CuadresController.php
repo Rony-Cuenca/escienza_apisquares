@@ -1,6 +1,7 @@
 <?php
-use PhpOffice\PhpSpreadsheet\IOFactory;
-require __DIR__ . '/../../vendor/autoload.php';
+ini_set('memory_limit', '512M');
+use Box\Spout\Reader\Common\Creator\ReaderEntityFactory;
+require __DIR__ . '/../../vendor/autoload.php'; 
 require_once __DIR__ . '/../model/Cuadre.php';
 require_once __DIR__ . '/../model/Usuario.php';
 
@@ -31,10 +32,10 @@ class CuadresController {
                     // Check for UTF-8 BOM (EF BB BF) and remove it
                     if (substr($header[0], 0, 3) == "\xEF\xBB\xBF") {
                         $header[0] = substr($header[0], 3);
-                    }
+                }
                 }
                 $colRUC = array_search('Ruc', $header);
-
+                
                 $dataRow = fgetcsv($handle);
                 $RUCSIRE = trim($dataRow[$colRUC]);
                 fclose($handle);
@@ -44,14 +45,29 @@ class CuadresController {
         }
     
         if (isset($_FILES['exe_nubox']) && $_FILES['exe_nubox']['error'] == 0) {
-            // Procesar archivo NUBOX
+            // Procesar archivo NUBOX (XLSX)
             try {
                 $nombTemp = $_FILES['exe_nubox']['tmp_name'];
-                $spreadsheet = IOFactory::load($nombTemp);
-                $hoja = $spreadsheet->getActiveSheet();
-                $RUCNUBOX = $hoja->getCell('B4')->getValue();
+                $reader = ReaderEntityFactory::createXLSXReader();
+                $reader->open($nombTemp);
+
+                $fila = 1;
+                $RUCNUBOX = null;
+                foreach ($reader->getSheetIterator() as $sheet) {
+                    foreach ($sheet->getRowIterator() as $row) {
+                        if ($fila == 3) {
+                            $cells = $row->toArray();
+                            // La columna B es índice 1 (arrays empiezan en 0)
+                            $RUCNUBOX = $cells[1];
+                            break 2;
+                        }
+                        $fila++;
+                    }
+                }
+                $reader->close();
+                //throw new Exception($RUCNUBOX);
             } catch (Exception $e) {
-                $ErrorNUBOX = "No se pudo abrir el archivo NUBOX.";
+                $ErrorNUBOX = $e->getMessage();
             }
         }
 
@@ -68,8 +84,6 @@ class CuadresController {
             $ErrorSIRE = "No se encontró el RUC en el archivo SIRE.";
         }
 
-        
-
         $contenido = 'view/components/cuadre.php';
         require 'view/layout.php';
     }
@@ -78,91 +92,86 @@ class CuadresController {
         $ErrorSIRE = null;
         $ResultsSIRE = [];
         $reporte = 2;
-        
-        // Verificar si se subió el archivo CSV
-        if (isset($_FILES['exe_sire']) && $_FILES['exe_sire']['error'] == 0) {
-            try {
-                // Inicializar variables para almacenar datos por serie
-                $nombTemp = $_FILES['exe_sire']['tmp_name'];
-                $DataSerieGraSIRE = [];
-                $DataSerieExoSIRE = [];
-                $DataSerieInaSIRE = [];
-                $DataSerieIGVSIRE = [];
-                $conteoSeriesSIRE = [];
-                    
-                if (($handle = fopen($nombTemp, "r")) != false) {
-                    // Leer el encabezado del CSV
-                    $header = fgetcsv($handle);
-                    
-                    // Buscar las columnas necesarias en el CSV
-                    $colSerie = array_search('Serie del CDP', $header);
-                    $colGrav = array_search('BI Gravada', $header);
-                    $colExo = array_search('Mto Exonerado', $header);
-                    $colIna = array_search('Mto Inafecto', $header);
-                    $colIGV = array_search('IGV / IPM', $header);
 
-                    // Verificar si todas las columnas existen
-                    if ($colSerie != false && $colGrav != false && $colExo != false && 
-                        $colIna != false && $colIGV != false) {
-                        // Procesar cada fila del CSV
-                        while (($datos = fgetcsv($handle, 0, ",")) !== false) {
-                            $serieSIRE = $datos[$colSerie];
-                            $GravSIRE = $datos[$colGrav];
-                            $ExoSIRE = $datos[$colExo];
-                            $InaSIRE = $datos[$colIna];
-                            $IGVSIRE = $datos[$colIGV];
+        try {
+            // Inicializar variables para almacenar datos por serie
+            $nombTemp = $_FILES['exe_sire']['tmp_name'];
+            $DataSerieGraSIRE = [];
+            $DataSerieExoSIRE = [];
+            $DataSerieInaSIRE = [];
+            $DataSerieIGVSIRE = [];
+            $conteoSeriesSIRE = [];
+                
+            if (($handle = fopen($nombTemp, "r")) != false) {
+                // Leer el encabezado del CSV
+                $header = fgetcsv($handle);
+                
+                // Buscar las columnas necesarias en el CSV
+                $colSerie = array_search('Serie del CDP', $header);
+                $colGrav = array_search('BI Gravada', $header);
+                $colExo = array_search('Mto Exonerado', $header);
+                $colIna = array_search('Mto Inafecto', $header);
+                $colIGV = array_search('IGV / IPM', $header);
 
-                            // Inicializar valores si es la primera vez que se ve la serie
-                            if (!isset($DataSerieGraSIRE[$serieSIRE])) {
-                                $DataSerieGraSIRE[$serieSIRE] = 0;
-                                $DataSerieExoSIRE[$serieSIRE] = 0;
-                                $DataSerieInaSIRE[$serieSIRE] = 0;
-                                $DataSerieIGVSIRE[$serieSIRE] = 0;
-                                $conteoSeriesSIRE[$serieSIRE] = 0;
-                            }
+                // Verificar si todas las columnas existen
+                if ($colSerie != false && $colGrav != false && $colExo != false && 
+                    $colIna != false && $colIGV != false) {
+                    // Procesar cada fila del CSV
+                    while (($datos = fgetcsv($handle, 0, ",")) !== false) {
+                        $serieSIRE = $datos[$colSerie];
+                        $GravSIRE = $datos[$colGrav];
+                        $ExoSIRE = $datos[$colExo];
+                        $InaSIRE = $datos[$colIna];
+                        $IGVSIRE = $datos[$colIGV];
 
-                            // Acumular valores por serie
-                            $DataSerieGraSIRE[$serieSIRE] += $GravSIRE;
-                            $DataSerieExoSIRE[$serieSIRE] += $ExoSIRE;
-                            $DataSerieInaSIRE[$serieSIRE] += $InaSIRE;
-                            $DataSerieIGVSIRE[$serieSIRE] += $IGVSIRE;
-                            $conteoSeriesSIRE[$serieSIRE]++;
+                        // Inicializar valores si es la primera vez que se ve la serie
+                        if (!isset($DataSerieGraSIRE[$serieSIRE])) {
+                            $DataSerieGraSIRE[$serieSIRE] = 0;
+                            $DataSerieExoSIRE[$serieSIRE] = 0;
+                            $DataSerieInaSIRE[$serieSIRE] = 0;
+                            $DataSerieIGVSIRE[$serieSIRE] = 0;
+                            $conteoSeriesSIRE[$serieSIRE] = 0;
                         }
 
-                        // Ordenar las series
-                        ksort($DataSerieGraSIRE);
-                        
-                        // Generar el array de resultados
-                        foreach ($DataSerieGraSIRE as $serie => $totalBI) {
-                            $TExoSIRE = $DataSerieExoSIRE[$serie];
-                            $TInaSIRE = $DataSerieInaSIRE[$serie];
-                            $TIGVSIRE = $DataSerieIGVSIRE[$serie];
-                            $TTotalSIRE = $totalBI + $TExoSIRE + $TInaSIRE + $TIGVSIRE;
-
-                            $this->guardarCuadre($serie,$conteoSeriesSIRE[$serie],$totalBI,$TExoSIRE,$TInaSIRE,$TIGVSIRE,$TTotalSIRE,$reporte);
-                                
-                            $ResultsSIRE[] = [
-                                'serie' => $serie,
-                                'conteo' => $conteoSeriesSIRE[$serie],
-                                'bi' => $totalBI,
-                                'exonerado' => $TExoSIRE,
-                                'inafecto' => $TInaSIRE,
-                                'igv' => $TIGVSIRE,
-                                'total' => $TTotalSIRE
-                            ];
-                        }
-                    } else {
-                        $ErrorSIRE = "No se encontraron las columnas necesarias en el archivo";
+                        // Acumular valores por serie
+                        $DataSerieGraSIRE[$serieSIRE] += floatval($GravSIRE);
+                        $DataSerieExoSIRE[$serieSIRE] += floatval($ExoSIRE);
+                        $DataSerieInaSIRE[$serieSIRE] += floatval($InaSIRE);
+                        $DataSerieIGVSIRE[$serieSIRE] += floatval($IGVSIRE);
+                        $conteoSeriesSIRE[$serieSIRE]++;
                     }
-                    fclose($handle);
+
+                    // Ordenar las series
+                    ksort($DataSerieGraSIRE);
+                    
+                    // Generar el array de resultados
+                    foreach ($DataSerieGraSIRE as $serie => $totalBI) {
+                        $TExoSIRE = $DataSerieExoSIRE[$serie];
+                        $TInaSIRE = $DataSerieInaSIRE[$serie];
+                        $TIGVSIRE = $DataSerieIGVSIRE[$serie];
+                        $TTotalSIRE = $totalBI + $TExoSIRE + $TInaSIRE + $TIGVSIRE;
+
+                        $this->guardarCuadre($serie,$conteoSeriesSIRE[$serie],$totalBI,$TExoSIRE,$TInaSIRE,$TIGVSIRE,$TTotalSIRE,$reporte);
+                            
+                        $ResultsSIRE[] = [
+                            'serie' => $serie,
+                            'conteo' => $conteoSeriesSIRE[$serie],
+                            'bi' => $totalBI,
+                            'exonerado' => $TExoSIRE,
+                            'inafecto' => $TInaSIRE,
+                            'igv' => $TIGVSIRE,
+                            'total' => $TTotalSIRE
+                        ];
+                    }
                 } else {
-                    $ErrorSIRE = "Error al abrir el archivo.";
+                    $ErrorSIRE = "No se encontraron las columnas necesarias en el archivo";
                 }
-            } catch (Exception $e) {
-                $ErrorSIRE = "Error al procesar el archivo: " . $e->getMessage();
+                fclose($handle);
+            } else {
+                $ErrorSIRE = "Error al abrir el archivo.";
             }
-        } else {
-            $ErrorSIRE = "Error al cargar el archivo";
+        } catch (Exception $e) {
+            $ErrorSIRE = "Error al procesar el archivo: " . $e->getMessage();
         }
 
         // Pasar los resultados a la vista
@@ -174,59 +183,72 @@ class CuadresController {
         $ResultsNUBOX = [];
         $reporte = 1;
         
-        // Verificar si se subió el archivo XLSX de Nubox
-        if (isset($_FILES['exe_nubox']) && $_FILES['exe_nubox']['error'] == 0) {
-            try {
-                // Inicializar variables para almacenar datos
-                $nombTemp = $_FILES['exe_nubox']['tmp_name'];
-                
-                // Cargar el archivo XLSX
-                $spreadsheet = IOFactory::load($nombTemp);
-                $hoja = $spreadsheet->getActiveSheet();
+        try {
+            $nombTemp = $_FILES['exe_nubox']['tmp_name'];
+            $DataSerieGraNubox = [];
+            $DataSerieExoNubox = [];
+            $DataSerieInaNubox = [];
+            $DataSerieIGVNubox = [];
+            $conteoSeriesNubox = [];
 
-                // Obtener el encabezado (primera fila)
-                $headerRow = 8;
-                $header = [];
-                $col = 1;
-                while ($hoja->getCellByColumnAndRow($col, $headerRow)->getValue() !== null) {
-                    $header[] = $hoja->getCellByColumnAndRow($col, $headerRow)->getValue();
-                    $col++;
+            // Crear el lector
+            $reader = ReaderEntityFactory::createXLSXReader();
+            $reader->open($nombTemp);
+
+            // Leer el encabezado (fila 8)
+            $header = null;
+            $filaActual = 1;
+            foreach ($reader->getSheetIterator() as $sheet) {
+                foreach ($sheet->getRowIterator() as $row) {
+                    if ($filaActual == 4) { // Solo cuando llegamos a la fila 8
+                        $cells = $row->toArray();
+                        $header = $cells;
+                        break;
+                    }
+                    $filaActual++;
                 }
+                if ($header !== null) break;
+            }
 
-                // Buscar las columnas necesarias
-                $colSerie = array_search('Número', $header);
-                $colGravado = array_search('Total Gravado', $header);
-                $colExonerado = array_search('Total Exonerado', $header);
-                $colInafecto = array_search('Total Inafecto', $header);
-                $colIGV = array_search('Total IGV', $header);
+            // Verificar si todas las columnas existen
+            $colSerie = array_search('Número', $header);
+            $colGravado = array_search('Total Gravado', $header);
+            $colExonerado = array_search('Total Exonerado', $header);
+            $colInafecto = array_search('Total Inafecto', $header);
+            $colIGV = array_search('Total IGV', $header);
 
-
-                // Inicializar variables para almacenar datos por serie
-                $DataSerieGraNubox = [];
-                $DataSerieExoNubox = [];
-                $DataSerieInaNubox = [];
-                $DataSerieIGVNubox = [];
-                $conteoSeriesNubox = [];
+            if ($colSerie !== false && $colGravado !== false && $colExonerado !== false && 
+                $colInafecto !== false && $colIGV !== false) {
                 
-                // Empezar desde la fila 2 (después del encabezado)
-                $FIni = 9;
-                if ($colSerie != false && $colGravado != false && $colExonerado != false && 
-                    $colInafecto != false && $colIGV != false) {
-                                   
-                    while (true) {
-                        $valorSerie = $hoja->getCellByColumnAndRow($colSerie + 1, $FIni)->getValue();
-                        // Si ya no hay número, se asume fin de datos
-                        if (empty($valorSerie)) {
-                            break;
+                // Procesar cada fila (empezando desde la fila 9)
+                foreach ($reader->getSheetIterator() as $sheet) {
+                    $filaActual = 1;
+                    foreach ($sheet->getRowIterator() as $row) {
+                        if ($filaActual < 5) { // Saltar las filas 1-8
+                            $filaActual++;
+                            continue;
                         }
+                        
+                        $cells = $row->toArray();
 
+                        if (
+                            !isset($cells[$colSerie]) || trim($cells[$colSerie]) === '' ||
+                            !isset($cells[$colGravado]) || trim($cells[$colGravado]) === '' ||
+                            !isset($cells[$colExonerado]) || trim($cells[$colExonerado]) === '' ||
+                            !isset($cells[$colInafecto]) || trim($cells[$colInafecto]) === '' ||
+                            !isset($cells[$colIGV]) || trim($cells[$colIGV]) === ''
+                        ) {
+                            $filaActual++;
+                            continue; // Saltar esta fila si hay campos faltantes o en blanco real
+                        }
+                        
                         // Extraer solo la parte antes del guion
-                        $serie = explode('-', $valorSerie)[0];
-
-                        $TGraNubox = $hoja->getCellByColumnAndRow($colGravado + 1, $FIni)->getValue();
-                        $TExoNubox = $hoja->getCellByColumnAndRow($colExonerado + 1, $FIni)->getValue();
-                        $TInaNubox = $hoja->getCellByColumnAndRow($colInafecto + 1, $FIni)->getValue();
-                        $TIGVNubox = $hoja->getCellByColumnAndRow($colIGV + 1, $FIni)->getValue();
+                        $serie = explode('-', $cells[$colSerie])[0];
+                        
+                        $TGraNubox = floatval($cells[$colGravado]);
+                        $TExoNubox = floatval($cells[$colExonerado]);
+                        $TInaNubox = floatval($cells[$colInafecto]);
+                        $TIGVNubox = floatval($cells[$colIGV]);
 
                         // Inicializar valores si es la primera vez que se ve la serie
                         if (!isset($DataSerieGraNubox[$serie])) {
@@ -243,13 +265,9 @@ class CuadresController {
                         $DataSerieInaNubox[$serie] += $TInaNubox;
                         $DataSerieIGVNubox[$serie] += $TIGVNubox;
                         $conteoSeriesNubox[$serie]++;
-
-                        $FIni++;
                     }
+                }
 
-                } else {
-                    $ErrorNUBOX = "No se encontraron las columnas necesarias en el archivo";
-                }    
                 // Ordenar las series
                 ksort($DataSerieGraNubox);
                 
@@ -260,7 +278,8 @@ class CuadresController {
                     $totalIGVNubox = $DataSerieIGVNubox[$serie];
                     $totalTotal = $totalGraNubox + $totalExoNubox + $totalInaNubox + $totalIGVNubox;
 
-                    $this->guardarCuadre($serie,$conteoSeriesNubox[$serie],$totalGraNubox,$totalExoNubox,$totalInaNubox,$totalIGVNubox,$totalTotal,$reporte);
+                    $this->guardarCuadre($serie, $conteoSeriesNubox[$serie], $totalGraNubox, 
+                        $totalExoNubox, $totalInaNubox, $totalIGVNubox, $totalTotal, $reporte);
                         
                     $ResultsNUBOX[] = [
                         'serie' => $serie,
@@ -272,11 +291,15 @@ class CuadresController {
                         'total' => $totalTotal
                     ];
                 }
-            } catch (Exception $e) {
-                $ErrorNUBOX = "Error al procesar el archivo: " . $e->getMessage();
+            } else {
+                $ErrorNUBOX = "No se encontraron las columnas necesarias en el archivo";
             }
-        } else {
-            $ErrorNUBOX = "Error al cargar el archivo";
+            
+            // Cerrar el lector
+            $reader->close();
+            
+        } catch (Exception $e) {
+            $ErrorNUBOX = "Error al procesar el archivo: " . $e->getMessage();
         }
 
         // Pasar los resultados a la vista

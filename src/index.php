@@ -48,6 +48,8 @@ switch ($controller) {
         $controlador = new CuadresController();
         break;
     case 'home':
+        require_once 'controller/HomeController.php';
+        $controlador = new HomeController();
         break;
     default:
         header('Location: index.php?controller=auth&action=login&error=Controlador no encontrado');
