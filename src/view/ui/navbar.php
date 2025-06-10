@@ -45,19 +45,55 @@ $controller = isset($_GET['controller']) ? $_GET['controller'] : '';
                     </li>
                 </ul>
             </div>
-            <div class="relative group">
-                <button class="bg-[#0018F4] text-white text-[14px] font-medium hover:bg-[#212d9b] rounded-[15px] focus:outline-none flex items-center gap-2 w-[125px] h-[45px] px-4 py-2">
+            <div class="relative">
+                <button id="btnAdminMenu" type="button"
+                    class="bg-[#0018F4] text-white text-[14px] font-medium hover:bg-[#212d9b] rounded-[15px] focus:outline-none flex items-center gap-2 w-[125px] h-[45px] px-4 py-2">
                     <img src="images/ic_user.png" class="w-[20px] h-[20px] inline-block" />
                     Admin
-                    <img src="images/ic_arrow_down.png" class="w-[10px] h-[50px]inline-block ml-1 object-contain" />
+                    <img src="images/ic_arrow_down.png" class="w-[10px] h-[50px] inline-block ml-1 object-contain" />
                 </button>
-                <div class="absolute right-0 mt-2 w-48 bg-white border rounded-md shadow-lg opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-150 z-10">
+                <div id="adminDropdown"
+                    class="absolute right-0 mt-2 w-48 bg-white border rounded-md shadow-lg opacity-0 invisible transition-opacity duration-150 z-10">
                     <a href="index.php?controller=configuracion&action=index" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">Configuración</a>
                     <a href="index.php?controller=auth&action=logout" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">Cerrar sesión</a>
                 </div>
             </div>
         </nav>
     </header>
+
+    <script>
+        const btnAdminMenu = document.getElementById('btnAdminMenu');
+        const adminDropdown = document.getElementById('adminDropdown');
+
+        function toggleDropdown(e) {
+            e.stopPropagation();
+            const isVisible = adminDropdown.classList.contains('opacity-100');
+            if (isVisible) {
+                adminDropdown.classList.remove('opacity-100', 'visible');
+                adminDropdown.classList.add('opacity-0', 'invisible');
+            } else {
+                adminDropdown.classList.remove('opacity-0', 'invisible');
+                adminDropdown.classList.add('opacity-100', 'visible');
+            }
+        }
+
+        function closeDropdown() {
+            adminDropdown.classList.remove('opacity-100', 'visible');
+            adminDropdown.classList.add('opacity-0', 'invisible');
+        }
+
+        btnAdminMenu.addEventListener('click', toggleDropdown);
+
+        document.addEventListener('click', function(e) {
+            if (!btnAdminMenu.contains(e.target) && !adminDropdown.contains(e.target)) {
+                closeDropdown();
+            }
+        });
+
+        adminDropdown.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', closeDropdown);
+        });
+    </script>
 </body>
 
 </html>

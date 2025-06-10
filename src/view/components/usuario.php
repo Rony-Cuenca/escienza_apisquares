@@ -2,7 +2,7 @@
     <div class="w-full max-w-7xl">
         <div class="mb-4 flex justify-end">
             <button id="btnNuevoUsuario"
-                class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow"
+                class="bg-[#0018F4] hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow"
                 data-correo-cliente="<?= htmlspecialchars($correo_cliente) ?>">
                 Nuevo
             </button>
@@ -112,7 +112,7 @@
                 <div class="flex gap-2">
                     <?php for ($i = 1; $i <= ceil($total / $limit); $i++): ?>
                         <a href="index.php?controller=usuario&page=<?= $i ?>&limit=<?= $limit ?>"
-                            class="px-3 py-1 border rounded <?= $i == $page ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700' ?>">
+                            class="px-3 py-1 border rounded <?= $i == $page ? 'bg-[#0018F4] text-white' : 'bg-gray-100 text-gray-700' ?>">
                             <?= $i ?>
                         </a>
                     <?php endfor; ?>
@@ -179,6 +179,22 @@
                 </button>
             </div>
         </form>
+    </div>
+</div>
+
+<div id="modalConfirmacion" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6 text-center relative">
+        <h2 class="text-xl font-semibold mb-4">Confirmación</h2>
+        <div id="modalAnimacion" class="flex justify-center mb-4 hidden"></div>
+        <p id="modalMensaje" class="text-gray-700 mb-6">¿Estás seguro de cambiar el estado de este usuario?</p>
+        <div id="modalBotones" class="flex justify-end gap-4">
+            <button id="btnCancelarConfirmacion" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded-lg">
+                Cancelar
+            </button>
+            <button id="btnAceptarConfirmacion" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg">
+                Aceptar
+            </button>
+        </div>
     </div>
 </div>
 

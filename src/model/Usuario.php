@@ -6,48 +6,47 @@ class Usuario
     public static function autenticar($usuario, $contrasena)
     {
         $conn = Conexion::conectar();
-        $sql = "SELECT * FROM usuario WHERE usuario = ? AND contraseña = ?";
+        $sql = "SELECT * FROM usuario WHERE usuario = ?";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("ss", $usuario, $contrasena);
+        $stmt->bind_param("s", $usuario);
         $stmt->execute();
         $result = $stmt->get_result();
         $user = $result->fetch_assoc();
-
-        if ($user) {
+        if ($user && password_verify($contrasena, $user['contraseña']) && $user['estado'] == 1) {
             return $user;
         }
         return false;
     }
 
-    public static function insertar($usuario, $rol, $id_sucursal, $estado, $id_cliente, $hashed_password)
+    public static function insertar($usuario, $rol, $id_sucursal, $estado, $id_cliente, $hashed_password, $user_create)
     {
         $conn = Conexion::conectar();
-        $user_create = 'admin';
-        $user_update = 'admin';
-        $sql = "INSERT INTO usuario (usuario, contraseña, rol, user_create, user_update, id_cliente, id_sucursal, estado)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        $date_create = date('Y-m-d H:i:s');
+        $sql = "INSERT INTO usuario (usuario, contraseña, rol, user_create, user_update, id_cliente, id_sucursal, estado, date_create, date_update)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("sssssiis", $usuario, $hashed_password, $rol, $user_create, $user_update, $id_cliente, $id_sucursal, $estado);
+        $stmt->bind_param("sssssiisss", $usuario, $hashed_password, $rol, $user_create, $user_create, $id_cliente, $id_sucursal, $estado, $date_create, $date_create);
         return $stmt->execute();
     }
 
-    public static function actualizar($id, $usuario, $rol, $id_sucursal, $estado, $id_cliente, $hashed_password = null)
+    public static function actualizar($id, $usuario, $rol, $id_sucursal, $estado, $id_cliente, $hashed_password = null, $user_update)
     {
         $conn = Conexion::conectar();
-        $user_update = 'admin';
+        $date_update = date('Y-m-d H:i:s');
 
         if ($hashed_password) {
-            $sql = "UPDATE usuario SET usuario=?, contraseña=?, rol=?, id_sucursal=?, estado=?, id_cliente=?, user_update=? WHERE id=?";
+            $sql = "UPDATE usuario SET usuario=?, contraseña=?, rol=?, id_sucursal=?, estado=?, id_cliente=?, user_update=?, date_update=? WHERE id=?";
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param("sssiiisi", $usuario, $hashed_password, $rol, $id_sucursal, $estado, $id_cliente, $user_update, $id);
+            $stmt->bind_param("sssiiissi", $usuario, $hashed_password, $rol, $id_sucursal, $estado, $id_cliente, $user_update, $date_update, $id);
         } else {
-            $sql = "UPDATE usuario SET usuario=?, rol=?, id_sucursal=?, estado=?, id_cliente=?, user_update=? WHERE id=?";
+            $sql = "UPDATE usuario SET usuario=?, rol=?, id_sucursal=?, estado=?, id_cliente=?, user_update=?, date_update=? WHERE id=?";
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param("ssiiisi", $usuario, $rol, $id_sucursal, $estado, $id_cliente, $user_update, $id);
+            $stmt->bind_param("ssiiissi", $usuario, $rol, $id_sucursal, $estado, $id_cliente, $user_update, $date_update, $id);
         }
 
         return $stmt->execute();
     }
+
     public static function obtenerId($id)
     {
         $conn = Conexion::conectar();
@@ -62,9 +61,13 @@ class Usuario
     public static function cambiarEstado($id, $estado)
     {
         $conn = Conexion::conectar();
-        $sql = "UPDATE usuario SET estado = ? WHERE id = ?";
+        $sql = "UPDATE usuario SET estado = ?, user_update = ?, date_update = ? WHERE id = ?";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("ii", $estado, $id);
+
+        $user_update = $_SESSION['usuario'] ?? 'desconocido';
+        $date_update = date('Y-m-d H:i:s');
+
+        $stmt->bind_param("issi", $estado, $user_update, $date_update, $id);
         return $stmt->execute();
     }
 

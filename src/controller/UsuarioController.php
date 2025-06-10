@@ -5,6 +5,11 @@ class UsuarioController
 {
     public function index()
     {
+        if (!isset($_SESSION['id_cliente'])) {
+            header('Location: index.php?controller=auth&action=login');
+            exit;
+        }
+
         $id_cliente = $_SESSION['id_cliente'];
         $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
         $limit = isset($_GET['limit']) ? max(1, intval($_GET['limit'])) : 10;
@@ -29,6 +34,7 @@ class UsuarioController
             $id_cliente = $_SESSION['id_cliente'];
             $contraseña = $_POST['contraseña'];
             $confirmar_contraseña = $_POST['confirmar_contraseña'];
+            $user_create = $_SESSION['usuario'];
 
             if ($contraseña !== $confirmar_contraseña) {
                 header('Location: index.php?controller=usuario&error=Las contraseñas no coinciden');
@@ -36,12 +42,10 @@ class UsuarioController
             }
 
             $hashed_password = password_hash($contraseña, PASSWORD_BCRYPT);
-            Usuario::insertar($usuario, $rol, $id_sucursal, $estado, $id_cliente, $hashed_password);
-            header('Location: index.php?controller=usuario');
+            Usuario::insertar($usuario, $rol, $id_sucursal, $estado, $id_cliente, $hashed_password, $user_create);
+            header('Location: index.php?controller=usuario&success=Usuario creado correctamente');
             exit;
         }
-        header('Location: index.php?controller=usuario');
-        exit;
     }
 
     public function editar()
@@ -55,6 +59,8 @@ class UsuarioController
             $id_cliente = $_SESSION['id_cliente'];
             $contraseña = $_POST['contraseña'];
             $confirmar_contraseña = $_POST['confirmar_contraseña'];
+            $user_update = $_SESSION['usuario'];
+
             if ($id_usuario <= 0 || empty($usuario) || empty($rol) || $id_sucursal <= 0 || !in_array($estado, [1, 2, 3])) {
                 header('Location: index.php?controller=usuario&error=Datos inválidos');
                 exit;
@@ -70,29 +76,28 @@ class UsuarioController
                 $hashed_password = null;
             }
 
-            $resultado = Usuario::actualizar($id_usuario, $usuario, $rol, $id_sucursal, $estado, $id_cliente, $hashed_password);
-
-            if ($resultado) {
-                header('Location: index.php?controller=usuario');
-            } else {
-                header('Location: index.php?controller=usuario&error=No se pudo actualizar el usuario');
-            }
+            Usuario::actualizar($id_usuario, $usuario, $rol, $id_sucursal, $estado, $id_cliente, $hashed_password, $user_update);
+            header('Location: index.php?controller=usuario&success=Usuario actualizado correctamente');
             exit;
         }
-        header('Location: index.php?controller=usuario');
-        exit;
     }
 
-    public function cambiarEstado($id)
+    public function cambiarEstado($id, $estado)
     {
         $id = intval($id);
-        $estado = isset($_GET['estado']) ? intval($_GET['estado']) : null;
+        $estado = intval($estado);
+
         if ($id <= 0 || !in_array($estado, [1, 2, 3])) {
-            header('Location: index.php?controller=usuario&error=Datos inválidos');
-            exit;
+            echo json_encode(['success' => false, 'error' => 'Datos inválidos']);
+            return;
         }
-        Usuario::cambiarEstado($id, $estado);
-        header('Location: index.php?controller=usuario');
-        exit;
+
+        $resultado = Usuario::cambiarEstado($id, $estado);
+
+        if ($resultado) {
+            echo json_encode(['success' => true]);
+        } else {
+            echo json_encode(['success' => false, 'error' => 'No se pudo cambiar el estado']);
+        }
     }
 }
