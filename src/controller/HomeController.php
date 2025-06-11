@@ -11,7 +11,7 @@ class HomeController
         session_start();
     }
     $id_cliente = $_SESSION['id_cliente'] ?? 1;
-    echo "ID CLIENTE: $id_cliente";
+   // echo "ID CLIENTE: $id_cliente";
 
     // Obtener sucursales usando el modelo Usuario
     $sucursales = Usuario::obtenerSucursalesPorCliente($id_cliente);

@@ -198,4 +198,4 @@
     </div>
 </div>
 
-<script src="/assets/js/usuario.js"></script>
+<script src="../assets/js/usuario.js"></script>
