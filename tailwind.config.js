@@ -7,12 +7,12 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        primary: '#1E3A8A', // azul personalizado
-        secondary: '#F59E0B', // amarillo
+        primary: '#0018F4', // azul
+        secondary: '#00E7BB', // celeste
         dark: '#1F2937',
       },
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
+        sans: ['Verdana', 'Geneva', 'sans-serif'],
         heading: ['"Poppins"', 'sans-serif'],
       },
     },
