@@ -54,8 +54,8 @@ $error = $error ?? ($_GET['error'] ?? '');
                         </button>
                     </div>
                 </div>
-                <button type="submit" class="w-full bg-[#0018F4] hover:bg-blue-700 text-white font-semibold py-2 rounded-lg shadow transition-colors duration-200">
-                    Iniciar Sesión
+                <button type="submit" id="btnLogin" class="w-full bg-[#0018F4] hover:bg-blue-700 text-white font-semibold py-2 rounded-lg shadow transition-colors duration-200 flex items-center justify-center gap-2">
+                    <span>Iniciar Sesión</span>
                 </button>
             </form>
         </div>
@@ -109,7 +109,7 @@ $error = $error ?? ($_GET['error'] ?? '');
         const form = document.querySelector('form[action*="login"]');
         const usuario = form.querySelector('input[name="usuario"]');
         const contrasena = form.querySelector('input[name="contrasena"]');
-        const btn = form.querySelector('button[type="submit"]');
+        const btn = document.getElementById('btnLogin');
 
         form.addEventListener('submit', function(e) {
             let errorMsg = '';
@@ -124,7 +124,6 @@ $error = $error ?? ($_GET['error'] ?? '');
                 return false;
             }
             btn.disabled = true;
-            btn.textContent = 'Procesando...';
         });
     });
 </script>

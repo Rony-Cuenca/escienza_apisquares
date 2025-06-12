@@ -1,15 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
     const modal = document.getElementById('modalUsuario');
-    const modalConfirmacion = document.getElementById('modalConfirmacion');
-    const modalAnimacion = document.getElementById('modalAnimacion');
-    const modalBotones = document.getElementById('modalBotones');
     const modalTitulo = document.getElementById('modalTitulo');
-    const modalMensaje = document.getElementById('modalMensaje');
     const btnNuevoUsuario = document.getElementById('btnNuevoUsuario');
     const btnCerrarModal = document.getElementById('btnCerrarModal');
     const btnCancelarModal = document.getElementById('btnCancelarModal');
-    const btnAceptarConfirmacion = document.getElementById('btnAceptarConfirmacion');
-    const btnCancelarConfirmacion = document.getElementById('btnCancelarConfirmacion');
     const formUsuario = document.getElementById('formUsuario');
     const correoCliente = btnNuevoUsuario.dataset.correoCliente;
 
@@ -27,46 +21,120 @@ document.addEventListener('DOMContentLoaded', () => {
     let idUsuario = null;
     let estadoUsuario = null;
 
-    function abrirModalUsuario({titulo, action, values = {}}) {
-        cerrarMenus();
-        modalTitulo.textContent = titulo;
-        formUsuario.action = action;
-        modalInputs.id.value = values.id || '';
-        modalInputs.nombre.value = values.nombre || '';
-        modalInputs.correo.value = values.correo || correoCliente || 'Correo no disponible';
-        modalInputs.correo.readOnly = true;
-        modalInputs.rol.value = values.rol || '';
-        modalInputs.sucursal.value = values.sucursal || '';
-        modalInputs.estado.value = values.estado || '1';
-        modalInputs.contraseña.value = '';
-        modalInputs.confirmarContraseña.value = '';
-        modal.classList.remove('hidden');
+    const errorContrasena = document.getElementById('errorContrasena');
+    let errorUsuario = document.getElementById('errorUsuario');
+    if (!errorUsuario) {
+        errorUsuario = document.createElement('div');
+        errorUsuario.id = 'errorUsuario';
+        errorUsuario.className = 'text-red-600 text-sm mb-1 hidden';
+        modalInputs.nombre.parentNode.appendChild(errorUsuario);
     }
 
-    function cerrarModalUsuario() {
-        modal.classList.add('hidden');
+    function mostrarError(element, mensaje) {
+        element.textContent = mensaje;
+        element.classList.remove('hidden');
+    }
+    function ocultarError(element) {
+        element.textContent = '';
+        element.classList.add('hidden');
     }
 
-    function resetModalConfirmacion() {
-        modalAnimacion.classList.add('hidden');
-        modalAnimacion.innerHTML = '';
-        modalBotones.classList.remove('hidden');
-        modalMensaje.textContent = '¿Estás seguro de cambiar el estado de este usuario?';
-        idUsuario = null;
-        estadoUsuario = null;
+    function contieneTildes(texto) {
+        return /[áéíóúÁÉÍÓÚ]/.test(texto);
     }
 
-    function cerrarMenus() {
-        document.querySelectorAll('[data-action="toggleMenu"]').forEach((btn) => {
-            const menu = btn.nextElementSibling;
-            if (menu && !menu.classList.contains('hidden')) {
-                menu.classList.add('hidden');
+    function validarFormularioUsuario() {
+        ocultarError(errorContrasena);
+        ocultarError(errorUsuario);
+
+        const usuario = modalInputs.nombre.value.trim();
+        const pass = modalInputs.contraseña.value;
+        const confirm = modalInputs.confirmarContraseña.value;
+
+        if (contieneTildes(usuario)) {
+            mostrarError(errorUsuario, 'El nombre de usuario no debe contener tildes');
+            modalInputs.nombre.focus();
+            return false;
+        }
+
+        if (pass || confirm) {
+            if (pass !== confirm) {
+                mostrarError(errorContrasena, 'Las contraseñas no coinciden');
+                modalInputs.confirmarContraseña.focus();
+                return false;
             }
-        });
+            if (pass.length < 8) {
+                mostrarError(errorContrasena, 'La contraseña debe tener al menos 8 caracteres');
+                modalInputs.contraseña.focus();
+                return false;
+            }
+            if (!/\d/.test(pass)) {
+                mostrarError(errorContrasena, 'La contraseña debe contener al menos un número');
+                modalInputs.contraseña.focus();
+                return false;
+            }
+            if (!/[A-Z]/.test(pass)) {
+                mostrarError(errorContrasena, 'La contraseña debe contener al menos una mayúscula');
+                modalInputs.contraseña.focus();
+                return false;
+            }
+            if (!/[\W_]/.test(pass)) {
+                mostrarError(errorContrasena, 'La contraseña debe contener al menos un símbolo');
+                modalInputs.contraseña.focus();
+                return false;
+            }
+            if (contieneTildes(pass)) {
+                mostrarError(errorContrasena, 'La contraseña no debe contener tildes');
+                modalInputs.contraseña.focus();
+                return false;
+            }
+        }
+
+        return true;
     }
+
+    function validarContrasenas() {
+        ocultarError(errorContrasena);
+        const pass = modalInputs.contraseña.value;
+        const confirm = modalInputs.confirmarContraseña.value;
+        if (confirm && pass !== confirm) {
+            mostrarError(errorContrasena, 'Las contraseñas no coinciden');
+            return false;
+        }
+        return true;
+    }
+
+    modalInputs.confirmarContraseña.addEventListener('input', validarContrasenas);
+    modalInputs.contraseña.addEventListener('input', validarContrasenas);
+
+    formUsuario.addEventListener('submit', function (e) {
+        e.preventDefault();
+        ocultarError(errorContrasena);
+        ocultarError(errorUsuario);
+
+        if (!validarFormularioUsuario()) return;
+
+        const usuario = modalInputs.nombre.value.trim();
+        const id_usuario = modalInputs.id.value || 0;
+
+        fetch(`index.php?controller=usuario&action=verificarUsuario&usuario=${encodeURIComponent(usuario)}&id_usuario=${id_usuario}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.existe) {
+                    mostrarError(errorUsuario, 'El nombre de usuario ya existe');
+                    modalInputs.nombre.focus();
+                    return false;
+                } else {
+                    formUsuario.submit();
+                }
+            })
+            .catch(() => {
+                mostrarError(errorUsuario, 'No se pudo verificar el usuario');
+            });
+    });
 
     btnNuevoUsuario.addEventListener('click', () => {
-        abrirModalUsuario({titulo: 'Nuevo Usuario', action: 'index.php?controller=usuario&action=crear'});
+        abrirModalUsuario({ titulo: 'Nuevo Usuario', action: 'index.php?controller=usuario&action=crear' });
     });
 
     document.querySelectorAll('[data-action="editar"]').forEach((btn) => {
@@ -86,8 +154,40 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    function abrirModalUsuario({ titulo, action, values = {} }) {
+        cerrarMenus();
+        modalTitulo.textContent = titulo;
+        formUsuario.action = action;
+        modalInputs.id.value = values.id || '';
+        modalInputs.nombre.value = values.nombre || '';
+        modalInputs.correo.value = values.correo || correoCliente || 'Correo no disponible';
+        modalInputs.correo.readOnly = true;
+        modalInputs.rol.value = values.rol || '';
+        modalInputs.sucursal.value = values.sucursal || '';
+        modalInputs.estado.value = values.estado || '1';
+        modalInputs.contraseña.value = '';
+        modalInputs.confirmarContraseña.value = '';
+        ocultarError(errorContrasena);
+        ocultarError(errorUsuario);
+        modal.classList.remove('hidden');
+        setTimeout(() => modalInputs.nombre.focus(), 100);
+    }
+
+    function cerrarModalUsuario() {
+        modal.classList.add('hidden');
+    }
+
     btnCerrarModal.addEventListener('click', cerrarModalUsuario);
     btnCancelarModal.addEventListener('click', cerrarModalUsuario);
+
+    function cerrarMenus() {
+        document.querySelectorAll('[data-action="toggleMenu"]').forEach((btn) => {
+            const menu = btn.nextElementSibling;
+            if (menu && !menu.classList.contains('hidden')) {
+                menu.classList.add('hidden');
+            }
+        });
+    }
 
     document.querySelectorAll('[data-action="toggleMenu"]').forEach((btn) => {
         btn.addEventListener('click', (e) => {
@@ -104,71 +204,35 @@ document.addEventListener('DOMContentLoaded', () => {
             idUsuario = btn.dataset.id;
             estadoUsuario = btn.dataset.estado;
             if (!idUsuario || !estadoUsuario) {
-                alert('Datos inválidos para cambiar el estado.');
+                Swal.fire('Error', 'Datos inválidos para cambiar el estado.', 'error');
                 return;
             }
-            modalMensaje.textContent = '¿Estás seguro de cambiar el estado de este usuario?';
-            modalConfirmacion.classList.remove('hidden');
-        });
-    });
-
-    btnCancelarConfirmacion.addEventListener('click', () => {
-        modalConfirmacion.classList.add('hidden');
-        resetModalConfirmacion();
-    });
-
-    btnAceptarConfirmacion.addEventListener('click', () => {
-        modalBotones.classList.add('hidden');
-        modalMensaje.textContent = 'Procesando...';
-        modalAnimacion.innerHTML = `
-            <svg class="animate-spin h-8 w-8 text-blue-600 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
-            </svg>
-        `;
-        modalAnimacion.classList.remove('hidden');
-
-        fetch(`index.php?controller=usuario&action=cambiarEstado&id=${idUsuario}&estado=${estadoUsuario}`, {
-            method: 'GET',
-        })
-        .then((response) => response.json())
-        .then((data) => {
-            if (data.success) {
-                modalAnimacion.innerHTML = `
-                    <svg class="h-16 w-16 text-green-500 mx-auto animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
-                    </svg>
-                `;
-                modalMensaje.textContent = '¡Estado cambiado correctamente!';
-                setTimeout(() => location.reload(), 1200);
-            } else {
-                modalAnimacion.innerHTML = `
-                    <svg class="h-16 w-16 text-red-500 mx-auto animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                `;
-                modalMensaje.textContent = 'Error: ' + data.error;
-                setTimeout(() => {
-                    modalConfirmacion.classList.add('hidden');
-                    resetModalConfirmacion();
-                }, 1800);
-            }
-        })
-        .catch(() => {
-            modalAnimacion.innerHTML = `
-                <svg class="h-16 w-16 text-red-500 mx-auto animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            `;
-            modalMensaje.textContent = 'Ocurrió un error al cambiar el estado.';
-            setTimeout(() => {
-                modalConfirmacion.classList.add('hidden');
-                resetModalConfirmacion();
-            }, 1800);
-        })
-        .finally(() => {
-            idUsuario = null;
-            estadoUsuario = null;
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: '¿Deseas cambiar el estado de este usuario?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#0018F4',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Sí, cambiar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(`index.php?controller=usuario&action=cambiarEstado&id=${idUsuario}&estado=${estadoUsuario}`)
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire('¡Listo!', 'El estado se cambió correctamente.', 'success')
+                                    .then(() => location.reload());
+                            } else {
+                                Swal.fire('Error', data.error || 'No se pudo cambiar el estado.', 'error');
+                            }
+                        })
+                        .catch(() => {
+                            Swal.fire('Error', 'Ocurrió un error al cambiar el estado.', 'error');
+                        });
+                }
+            });
         });
     });
 });

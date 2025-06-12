@@ -3,6 +3,7 @@ require_once 'config/conexion.php';
 
 class Usuario
 {
+
     public static function autenticar($usuario, $contrasena)
     {
         $conn = Conexion::conectar();
@@ -26,7 +27,15 @@ class Usuario
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("sssssiisss", $usuario, $hashed_password, $rol, $user_create, $user_create, $id_cliente, $id_sucursal, $estado, $date_create, $date_create);
-        return $stmt->execute();
+        try {
+            return $stmt->execute();
+        } catch (mysqli_sql_exception $e) {
+            // Si hay error por duplicidad de usuario (índice único)
+            if ($e->getCode() == 1062) {
+                return false;
+            }
+            throw $e;
+        }
     }
 
     public static function actualizar($id, $usuario, $rol, $id_sucursal, $estado, $id_cliente, $hashed_password = null, $user_update)
@@ -43,7 +52,6 @@ class Usuario
             $stmt = $conn->prepare($sql);
             $stmt->bind_param("ssiiissi", $usuario, $rol, $id_sucursal, $estado, $id_cliente, $user_update, $date_update, $id);
         }
-
         return $stmt->execute();
     }
 
@@ -108,7 +116,7 @@ class Usuario
         WHERE u.id_cliente = ?
         ORDER BY $sort $dir
         LIMIT ? OFFSET ?
-    ";
+        ";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("iii", $id_cliente, $limit, $offset);
         $stmt->execute();
@@ -126,5 +134,22 @@ class Usuario
         $res = $stmt->get_result();
         $row = $res->fetch_assoc();
         return $row['total'];
+    }
+
+    public static function existeUsuario($usuario, $id_usuario = 0)
+    {
+        $conn = Conexion::conectar();
+        if ($id_usuario > 0) {
+            $sql = "SELECT id FROM usuario WHERE usuario = ? AND id != ? LIMIT 1";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("si", $usuario, $id_usuario);
+        } else {
+            $sql = "SELECT id FROM usuario WHERE usuario = ? LIMIT 1";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("s", $usuario);
+        }
+        $stmt->execute();
+        $res = $stmt->get_result();
+        return $res->fetch_assoc() ? true : false;
     }
 }
