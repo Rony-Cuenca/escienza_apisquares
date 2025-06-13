@@ -1,17 +1,11 @@
 {
   "devDependencies": {
     "tailwindcss": "^3.4.17"
-<<<<<<< HEAD
   },
   "dependencies": {
     "flowbite": "^3.1.2"
-  }
-=======
-    
   },
   "scripts": {
-  "dev": "tailwindcss -i ./assets/css/input.css -o ./assets/css/output.css --watch"
-}
-  
->>>>>>> 3fdc209 (DETAILS IN THE DESIGN OF THE NAVBAR AND FOOT)
+    "dev": "tailwindcss -i ./assets/css/input.css -o ./assets/css/output.css --watch"
+  }
 }
