@@ -6,17 +6,16 @@ class UsuarioController
     public function index()
     {
         $this->verificarSesion();
-
-        $id_cliente = $_SESSION['id_cliente'];
+        $id_sucursal = $_SESSION['id_sucursal'];
         $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
         $limit = isset($_GET['limit']) ? max(1, intval($_GET['limit'])) : 10;
         $offset = ($page - 1) * $limit;
         $sort = $_GET['sort'] ?? 'sucursal';
         $dir = ($_GET['dir'] ?? 'ASC') === 'DESC' ? 'DESC' : 'ASC';
-        $usuarios = Usuario::obtenerPaginado($id_cliente, $limit, $offset, $sort, $dir);
-        $total = Usuario::contarPorCliente($id_cliente);
-        $sucursales = Usuario::obtenerSucursalesPorCliente($id_cliente);
-        $correo_cliente = Usuario::obtenerCorreoCliente($id_cliente);
+        $usuarios = Usuario::obtenerPaginadoPorSucursal($id_sucursal, $limit, $offset, $sort, $dir);
+        $total = Usuario::contarPorSucursal($id_sucursal);
+        $sucursales = Usuario::obtenerSucursalesPorCliente($_SESSION['id_cliente']);
+        $correo_cliente = Usuario::obtenerCorreoCliente($_SESSION['id_cliente']);
         $contenido = 'view/components/usuario.php';
         require 'view/layout.php';
     }
@@ -107,11 +106,12 @@ class UsuarioController
                 $hashed_password,
                 $_SESSION['usuario']
             );
-            
+
             if ($id_usuario == $_SESSION['id_usuario']) {
                 $_SESSION['usuario'] = $datos['usuario'];
                 $_SESSION['correo'] = $datos['correo'];
                 $_SESSION['rol'] = $datos['rol'];
+                $_SESSION['id_sucursal'] = $datos['id_sucursal'];
             }
 
             header('Location: index.php?controller=usuario');
@@ -123,6 +123,11 @@ class UsuarioController
     {
         $id = intval($id);
         $estado = intval($estado);
+
+        if ($id == $_SESSION['id_usuario']) {
+            echo json_encode(['success' => false, 'error' => 'No puedes cambiar el estado de tu propio usuario.']);
+            return;
+        }
 
         if ($id <= 0 || !in_array($estado, [1, 2, 3])) {
             echo json_encode(['success' => false, 'error' => 'Datos inválidos']);

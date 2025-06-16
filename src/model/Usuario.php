@@ -101,34 +101,34 @@ class Usuario
         return $res->fetch_all(MYSQLI_ASSOC);
     }
 
-    public static function obtenerPaginado($id_cliente, $limit, $offset, $sort, $dir)
+    public static function obtenerPaginadoPorSucursal($id_sucursal, $limit, $offset, $sort, $dir)
     {
         $conn = Conexion::conectar();
         $allowed = ['usuario', 'correo', 'estado', 'rol', 'sucursal', 'id'];
         $sort = in_array($sort, $allowed) ? $sort : 'sucursal';
         $dir = $dir === 'DESC' ? 'DESC' : 'ASC';
-
         $sql = "
         SELECT u.id, u.usuario, u.correo, u.estado, u.rol, s.razon_social AS sucursal, u.id_sucursal
         FROM usuario u
         INNER JOIN sucursal s ON u.id_sucursal = s.id
-        WHERE u.id_cliente = ?
+        WHERE u.id_sucursal = ?
         ORDER BY $sort $dir
         LIMIT ? OFFSET ?
         ";
+
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("iii", $id_cliente, $limit, $offset);
+        $stmt->bind_param("iii", $id_sucursal, $limit, $offset);
         $stmt->execute();
         $res = $stmt->get_result();
         return $res->fetch_all(MYSQLI_ASSOC);
     }
 
-    public static function contarPorCliente($id_cliente)
+    public static function contarPorSucursal($id_sucursal)
     {
         $conn = Conexion::conectar();
-        $sql = "SELECT COUNT(*) as total FROM usuario WHERE id_cliente = ?";
+        $sql = "SELECT COUNT(*) as total FROM usuario WHERE id_sucursal = ?";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("i", $id_cliente);
+        $stmt->bind_param("i", $id_sucursal);
         $stmt->execute();
         $res = $stmt->get_result();
         $row = $res->fetch_assoc();

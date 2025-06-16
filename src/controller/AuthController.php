@@ -29,6 +29,7 @@ class AuthController
                 $_SESSION['id_usuario'] = $user['id'];
                 $_SESSION['correo'] = $user['correo'];
                 $_SESSION['rol'] = $user['rol'];
+                $_SESSION['id_sucursal'] = $user['id_sucursal'];
                 $_SESSION['ultima_actividad'] = time();
                 header('Location: index.php?controller=home');
                 exit;

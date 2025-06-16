@@ -1,7 +1,8 @@
 <div class="w-full px-2 md:px-10 py-10 bg-gray-200 flex-1 flex flex-col">
-    <div class="w-full bg-white rounded-lg shadow-2xl shadow-blue-300 p-2 md:p-8">
-        <!-- Botón Nuevo -->
-        <div class="mb-4 flex justify-end">
+    <div class="flex items-center justify-between w-full pt-6 pb-10 px-8 rounded-t-lg"
+        style="background: linear-gradient(to bottom, #86bdfa 80%, #fff 100%);">
+        <span class="text-2xl font-bold text-black">LISTA DE USUARIOS</span>
+        <?php if ($_SESSION['rol'] === 'Administrador'): ?>
             <button id="btnNuevoUsuario"
                 class="flex items-center gap-2 bg-[#0018F4] hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow"
                 data-correo-cliente="<?= htmlspecialchars($correo_cliente) ?>">
@@ -10,7 +11,9 @@
                 </svg>
                 Nuevo
             </button>
-        </div>
+        <?php endif; ?>
+    </div>
+    <div class="w-full bg-white rounded-b-lg shadow-2xl shadow-blue-300 p-2 md:p-8">
         <!-- Tabla de Usuarios -->
         <div class="mb-8 overflow-x-auto rounded-xl border border-[#0018F4]">
             <table class="w-full min-w-max bg-white text-sm">
@@ -42,68 +45,88 @@
                             <tr class="border-b border-[#0018F4] hover:bg-blue-50 transition">
                                 <td class="py-2 px-1 text-center"><?= $i++ ?></td>
                                 <td class="py-2 px-1"><?= htmlspecialchars($row['usuario']) ?></td>
-                                <td class="py-2 px-1"><?= htmlspecialchars($row['correo']) ?></td>
+                                <td class="py-2 px-1"><?= !empty($row['correo']) ? htmlspecialchars($row['correo']) : 'Sin establecer' ?></td>
                                 <td class="py-2 px-1"><?= htmlspecialchars($row['rol']) ?></td>
                                 <td class="py-2 px-1"><?= htmlspecialchars($row['sucursal']) ?></td>
                                 <td class="py-2 px-1">
-                                    <?php if ($row['estado'] == 1): ?>
-                                        <span
-                                            class="inline-flex items-center justify-center w-28 px-3 py-1 rounded-full bg-green-200 text-green-800 text-sm font-medium cursor-pointer transition hover:bg-green-300"
-                                            data-action="cambiarEstado"
-                                            data-id="<?= $row['id'] ?>"
-                                            data-estado="2"
-                                            title="Cambiar a inactivo"
-                                            tabindex="0"
-                                            role="button"
-                                            aria-pressed="true">
-                                            <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>Activo
-                                        </span>
-                                    <?php elseif ($row['estado'] == 2): ?>
-                                        <span
-                                            class="inline-flex items-center justify-center w-28 px-3 py-1 rounded-full bg-red-200 text-yellow-800 text-sm font-medium cursor-pointer transition hover:bg-red-300"
-                                            data-action="cambiarEstado"
-                                            data-id="<?= $row['id'] ?>"
-                                            data-estado="1"
-                                            title="Cambiar a activo"
-                                            tabindex="0"
-                                            role="button"
-                                            aria-pressed="true">
-                                            <span class="w-2 h-2 bg-red-500 rounded-full mr-2"></span>Inactivo
-                                        </span>
+                                    <?php if ($_SESSION['rol'] === 'Administrador'): ?>
+                                        <?php if ($row['estado'] == 1): ?>
+                                            <span
+                                                class="inline-flex items-center justify-center w-28 px-3 py-1 rounded-full bg-green-200 text-green-800 text-sm font-medium cursor-pointer transition hover:bg-green-300"
+                                                data-action="cambiarEstado"
+                                                data-id="<?= $row['id'] ?>"
+                                                data-estado="2"
+                                                title="Cambiar a inactivo"
+                                                tabindex="0"
+                                                role="button"
+                                                aria-pressed="true">
+                                                <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>Activo
+                                            </span>
+                                        <?php elseif ($row['estado'] == 2): ?>
+                                            <span
+                                                class="inline-flex items-center justify-center w-28 px-3 py-1 rounded-full bg-red-200 text-yellow-800 text-sm font-medium cursor-pointer transition hover:bg-red-300"
+                                                data-action="cambiarEstado"
+                                                data-id="<?= $row['id'] ?>"
+                                                data-estado="1"
+                                                title="Cambiar a activo"
+                                                tabindex="0"
+                                                role="button"
+                                                aria-pressed="true">
+                                                <span class="w-2 h-2 bg-red-500 rounded-full mr-2"></span>Inactivo
+                                            </span>
+                                        <?php else: ?>
+                                            <span class="inline-flex items-center justify-center w-28 px-3 py-1 rounded-full bg-gray-200 text-gray-700 text-sm font-medium cursor-not-allowed opacity-90">
+                                                Deshabilitado
+                                            </span>
+                                        <?php endif; ?>
                                     <?php else: ?>
-                                        <span class="inline-flex items-center justify-center w-28 px-3 py-1 rounded-full bg-gray-200 text-gray-700 text-sm font-medium cursor-not-allowed opacity-90">
-                                            Deshabilitado
-                                        </span>
+                                        <?php if ($row['estado'] == 1): ?>
+                                            <span class="inline-flex items-center justify-center w-28 px-3 py-1 rounded-full bg-green-200 text-green-800 text-sm font-medium">
+                                                <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>Activo
+                                            </span>
+                                        <?php elseif ($row['estado'] == 2): ?>
+                                            <span class="inline-flex items-center justify-center w-28 px-3 py-1 rounded-full bg-red-200 text-yellow-800 text-sm font-medium">
+                                                <span class="w-2 h-2 bg-red-500 rounded-full mr-2"></span>Inactivo
+                                            </span>
+                                        <?php else: ?>
+                                            <span class="inline-flex items-center justify-center w-28 px-3 py-1 rounded-full bg-gray-200 text-gray-700 text-sm font-medium opacity-90">
+                                                Deshabilitado
+                                            </span>
+                                        <?php endif; ?>
                                     <?php endif; ?>
                                 </td>
                                 <td class="py-2 px-1 text-center relative">
-                                    <button data-action="toggleMenu" type="button" class="focus:outline-none" aria-label="Abrir menú de usuario">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24">
-                                            <circle cx="12" cy="5" r="2" fill="#000" />
-                                            <circle cx="12" cy="12" r="2" fill="#000" />
-                                            <circle cx="12" cy="19" r="2" fill="#000" />
-                                        </svg>
-                                    </button>
-                                    <div id="menuUsuario" class="hidden fixed z-50 w-32 bg-white rounded-lg shadow-lg border min-w-[120px]">
-                                        <a href="javascript:void(0);"
-                                            data-action="editar"
-                                            data-id="<?= $row['id'] ?>"
-                                            data-usuario="<?= htmlspecialchars($row['usuario']) ?>"
-                                            data-correo="<?= htmlspecialchars($row['correo']) ?>"
-                                            data-rol="<?= htmlspecialchars($row['rol']) ?>"
-                                            data-sucursal="<?= $row['id_sucursal'] ?>"
-                                            data-estado="<?= $row['estado'] ?>"
-                                            class="block w-full text-left px-4 py-2 hover:bg-gray-100 text-black">
-                                            Editar
-                                        </a>
-                                        <?php if ($row['estado'] != 3): ?>
-                                            <a href="javascript:void(0);" data-action="cambiarEstado" data-id="<?= $row['id'] ?>" data-estado="3"
-                                                class="block w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100">Deshabilitar</a>
-                                        <?php else: ?>
-                                            <a href="javascript:void(0);" data-action="cambiarEstado" data-id="<?= $row['id'] ?>" data-estado="1"
-                                                class="block w-full text-left px-4 py-2 text-green-600 hover:bg-gray-100">Habilitar</a>
-                                        <?php endif; ?>
-                                    </div>
+                                    <?php if ($_SESSION['rol'] === 'Administrador'): ?>
+                                        <button data-action="toggleMenu" type="button" class="focus:outline-none" aria-label="Abrir menú de usuario">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24">
+                                                <circle cx="12" cy="5" r="2" fill="#000" />
+                                                <circle cx="12" cy="12" r="2" fill="#000" />
+                                                <circle cx="12" cy="19" r="2" fill="#000" />
+                                            </svg>
+                                        </button>
+                                        <div id="menuUsuario" class="hidden fixed z-50 w-32 bg-white rounded-lg shadow-lg border min-w-[120px]">
+                                            <a href="javascript:void(0);"
+                                                data-action="editar"
+                                                data-id="<?= $row['id'] ?>"
+                                                data-usuario="<?= htmlspecialchars($row['usuario']) ?>"
+                                                data-correo="<?= htmlspecialchars($row['correo']) ?>"
+                                                data-rol="<?= htmlspecialchars($row['rol']) ?>"
+                                                data-sucursal="<?= $row['id_sucursal'] ?>"
+                                                data-estado="<?= $row['estado'] ?>"
+                                                class="block w-full text-left px-4 py-2 hover:bg-gray-100 text-black">
+                                                Editar
+                                            </a>
+                                            <?php if ($row['id'] != $_SESSION['id_usuario']): ?>
+                                                <?php if ($row['estado'] != 3): ?>
+                                                    <a href="javascript:void(0);" data-action="cambiarEstado" data-id="<?= $row['id'] ?>" data-estado="3"
+                                                        class="block w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100">Deshabilitar</a>
+                                                <?php else: ?>
+                                                    <a href="javascript:void(0);" data-action="cambiarEstado" data-id="<?= $row['id'] ?>" data-estado="1"
+                                                        class="block w-full text-left px-4 py-2 text-green-600 hover:bg-gray-100">Habilitar</a>
+                                                <?php endif; ?>
+                                            <?php endif; ?>
+                                        </div>
+                                    <?php endif; ?>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -146,11 +169,19 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                 <div>
                     <label class="block mb-1 font-semibold text-sm text-gray-700">Nombre de usuario</label>
-                    <input type="text" name="usuario" id="modalUsuarioNombre" required class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+                    <input type="text" name="usuario" id="modalUsuarioNombre" required
+                        class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+                    <div id="errorUsuario" class="text-red-600 text-sm mb-1 hidden flex items-center gap-1 pt-1">
+                        <!-- El icono y mensaje se insertan por JS -->
+                    </div>
                 </div>
                 <div>
                     <label class="block mb-1 font-semibold text-sm text-gray-700">Correo electrónico</label>
-                    <input type="email" name="correo" id="modalUsuarioCorreo" required class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+                    <input type="email" name="correo" id="modalUsuarioCorreo" required
+                        class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors" />
+                    <div id="errorCorreo" class="text-red-600 text-sm mb-1 hidden flex items-center gap-1 pt-1">
+                        <!-- El icono y mensaje se insertan por JS -->
+                    </div>
                 </div>
                 <div>
                     <label class="block mb-1 font-semibold text-sm text-gray-700">Rol</label>
@@ -185,7 +216,9 @@
                 <div>
                     <label class="block mb-1 font-semibold text-sm text-gray-700">Confirmar Contraseña</label>
                     <input type="password" name="confirmar_contraseña" id="modalUsuarioConfirmarContraseña" required class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400" autocomplete="new-password" />
-                    <div id="errorContrasena" class="text-red-600 text-sm mb-1 hidden"></div>
+                    <div id="errorContrasena" class="text-red-600 text-sm mb-1 hidden flex items-center gap-1 pt-1">
+                        <!-- El icono y mensaje se insertan por JS -->
+                    </div>
                 </div>
             </div>
             <div class="flex justify-end mt-6 gap-2">
@@ -200,4 +233,8 @@
     </div>
 </div>
 
+<script>
+    window.ID_USUARIO_LOGUEADO = <?= json_encode($_SESSION['id_usuario']) ?>;
+    window.ROL_USUARIO_LOGUEADO = <?= json_encode($_SESSION['rol']) ?>;
+</script>
 <script src="../assets/js/usuario.js"></script>

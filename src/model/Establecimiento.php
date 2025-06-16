@@ -45,7 +45,7 @@ class Establecimiento
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param(
-            "sssisssss",
+            "sssiissss",
             $data['ruc'],
             $data['razon_social'],
             $data['direccion'],
@@ -66,7 +66,7 @@ class Establecimiento
         $sql = "UPDATE sucursal SET ruc = ?, razon_social = ?, direccion = ?, estado = ?, user_update = ?, date_update = ? WHERE id = ? AND id_cliente = ?";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param(
-            "ssisssii",
+            "sssissii",
             $data['ruc'],
             $data['razon_social'],
             $data['direccion'],

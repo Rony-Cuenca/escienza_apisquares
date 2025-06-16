@@ -31,7 +31,7 @@
                                 <td class="py-2 px-1 text-center"><?= $i++ ?></td>
                                 <td class="py-2 px-1"><?= htmlspecialchars($row['ruc']) ?></td>
                                 <td class="py-2 px-1"><?= htmlspecialchars($row['razon_social']) ?></td>
-                                <td class="py-2 px-1"><?= htmlspecialchars($row['direccion']) ?></td>
+                                <td class="py-2 px-1"><?= !empty($row['direccion']) ? htmlspecialchars($row['direccion']) : 'Sin establecer' ?></td>
                                 <td class="py-2 px-1">
                                     <?php if ($row['estado'] == 1): ?>
                                         <span
@@ -135,6 +135,9 @@
                     <label for="modalEstRuc" class="block text-sm font-medium mb-1">RUC</label>
                     <input type="text" name="ruc" id="modalEstRuc" maxlength="11" required
                         class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                    <div id="errorRuc" class="text-red-600 text-sm mb-1 hidden flex items-center gap-1 pt-1">
+                        <!-- El icono y mensaje se insertan por JS -->
+                    </div>
                 </div>
                 <div>
                     <label for="modalEstRazon" class="block text-sm font-medium mb-1">Razón Social</label>
