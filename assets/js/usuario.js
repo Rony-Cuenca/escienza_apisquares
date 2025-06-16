@@ -18,6 +18,10 @@ document.addEventListener('DOMContentLoaded', () => {
         estado: document.getElementById('modalUsuarioEstado')
     };
 
+    const cambiarContrasenaWrapper = document.getElementById('cambiarContrasenaWrapper');
+    const checkCambiarContrasena = document.getElementById('checkCambiarContrasena');
+    const camposContrasena = document.getElementById('camposContrasena');
+
     let idUsuario = null;
     let estadoUsuario = null;
 
@@ -28,6 +32,14 @@ document.addEventListener('DOMContentLoaded', () => {
         errorUsuario.id = 'errorUsuario';
         errorUsuario.className = 'text-red-600 text-sm mb-1 hidden';
         modalInputs.nombre.parentNode.appendChild(errorUsuario);
+    }
+
+    let errorCorreo = document.getElementById('errorCorreo');
+    if (!errorCorreo) {
+        errorCorreo = document.createElement('div');
+        errorCorreo.id = 'errorCorreo';
+        errorCorreo.className = 'text-red-600 text-sm mb-1 hidden';
+        modalInputs.correo.parentNode.appendChild(errorCorreo);
     }
 
     function mostrarError(element, mensaje) {
@@ -46,8 +58,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function validarFormularioUsuario() {
         ocultarError(errorContrasena);
         ocultarError(errorUsuario);
+        ocultarError(errorCorreo);
 
         const usuario = modalInputs.nombre.value.trim();
+        const correo = modalInputs.correo.value.trim();
         const pass = modalInputs.contraseña.value;
         const confirm = modalInputs.confirmarContraseña.value;
 
@@ -57,7 +71,18 @@ document.addEventListener('DOMContentLoaded', () => {
             return false;
         }
 
-        if (pass || confirm) {
+        if (!correo) {
+            mostrarError(errorCorreo, 'El correo es obligatorio');
+            modalInputs.correo.focus();
+            return false;
+        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) {
+            mostrarError(errorCorreo, 'El correo no es válido');
+            modalInputs.correo.focus();
+            return false;
+        }
+
+        if (!camposContrasena.classList.contains('hidden') && (pass || confirm)) {
             if (pass !== confirm) {
                 mostrarError(errorContrasena, 'Las contraseñas no coinciden');
                 modalInputs.confirmarContraseña.focus();
@@ -107,14 +132,34 @@ document.addEventListener('DOMContentLoaded', () => {
     modalInputs.confirmarContraseña.addEventListener('input', validarContrasenas);
     modalInputs.contraseña.addEventListener('input', validarContrasenas);
 
+    // Checkbox para habilitar cambio de contraseña
+    if (checkCambiarContrasena) {
+        checkCambiarContrasena.addEventListener('change', function () {
+            if (this.checked) {
+                camposContrasena.classList.remove('hidden');
+                modalInputs.contraseña.required = true;
+                modalInputs.confirmarContraseña.required = true;
+            } else {
+                camposContrasena.classList.add('hidden');
+                modalInputs.contraseña.required = false;
+                modalInputs.confirmarContraseña.required = false;
+                modalInputs.contraseña.value = '';
+                modalInputs.confirmarContraseña.value = '';
+                ocultarError(errorContrasena);
+            }
+        });
+    }
+
     formUsuario.addEventListener('submit', function (e) {
         e.preventDefault();
         ocultarError(errorContrasena);
         ocultarError(errorUsuario);
+        ocultarError(errorCorreo);
 
         if (!validarFormularioUsuario()) return;
 
         const usuario = modalInputs.nombre.value.trim();
+        const correo = modalInputs.correo.value.trim();
         const id_usuario = modalInputs.id.value || 0;
 
         fetch(`index.php?controller=usuario&action=verificarUsuario&usuario=${encodeURIComponent(usuario)}&id_usuario=${id_usuario}`)
@@ -125,7 +170,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     modalInputs.nombre.focus();
                     return false;
                 } else {
-                    formUsuario.submit();
+                    fetch(`index.php?controller=usuario&action=verificarCorreo&correo=${encodeURIComponent(correo)}&id_usuario=${id_usuario}`)
+                        .then(res => res.json())
+                        .then(dataCorreo => {
+                            if (dataCorreo.existe) {
+                                mostrarError(errorCorreo, 'El correo ya está registrado');
+                                modalInputs.correo.focus();
+                                return false;
+                            } else {
+                                formUsuario.submit();
+                            }
+                        })
+                        .catch(() => {
+                            mostrarError(errorCorreo, 'No se pudo verificar el correo');
+                        });
                 }
             })
             .catch(() => {
@@ -160,8 +218,8 @@ document.addEventListener('DOMContentLoaded', () => {
         formUsuario.action = action;
         modalInputs.id.value = values.id || '';
         modalInputs.nombre.value = values.nombre || '';
-        modalInputs.correo.value = values.correo || correoCliente || 'Correo no disponible';
-        modalInputs.correo.readOnly = true;
+        modalInputs.correo.value = values.correo || '';
+        modalInputs.correo.readOnly = false;
         modalInputs.rol.value = values.rol || '';
         modalInputs.sucursal.value = values.sucursal || '';
         modalInputs.estado.value = values.estado || '1';
@@ -169,6 +227,21 @@ document.addEventListener('DOMContentLoaded', () => {
         modalInputs.confirmarContraseña.value = '';
         ocultarError(errorContrasena);
         ocultarError(errorUsuario);
+        ocultarError(errorCorreo);
+
+        if (values.id) {
+            cambiarContrasenaWrapper.classList.remove('hidden');
+            checkCambiarContrasena.checked = false;
+            camposContrasena.classList.add('hidden');
+            modalInputs.contraseña.required = false;
+            modalInputs.confirmarContraseña.required = false;
+        } else {
+            cambiarContrasenaWrapper.classList.add('hidden');
+            camposContrasena.classList.remove('hidden');
+            modalInputs.contraseña.required = true;
+            modalInputs.confirmarContraseña.required = true;
+        }
+
         modal.classList.remove('hidden');
         setTimeout(() => modalInputs.nombre.focus(), 100);
     }
@@ -178,7 +251,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     btnCerrarModal.addEventListener('click', cerrarModalUsuario);
-    btnCancelarModal.addEventListener('click', cerrarModalUsuario);
+    btnCancelarModal && btnCancelarModal.addEventListener('click', cerrarModalUsuario);
 
     function cerrarMenus() {
         document.querySelectorAll('[data-action="toggleMenu"]').forEach((btn) => {

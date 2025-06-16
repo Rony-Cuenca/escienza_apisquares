@@ -39,9 +39,16 @@ class UsuarioController
                 exit;
             }
 
+            if (Usuario::existeCorreo($datos['correo'], $id_usuario)) {
+                $contenido = __DIR__ . '/../view/components/error.php';
+                require 'view/layout.php';
+                exit;
+            }
+
             $hashed_password = password_hash($datos['contraseña'], PASSWORD_BCRYPT);
             Usuario::insertar(
                 $datos['usuario'],
+                $datos['correo'],
                 $datos['rol'],
                 $datos['id_sucursal'],
                 1,
@@ -73,6 +80,12 @@ class UsuarioController
                 exit;
             }
 
+            if (Usuario::existeCorreo($datos['correo'], $id_usuario)) {
+                $contenido = __DIR__ . '/../view/components/error.php';
+                require 'view/layout.php';
+                exit;
+            }
+
             $hashed_password = null;
             if (!empty($datos['contraseña']) || !empty($datos['confirmar_contraseña'])) {
                 if ($datos['contraseña'] !== $datos['confirmar_contraseña']) {
@@ -86,6 +99,7 @@ class UsuarioController
             Usuario::actualizar(
                 $id_usuario,
                 $datos['usuario'],
+                $datos['correo'],
                 $datos['rol'],
                 $datos['id_sucursal'],
                 intval($datos['estado']),
@@ -93,6 +107,13 @@ class UsuarioController
                 $hashed_password,
                 $_SESSION['usuario']
             );
+            
+            if ($id_usuario == $_SESSION['id_usuario']) {
+                $_SESSION['usuario'] = $datos['usuario'];
+                $_SESSION['correo'] = $datos['correo'];
+                $_SESSION['rol'] = $datos['rol'];
+            }
+
             header('Location: index.php?controller=usuario');
             exit;
         }
@@ -126,11 +147,22 @@ class UsuarioController
         exit;
     }
 
+    public function verificarCorreo()
+    {
+        $correo = trim($_GET['correo'] ?? '');
+        $id_usuario = isset($_GET['id_usuario']) ? intval($_GET['id_usuario']) : 0;
+        $existe = Usuario::existeCorreo($correo, $id_usuario);
+        header('Content-Type: application/json');
+        echo json_encode(['existe' => $existe]);
+        exit;
+    }
+
     private function limpiarDatos($data)
     {
         return [
             'id_usuario' => isset($data['id_usuario']) ? intval($data['id_usuario']) : 0,
             'usuario' => trim(strip_tags($data['usuario'] ?? '')),
+            'correo' => trim(strip_tags($data['correo'] ?? '')),
             'rol' => trim(strip_tags($data['rol'] ?? '')),
             'id_sucursal' => intval($data['id_sucursal'] ?? 0),
             'estado' => isset($data['estado']) ? intval($data['estado']) : 1,
@@ -152,6 +184,13 @@ class UsuarioController
             return 'El nombre de usuario no debe contener tildes';
         }
 
+        if (empty($datos['correo'])) {
+            return 'El correo es obligatorio';
+        }
+
+        if (!filter_var($datos['correo'], FILTER_VALIDATE_EMAIL)) {
+            return 'El correo no es válido';
+        }
         if (!$esEdicion && (empty($datos['contraseña']) || empty($datos['confirmar_contraseña']))) {
             return 'La contraseña es obligatoria';
         }

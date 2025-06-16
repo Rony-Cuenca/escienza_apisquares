@@ -39,9 +39,9 @@ switch ($controller) {
         require_once 'controller/UsuarioController.php';
         $controlador = new UsuarioController();
         break;
-    case 'cliente':
-        require_once 'controller/ClienteController.php';
-        $controlador = new ClienteController();
+    case 'establecimiento':
+        require_once 'controller/EstablecimientoController.php';
+        $controlador = new EstablecimientoController();
         break;
     case 'cuadres':
         require_once 'controller/CuadresController.php';
