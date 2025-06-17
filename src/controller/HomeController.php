@@ -56,5 +56,36 @@ class HomeController
         echo json_encode($datos);
         exit;
     }
+
+    // Endpoint para AJAX - Series más vendidas por mes y sucursal
+    public function seriesMasVendidas()
+    {
+        $conn = Conexion::conectar();
+        $sucursal = $_GET['sucursal'] ?? '';
+        $anio = $_GET['anio'] ?? date('Y');
+        $mes = $_GET['mes'] ?? date('m');
+        $tipo = $_GET['tipo'] ?? 'NUBOX360';
+
+        $sql = "SELECT rc.serie, SUM(rc.monto_total) AS total
+                FROM resumen_comprobante rc
+                JOIN tipo_reportedoc tr ON rc.id_reporte = tr.id
+                WHERE rc.id_sucursal = ? AND YEAR(rc.date_create) = ? AND MONTH(rc.date_create) = ? AND tr.descripcion = ?
+                GROUP BY rc.serie
+                HAVING total > 0
+                ORDER BY total DESC";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("iiis", $sucursal, $anio, $mes, $tipo);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $datos = [];
+        while ($row = $result->fetch_assoc()) {
+            $datos[] = $row;
+        }
+
+        header('Content-Type: application/json');
+        echo json_encode($datos);
+        exit;
+    }
 }
 
