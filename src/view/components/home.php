@@ -1,71 +1,100 @@
+<div class="bg-white rounded-xl shadow p-6 mb-8">
+  <div class="flex flex-col items-center">
+    <span class="text-center text-base text-sky-600 font-semibold mb-2">Filtrar datos históricos</span>
+    <hr class="w-full mb-4">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-center gap-8 w-full">
+      <div class="flex flex-col">
+        <label class="block text-base font-semibold text-slate-700 mb-1" for="select-sucursal">Establecimiento</label>
+        <select id="select-sucursal" class="border border-gray-300 rounded-lg px-4 py-2 text-base w-64 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white">
+          <?php foreach ($sucursales as $s): ?>
+            <option value="<?= $s['id'] ?>"><?= htmlspecialchars($s['razon_social']) ?></option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+      <div class="flex flex-col">
+        <label class="block text-base font-semibold text-slate-700 mb-1" for="select-anio">Año</label>
+        <select id="select-anio" class="border border-gray-300 rounded-lg px-4 py-2 text-base w-40 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white">
+          <?php foreach ($anios as $anio): ?>
+            <option value="<?= $anio ?>"><?= $anio ?></option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+    </div>
+  </div>
+</div>
 
+<div class="flex flex-col md:flex-row gap-8 mt-8 justify-center">
+  <!-- Gráfico de Barras -->
+  <div class="bg-white rounded-xl shadow p-6 w-full md:w-[500px]">
+      <h1 class="text-xl font-bold text-gray-800">RESUMEN DE VENTAS</h1>
 
+    <div class="flex items-center justify-between mb-4">
+      <div class="flex items-center space-x-3">
+        <!-- <select id="select-anio" class="border rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
+          <?php foreach ($anios as $anio): ?>
+            <option value="<?= $anio ?>"><?= $anio ?></option>
+          <?php endforeach; ?>
+        </select> -->
+        <!-- <select id="select-sucursal" class="border rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
+          <?php foreach ($sucursales as $s): ?>
+            <option value="<?= $s['id'] ?>"><?= htmlspecialchars($s['razon_social']) ?></option>
+          <?php endforeach; ?>
+        </select> -->
+      </div>
+    </div>
+    <div class="flex items-center space-x-6 mb-2">
+      <div class="flex items-center space-x-2">
+        <span class="inline-block w-3 h-3 rounded-full bg-blue-600"></span>
+        <span class="text-xs text-gray-700">Nubox</span>
+      </div>
+      <div class="flex items-center space-x-2">
+        <span class="inline-block w-3 h-3 rounded-full bg-pink-500"></span>
+        <span class="text-xs text-gray-700">EDSuite</span>
+      </div>
+      <div class="flex items-center space-x-2">
+        <span class="inline-block w-3 h-3 rounded-full bg-green-500"></span>
+        <span class="text-xs text-gray-700">SIRE</span>
+      </div>
+    </div>
+    <!-- Contenedor con scroll horizontal -->
+    <div class="overflow-x-auto">
+      <div id="columnchart_material" class="min-w-[700px] h-[350px]"></div>
+    </div>
+  </div>
 
-<div class="max-w-3xl mx-auto mt-8 bg-white rounded-xl shadow p-6">
-  <div class="flex items-center justify-between mb-4">
-    <h1 class="text-xl font-bold text-gray-800">RESUMEN DE VENTAS</h1>
-    <div class="flex items-center space-x-3">
-      <select id="select-anio" class="border rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
-        <?php foreach ($anios as $anio): ?>
-          <option value="<?= $anio ?>"><?= $anio ?></option>
-        <?php endforeach; ?>
+  <!-- Gráfico de Pastel -->
+  <div class="bg-white rounded-xl shadow p-6 w-full md:w-[500px] flex flex-col items-center">
+    <h1 class="text-2xl font-bold text-center mb-4">SERIES CON MÁS VENTA</h1>
+    <div class="flex flex-col md:flex-row items-center justify-center mb-2 gap-2">
+      <select id="select-tipo" class="border rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
+        <option value="">Selecciona una opción</option>
+        <option value="NUBOX360">Nubox</option>
+        <option value="SIRE">SIRE</option>
+        <option value="EDSUITE">EDSuite</option>
       </select>
-      <select id="select-sucursal" class="border rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
+      <!--
+      <select id="select-sucursalpie" class="border rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
         <?php foreach ($sucursales as $s): ?>
           <option value="<?= $s['id'] ?>"><?= htmlspecialchars($s['razon_social']) ?></option>
         <?php endforeach; ?>
       </select>
+      -->
+      <select id="select-mes" class="border rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
+        <?php
+          $meses = [
+            '01' => 'Enero', '02' => 'Febrero', '03' => 'Marzo', '04' => 'Abril',
+            '05' => 'Mayo', '06' => 'Junio', '07' => 'Julio', '08' => 'Agosto',
+            '09' => 'Septiembre', '10' => 'Octubre', '11' => 'Noviembre', '12' => 'Diciembre'
+          ];
+          foreach ($meses as $num => $nombre) {
+            echo "<option value=\"$num\">$nombre</option>";
+          }
+        ?>
+      </select>
     </div>
+    <div id="piechart" style="width: 100%; max-width: 400px; height: 320px;"></div>
   </div>
-
-  <div class="flex items-center space-x-6 mb-2">
-    <div class="flex items-center space-x-2">
-      <span class="inline-block w-3 h-3 rounded-full bg-blue-600"></span>
-      <span class="text-xs text-gray-700">Nubox</span>
-    </div>
-    <div class="flex items-center space-x-2">
-      <span class="inline-block w-3 h-3 rounded-full bg-pink-500"></span>
-      <span class="text-xs text-gray-700">EDSuite</span>
-    </div>
-    <div class="flex items-center space-x-2">
-      <span class="inline-block w-3 h-3 rounded-full bg-green-500"></span>
-      <span class="text-xs text-gray-700">SIRE</span>
-    </div>
-  </div>
-
-  <div id="columnchart_material" class="w-full h-[350px]"></div>
 </div>
-
-<h1 class="text-2xl font-bold text-center mt-8 mb-4">Series con más venta</h1>
-<div class="flex items-center justify-center mb-4">
-  
-  <select id="select-tipo" class="border rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 ml-2">
-   <option value="">Selecciona una opción</option>
-  <option value="NUBOX360">Nubox</option>
-    <option value="SIRE">SIRE</option>
-    <option value="EDSUITE">EDSuite</option>
-  </select>
-</div>
-<div class="flex items-center justify-center mb-4">
-    <select id="select-sucursalpie" class="border rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
-        <?php foreach ($sucursales as $s): ?>
-          <option value="<?= $s['id'] ?>"><?= htmlspecialchars($s['razon_social']) ?></option>
-        <?php endforeach; ?>
-      </select> 
-  <select id="select-mes" class="border rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
-    <?php
-      $meses = [
-        '01' => 'Enero', '02' => 'Febrero', '03' => 'Marzo', '04' => 'Abril',
-        '05' => 'Mayo', '06' => 'Junio', '07' => 'Julio', '08' => 'Agosto',
-        '09' => 'Septiembre', '10' => 'Octubre', '11' => 'Noviembre', '12' => 'Diciembre'
-      ];
-      foreach ($meses as $num => $nombre) {
-        echo "<option value=\"$num\">$nombre</option>";
-      }
-    ?>
-  </select>
-</div>
-<div id="piechart" style="width: 100%; max-width: 600px; height: 400px; margin: 0 auto;"></div>
 
 <!-- Google Charts Scripts -->
 <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
@@ -112,7 +141,7 @@ google.charts.setOnLoadCallback(drawPieChart);
 
 function drawPieChart() {
   let anio = document.getElementById('select-anio').value;
-  let sucursal = document.getElementById('select-sucursalpie').value;
+  let sucursal = document.getElementById('select-sucursal').value;
   let mes = document.getElementById('select-mes').value;
   let tipo = document.getElementById('select-tipo').value;
   fetch(`index.php?controller=home&action=seriesMasVendidas&sucursal=${sucursal}&anio=${anio}&mes=${mes}&tipo=${tipo}`)
@@ -133,7 +162,7 @@ function drawPieChart() {
     });
 }
 
-document.getElementById('select-sucursalpie').addEventListener('change', function() {
+document.getElementById('select-sucursal').addEventListener('change', function() {
   document.getElementById('select-tipo').selectedIndex = 0;
   document.getElementById('select-mes').selectedIndex = 0;
   drawPieChart();
