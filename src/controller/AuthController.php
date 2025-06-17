@@ -5,7 +5,7 @@ class AuthController
 {
     public function __construct()
     {
-        if (!isset($_SESSION)) {
+        if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
     }
@@ -27,12 +27,14 @@ class AuthController
                 $_SESSION['id_cliente'] = $user['id_cliente'];
                 $_SESSION['usuario'] = $user['usuario'];
                 $_SESSION['id_usuario'] = $user['id'];
+                $_SESSION['correo'] = $user['correo'];
+                $_SESSION['rol'] = $user['rol'];
+                $_SESSION['id_sucursal'] = $user['id_sucursal'];
                 $_SESSION['ultima_actividad'] = time();
                 header('Location: index.php?controller=home');
                 exit;
             } else {
-                $error = "Usuario o contraseña incorrectos";
-                $this->renderLoginView($error);
+                $this->renderLoginView("Usuario o contraseña incorrectos");
             }
         } else {
             $this->renderLoginView();
@@ -60,7 +62,6 @@ class AuthController
             header('Location: index.php?controller=auth&action=login&error=Sesión expirada por inactividad');
             exit;
         }
-
         $_SESSION['ultima_actividad'] = time();
     }
 

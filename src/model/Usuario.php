@@ -3,6 +3,7 @@ require_once 'config/conexion.php';
 
 class Usuario
 {
+
     public static function autenticar($usuario, $contrasena)
     {
         $conn = Conexion::conectar();
@@ -18,32 +19,38 @@ class Usuario
         return false;
     }
 
-    public static function insertar($usuario, $rol, $id_sucursal, $estado, $id_cliente, $hashed_password, $user_create)
+    public static function insertar($usuario, $correo, $rol, $id_sucursal, $estado, $id_cliente, $hashed_password, $user_create)
     {
         $conn = Conexion::conectar();
         $date_create = date('Y-m-d H:i:s');
-        $sql = "INSERT INTO usuario (usuario, contraseña, rol, user_create, user_update, id_cliente, id_sucursal, estado, date_create, date_update)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        $sql = "INSERT INTO usuario (usuario, correo, contraseña, rol, user_create, user_update, id_cliente, id_sucursal, estado, date_create, date_update)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("sssssiisss", $usuario, $hashed_password, $rol, $user_create, $user_create, $id_cliente, $id_sucursal, $estado, $date_create, $date_create);
-        return $stmt->execute();
+        $stmt->bind_param("ssssssiisss", $usuario, $correo, $hashed_password, $rol, $user_create, $user_create, $id_cliente, $id_sucursal, $estado, $date_create, $date_create);
+        try {
+            return $stmt->execute();
+        } catch (mysqli_sql_exception $e) {
+            if ($e->getCode() == 1062) {
+                return false;
+            }
+            throw $e;
+        }
     }
 
-    public static function actualizar($id, $usuario, $rol, $id_sucursal, $estado, $id_cliente, $hashed_password = null, $user_update)
+    public static function actualizar($id, $usuario, $correo, $rol, $id_sucursal, $estado, $id_cliente, $hashed_password = null, $user_update)
     {
         $conn = Conexion::conectar();
         $date_update = date('Y-m-d H:i:s');
 
         if ($hashed_password) {
-            $sql = "UPDATE usuario SET usuario=?, contraseña=?, rol=?, id_sucursal=?, estado=?, id_cliente=?, user_update=?, date_update=? WHERE id=?";
+            $sql = "UPDATE usuario SET usuario=?, correo=?, contraseña=?, rol=?, id_sucursal=?, estado=?, id_cliente=?, user_update=?, date_update=? WHERE id=?";
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param("sssiiissi", $usuario, $hashed_password, $rol, $id_sucursal, $estado, $id_cliente, $user_update, $date_update, $id);
+            $stmt->bind_param("sssssiissi", $usuario, $correo, $hashed_password, $rol, $id_sucursal, $estado, $id_cliente, $user_update, $date_update, $id);
         } else {
-            $sql = "UPDATE usuario SET usuario=?, rol=?, id_sucursal=?, estado=?, id_cliente=?, user_update=?, date_update=? WHERE id=?";
+            $sql = "UPDATE usuario SET usuario=?, correo=?, rol=?, id_sucursal=?, estado=?, id_cliente=?, user_update=?, date_update=? WHERE id=?";
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param("ssiiissi", $usuario, $rol, $id_sucursal, $estado, $id_cliente, $user_update, $date_update, $id);
+            $stmt->bind_param("sssiiissi", $usuario, $correo, $rol, $id_sucursal, $estado, $id_cliente, $user_update, $date_update, $id);
         }
-
         return $stmt->execute();
     }
 
@@ -94,37 +101,71 @@ class Usuario
         return $res->fetch_all(MYSQLI_ASSOC);
     }
 
-    public static function obtenerPaginado($id_cliente, $limit, $offset, $sort, $dir)
+    public static function obtenerPaginadoPorSucursal($id_sucursal, $limit, $offset, $sort, $dir)
     {
         $conn = Conexion::conectar();
-        $allowed = ['usuario', 'estado', 'rol', 'sucursal', 'id'];
+        $allowed = ['usuario', 'correo', 'estado', 'rol', 'sucursal', 'id'];
         $sort = in_array($sort, $allowed) ? $sort : 'sucursal';
         $dir = $dir === 'DESC' ? 'DESC' : 'ASC';
-
         $sql = "
-        SELECT u.id, u.usuario, u.estado, u.rol, s.razon_social AS sucursal, u.id_sucursal
+        SELECT u.id, u.usuario, u.correo, u.estado, u.rol, s.razon_social AS sucursal, u.id_sucursal
         FROM usuario u
         INNER JOIN sucursal s ON u.id_sucursal = s.id
-        WHERE u.id_cliente = ?
+        WHERE u.id_sucursal = ?
         ORDER BY $sort $dir
         LIMIT ? OFFSET ?
-    ";
+        ";
+
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("iii", $id_cliente, $limit, $offset);
+        $stmt->bind_param("iii", $id_sucursal, $limit, $offset);
         $stmt->execute();
         $res = $stmt->get_result();
         return $res->fetch_all(MYSQLI_ASSOC);
     }
 
-    public static function contarPorCliente($id_cliente)
+    public static function contarPorSucursal($id_sucursal)
     {
         $conn = Conexion::conectar();
-        $sql = "SELECT COUNT(*) as total FROM usuario WHERE id_cliente = ?";
+        $sql = "SELECT COUNT(*) as total FROM usuario WHERE id_sucursal = ?";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("i", $id_cliente);
+        $stmt->bind_param("i", $id_sucursal);
         $stmt->execute();
         $res = $stmt->get_result();
         $row = $res->fetch_assoc();
         return $row['total'];
+    }
+
+    public static function existeUsuario($usuario, $id_usuario = 0)
+    {
+        $conn = Conexion::conectar();
+        if ($id_usuario > 0) {
+            $sql = "SELECT id FROM usuario WHERE usuario = ? AND id != ? LIMIT 1";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("si", $usuario, $id_usuario);
+        } else {
+            $sql = "SELECT id FROM usuario WHERE usuario = ? LIMIT 1";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("s", $usuario);
+        }
+        $stmt->execute();
+        $res = $stmt->get_result();
+        return $res->fetch_assoc() ? true : false;
+    }
+
+    public static function existeCorreo($correo, $id_usuario = 0)
+    {
+        $conn = Conexion::conectar();
+        if ($id_usuario > 0) {
+            $sql = "SELECT id FROM usuario WHERE correo = ? AND id != ? LIMIT 1";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("si", $correo, $id_usuario);
+        } else {
+            $sql = "SELECT id FROM usuario WHERE correo = ? LIMIT 1";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("s", $correo);
+        }
+        $stmt->execute();
+        $res = $stmt->get_result();
+        return $res->fetch_assoc() ? true : false;
     }
 }
