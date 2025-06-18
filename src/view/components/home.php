@@ -1,19 +1,19 @@
-<div class="bg-white rounded-xl shadow p-6 mb-8">
+<div class="bg-white rounded-xl shadow p-4 sm:p-6 mb-8">
   <div class="flex flex-col items-center">
-    <span class="text-center text-base text-sky-600 font-semibold mb-2">Filtrar datos históricos</span>
+    <span class="text-center text-base text-slate-700 font-semibold mb-2">Filtrar datos históricos</span>
     <hr class="w-full mb-4">
-    <div class="flex flex-col md:flex-row md:items-center md:justify-center gap-8 w-full">
-      <div class="flex flex-col">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-center gap-4 sm:gap-8 w-full">
+      <div class="flex flex-col w-full sm:w-auto">
         <label class="block text-base font-semibold text-slate-700 mb-1" for="select-sucursal">Establecimiento</label>
-        <select id="select-sucursal" class="border border-gray-300 rounded-lg px-4 py-2 text-base w-64 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white">
+        <select id="select-sucursal" class="border border-gray-300 rounded-lg px-4 py-2 text-base w-full sm:w-64 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white">
           <?php foreach ($sucursales as $s): ?>
             <option value="<?= $s['id'] ?>"><?= htmlspecialchars($s['razon_social']) ?></option>
           <?php endforeach; ?>
         </select>
       </div>
-      <div class="flex flex-col">
+      <div class="flex flex-col w-full sm:w-auto">
         <label class="block text-base font-semibold text-slate-700 mb-1" for="select-anio">Año</label>
-        <select id="select-anio" class="border border-gray-300 rounded-lg px-4 py-2 text-base w-40 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white">
+        <select id="select-anio" class="border border-gray-300 rounded-lg px-4 py-2 text-base w-full sm:w-40 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white">
           <?php foreach ($anios as $anio): ?>
             <option value="<?= $anio ?>"><?= $anio ?></option>
           <?php endforeach; ?>
@@ -23,23 +23,14 @@
   </div>
 </div>
 
-<div class="flex flex-col md:flex-row gap-8 mt-8 justify-center">
+<div class="flex flex-col gap-8 mt-8 md:flex-row md:justify-center">
   <!-- Gráfico de Barras -->
-  <div class="bg-white rounded-xl shadow p-6 w-full md:w-[500px]">
+  <div class="bg-white rounded-xl shadow p-4 sm:p-6 w-full md:w-[700px]">
       <h1 class="text-xl font-bold text-gray-800">RESUMEN DE VENTAS</h1>
 
     <div class="flex items-center justify-between mb-4">
       <div class="flex items-center space-x-3">
-        <!-- <select id="select-anio" class="border rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
-          <?php foreach ($anios as $anio): ?>
-            <option value="<?= $anio ?>"><?= $anio ?></option>
-          <?php endforeach; ?>
-        </select> -->
-        <!-- <select id="select-sucursal" class="border rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
-          <?php foreach ($sucursales as $s): ?>
-            <option value="<?= $s['id'] ?>"><?= htmlspecialchars($s['razon_social']) ?></option>
-          <?php endforeach; ?>
-        </select> -->
+        <!-- Selectores ocultos, ya están arriba -->
       </div>
     </div>
     <div class="flex items-center space-x-6 mb-2">
@@ -56,30 +47,23 @@
         <span class="text-xs text-gray-700">SIRE</span>
       </div>
     </div>
-    <!-- Contenedor con scroll horizontal -->
+    <!-- Contenedor con scroll horizontal en móvil -->
     <div class="overflow-x-auto">
       <div id="columnchart_material" class="min-w-[700px] h-[350px]"></div>
     </div>
   </div>
 
   <!-- Gráfico de Pastel -->
-  <div class="bg-white rounded-xl shadow p-6 w-full md:w-[500px] flex flex-col items-center">
+  <div class="bg-white rounded-xl shadow p-4 sm:p-6 w-full md:w-[500px] flex flex-col items-center">
     <h1 class="text-2xl font-bold text-center mb-4">SERIES CON MÁS VENTA</h1>
-    <div class="flex flex-col md:flex-row items-center justify-center mb-2 gap-2">
-      <select id="select-tipo" class="border rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
+    <div class="flex flex-col sm:flex-row items-center justify-center mb-2 gap-2 w-full">
+      <select id="select-tipo" class="border rounded px-2 py-1 text-sm w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-blue-400">
         <option value="">Selecciona una opción</option>
         <option value="NUBOX360">Nubox</option>
         <option value="SIRE">SIRE</option>
         <option value="EDSUITE">EDSuite</option>
       </select>
-      <!--
-      <select id="select-sucursalpie" class="border rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
-        <?php foreach ($sucursales as $s): ?>
-          <option value="<?= $s['id'] ?>"><?= htmlspecialchars($s['razon_social']) ?></option>
-        <?php endforeach; ?>
-      </select>
-      -->
-      <select id="select-mes" class="border rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
+      <select id="select-mes" class="border rounded px-2 py-1 text-sm w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-blue-400">
         <?php
           $meses = [
             '01' => 'Enero', '02' => 'Febrero', '03' => 'Marzo', '04' => 'Abril',
