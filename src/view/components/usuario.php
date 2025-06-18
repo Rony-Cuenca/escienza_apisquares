@@ -1,48 +1,58 @@
 <div class="w-full px-2 md:px-10 py-10 bg-gray-200 flex-1 flex flex-col">
     <div class="flex items-center justify-between w-full pt-6 pb-10 px-8 rounded-t-lg"
-        style="background: linear-gradient(to bottom, #86bdfa 80%, #fff 100%);">
-        <span class="text-2xl font-bold text-black">LISTA DE USUARIOS</span>
+        style="background: linear-gradient(to bottom, #60A5FA 80%, #fff 100%);">
+        <span class="text-xl text-white" style="font-family: 'Montserrat', sans-serif;">LISTA DE USUARIOS</span>
         <?php if ($_SESSION['rol'] === 'Administrador'): ?>
-            <button id="btnNuevoUsuario"
-                class="flex items-center gap-2 bg-[#0018F4] hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow"
-                data-correo-cliente="<?= htmlspecialchars($correo_cliente) ?>">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                </svg>
-                Nuevo
-            </button>
+            <div class="flex gap-2">
+                <button id="btnNuevoUsuario"
+                    class="flex items-center gap-2 bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-normal py-2 px-4 rounded-lg shadow"
+                    data-correo-cliente="<?= htmlspecialchars($correo_cliente) ?>">
+                    <span class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-white">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="rgba(0,0,0,0.3)" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m6-6H6" />
+                        </svg>
+                    </span>
+                    Nuevo
+                </button>
+                <button id="btnGenerarCodigo" class="bg-green-600 hover:bg-green-700 text-white font-normal py-2 px-4 rounded-lg shadow flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 010 5.656l-3.535 3.535a4 4 0 01-5.657-5.657l2.121-2.121m6.364-6.364a4 4 0 015.657 5.657l-2.121 2.121" />
+                    </svg>
+                    Generar Código de Acceso
+                </button>
+            </div>
         <?php endif; ?>
     </div>
     <div class="w-full bg-white rounded-b-lg shadow-2xl shadow-blue-300 p-2 md:p-8">
         <!-- Tabla de Usuarios -->
-        <div class="mb-8 overflow-x-auto rounded-xl border border-[#0018F4]">
+        <div class="mb-8 overflow-x-auto rounded-xl border border-[#2563EB]" style="font-family: 'Poppins', sans-serif; font-weight: 300;">
             <table class="w-full min-w-max bg-white text-sm">
                 <thead>
                     <tr class="bg-[#A9C3E8]">
-                        <th class="py-2 px-1 text-center font-semibold border-b border-[#0018F4] w-[40px]"><strong>#</strong></th>
-                        <th class="py-2 px-1 text-left font-semibold border-b border-[#0018F4] w-[120px]">
+                        <th class="py-2 px-1 text-center font-semibold border-b border-[#2563EB] w-[40px]"><strong>#</strong></th>
+                        <th class="py-2 px-1 text-left font-semibold border-b border-[#2563EB] w-[120px]">
                             <a href="index.php?controller=usuario&sort=usuario&dir=<?= $sort === 'usuario' && $dir === 'ASC' ? 'DESC' : 'ASC' ?>" class="hover:underline"><strong>USUARIO</strong></a>
                         </th>
-                        <th class="py-2 px-1 text-left font-semibold border-b border-[#0018F4] w-[180px]">
+                        <th class="py-2 px-1 text-left font-semibold border-b border-[#2563EB] w-[180px]">
                             <a href="index.php?controller=usuario&sort=correo&dir=<?= $sort === 'correo' && $dir === 'ASC' ? 'DESC' : 'ASC' ?>" class="hover:underline"><strong>CORREO</strong></a>
                         </th>
-                        <th class="py-2 px-1 text-left font-semibold border-b border-[#0018F4] w-[120px]">
+                        <th class="py-2 px-1 text-left font-semibold border-b border-[#2563EB] w-[120px]">
                             <a href="index.php?controller=usuario&sort=rol&dir=<?= $sort === 'rol' && $dir === 'ASC' ? 'DESC' : 'ASC' ?>" class="hover:underline"><strong>ROL</strong></a>
                         </th>
-                        <th class="py-2 px-1 text-left font-semibold border-b border-[#0018F4] w-[220px]">
+                        <th class="py-2 px-1 text-left font-semibold border-b border-[#2563EB] w-[220px]">
                             <a href="index.php?controller=usuario&sort=sucursal&dir=<?= $sort === 'sucursal' && $dir === 'ASC' ? 'DESC' : 'ASC' ?>" class="hover:underline"><strong>SUCURSAL</strong></a>
                         </th>
-                        <th class="py-2 px-1 text-left font-semibold border-b border-[#0018F4] w-[120px]">
+                        <th class="py-2 px-1 text-left font-semibold border-b border-[#2563EB] w-[120px]">
                             <a href="index.php?controller=usuario&sort=estado&dir=<?= $sort === 'estado' && $dir === 'ASC' ? 'DESC' : 'ASC' ?>" class="hover:underline"><strong>ESTADO</strong></a>
                         </th>
-                        <th class="py-2 px-1 border-b border-[#0018F4] w-[40px]"><strong></strong></th>
+                        <th class="py-2 px-1 border-b border-[#2563EB] w-[40px]"><strong></strong></th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php if ($usuarios): ?>
                         <?php $i = 1;
                         foreach ($usuarios as $row): ?>
-                            <tr class="border-b border-[#0018F4] hover:bg-blue-50 transition">
+                            <tr class="border-b border-[#2563EB] hover:bg-blue-50 transition" style="font-size: small;">
                                 <td class="py-2 px-1 text-center"><?= $i++ ?></td>
                                 <td class="py-2 px-1"><?= htmlspecialchars($row['usuario']) ?></td>
                                 <td class="py-2 px-1"><?= !empty($row['correo']) ? htmlspecialchars($row['correo']) : 'Sin establecer' ?></td>
@@ -139,14 +149,14 @@
             </table>
         </div>
         <!-- Paginación -->
-        <div class="flex items-center justify-between bg-white">
+        <div class="flex items-center justify-between bg-white" style="font-family: 'Montserrat', sans-serif; font-weight: lighter;">
             <div class="text-sm text-black">
                 Mostrando <?= $offset + 1 ?> a <?= min($offset + $limit, $total) ?> de <?= $total ?> usuarios
             </div>
             <div class="flex gap-2">
                 <?php for ($i = 1; $i <= ceil($total / $limit); $i++): ?>
                     <a href="index.php?controller=usuario&page=<?= $i ?>&limit=<?= $limit ?>"
-                        class="px-3 py-1 border rounded <?= $i == $page ? 'bg-[#0018F4] text-white hover:bg-blue-800' : 'bg-gray-100 text-gray-700 hover:bg-gray-300' ?>">
+                        class="px-3 py-1 border rounded <?= $i == $page ? 'bg-[#2563EB] text-white hover:bg-blue-800' : 'bg-gray-100 text-gray-700 hover:bg-gray-300' ?>">
                         <?= $i ?>
                     </a>
                 <?php endfor; ?>
@@ -155,6 +165,7 @@
     </div>
 </div>
 
+<!-- Modal Usuario Nuevo / Editar -->
 <div id="modalUsuario" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
     <div class="bg-white rounded-lg shadow-lg w-full max-w-2xl p-6">
         <div class="flex justify-between items-center border-b pb-3">
@@ -233,8 +244,51 @@
     </div>
 </div>
 
+<!-- Modal Generar Código de Acceso -->
+<div id="modalAccessToken" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
+        <div class="flex justify-between items-center border-b pb-3">
+            <h2 class="text-xl font-semibold">Generar Código de Acceso</h2>
+            <button id="btnCerrarModalAccessToken" class="text-gray-500 hover:text-gray-700">&times;</button>
+        </div>
+        <form id="formAccessToken" autocomplete="off">
+            <div class="mt-4">
+                <label class="block mb-1 font-semibold text-sm text-gray-700">Rol</label>
+                <select name="rol" id="accessTokenRol" required class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                    <option value="">Selecciona un rol</option>
+                    <option value="Administrador">Administrador</option>
+                    <option value="Contador">Contador</option>
+                    <option value="Vendedor">Vendedor</option>
+                </select>
+            </div>
+            <div class="mt-4">
+                <label class="block mb-1 font-semibold text-sm text-gray-700">Código generado</label>
+                <div class="flex items-center gap-2">
+                    <input type="text" readonly id="accessTokenCodigo" class="w-full border rounded px-3 py-2 bg-gray-100 text-lg font-mono" value="">
+                    <button type="button" id="btnCopiarCodigo" class="text-gray-600 hover:text-blue-700" title="Copiar">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="2" fill="none" />
+                            <rect x="3" y="3" width="13" height="13" rx="2" stroke="currentColor" stroke-width="2" fill="none" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div class="flex justify-end mt-6 gap-2">
+                <button type="button" id="btnCancelarModalAccessToken" class="hover:bg-red-400 bg-red-600 text-white font-semibold py-2 px-6 rounded-lg shadow transition-colors duration-200">
+                    Cancelar
+                </button>
+                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-lg shadow transition-colors duration-200">
+                    Generar Código
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
     window.ID_USUARIO_LOGUEADO = <?= json_encode($_SESSION['id_usuario']) ?>;
     window.ROL_USUARIO_LOGUEADO = <?= json_encode($_SESSION['rol']) ?>;
+    window.ID_SUCURSAL_LOGUEADO = <?= json_encode($_SESSION['id_sucursal']) ?>;
 </script>
 <script src="../assets/js/usuario.js"></script>
+<script src="../assets/js/access_token.js"></script>

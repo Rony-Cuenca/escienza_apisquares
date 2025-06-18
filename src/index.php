@@ -8,7 +8,7 @@ $action = $_GET['action'] ?? null;
 $controlador = null;
 
 if (!isset($_SESSION['id_cliente'])) {
-    if ($controller !== 'auth' || $action !== 'login') {
+    if ($controller !== 'auth' || !in_array($action, ['login', 'register'])) {
         header('Location: index.php?controller=auth&action=login');
         exit;
     }
@@ -50,6 +50,14 @@ switch ($controller) {
     case 'home':
         require_once 'controller/HomeController.php';
         $controlador = new HomeController();
+        break;
+    case 'reporte':
+        require_once 'controller/ReporteController.php';
+        $controlador = new ReporteController();
+        break;
+    case 'accessToken':
+        require_once 'controller/AccessTokenController.php';
+        $controlador = new AccessTokenController();
         break;
     default:
         header('Location: index.php?controller=auth&action=login&error=Controlador no encontrado');

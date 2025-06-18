@@ -41,6 +41,18 @@ class AuthController
         }
     }
 
+    public function register()
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Procesar registro (validar, insertar usuario, etc)
+            // Redirigir o mostrar errores
+        } else {
+            // Mostrar formulario de registro
+            $contenido = 'view/components/register.php';
+            require 'view/layout.php';
+        }
+    }
+
     public function logout()
     {
         session_unset();

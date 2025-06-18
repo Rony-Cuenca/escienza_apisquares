@@ -16,6 +16,7 @@ class ModalCrudController {
         this.cambiarContrasenaWrapper = document.getElementById(config.cambiarContrasenaWrapperId);
         this.checkCambiarContrasena = document.getElementById(config.checkCambiarContrasenaId);
         this.camposContrasena = document.getElementById(config.camposContrasenaId);
+        this.sucursalOriginal = null;
         this._bindEvents(config);
         this.verificarAdmin();
     }
@@ -66,12 +67,31 @@ class ModalCrudController {
         this.ocultarError(this.errorCorreo, this.inputs.correo);
         this.ocultarError(this.errorContrasena, this.inputs.contraseña);
 
+        const isEdicion = !!values.id;
+        const sucursalSelect = this.inputs.sucursal;
+        if (!isEdicion) {
+            Array.from(sucursalSelect.options).forEach(opt => {
+                if (opt.value && opt.value !== String(window.ID_SUCURSAL_LOGUEADO)) {
+                    opt.style.display = 'none';
+                } else {
+                    opt.style.display = '';
+                }
+            });
+            sucursalSelect.value = window.ID_SUCURSAL_LOGUEADO || '';
+            sucursalSelect.disabled = true;
+            sucursalSelect.classList.add('bg-gray-100', 'cursor-not-allowed');
+        } else {
+            Array.from(sucursalSelect.options).forEach(opt => {
+                opt.style.display = '';
+            });
+            sucursalSelect.disabled = false;
+            sucursalSelect.classList.remove('bg-gray-100', 'cursor-not-allowed');
+            this.sucursalOriginal = values.sucursal || '';
+        }
+
         if (values.id && window.ID_USUARIO_LOGUEADO && String(values.id) === String(window.ID_USUARIO_LOGUEADO)) {
             this.inputs.sucursal.disabled = true;
             this.inputs.sucursal.classList.add('bg-gray-100', 'cursor-not-allowed');
-        } else {
-            this.inputs.sucursal.disabled = false;
-            this.inputs.sucursal.classList.remove('bg-gray-100', 'cursor-not-allowed');
         }
 
         if (values.id) {
@@ -312,6 +332,24 @@ class ModalCrudController {
         });
 
         this.form.addEventListener('submit', (e) => {
+            if (this.sucursalOriginal && this.inputs.sucursal.value !== this.sucursalOriginal) {
+                e.preventDefault();
+                Swal.fire({
+                    title: '¿Estás seguro?',
+                    text: 'Estás cambiando la sucursal de este usuario. ¿Deseas continuar?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sí, cambiar',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        this.sucursalOriginal = null;
+                        this.form.submit();
+                    }
+                });
+                return false;
+            }
+
             e.preventDefault();
             this.ocultarError(this.errorUsuario, this.inputs.usuario);
             this.ocultarError(this.errorCorreo, this.inputs.correo);

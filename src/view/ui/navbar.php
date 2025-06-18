@@ -4,7 +4,7 @@ $nombreUsuario = isset($_SESSION['usuario']) ? $_SESSION['usuario'] : '';
 $rolUsuario = isset($_SESSION['rol']) ? $_SESSION['rol'] : '';
 $correoUsuario = isset($_SESSION['correo']) ? $_SESSION['correo'] : '';
 ?>
-<nav class="sticky top-0 z-50 bg-slate-100 border-b border-gray-200">
+<nav class="sticky top-0 z-50 bg-slate-100 border-b border-gray-300">
   <div class="max-w-screen-xl mx-auto flex items-center justify-between px-2 md:px-8 py-4">
     <!-- Logo -->
     <div class="flex items-center">
@@ -24,19 +24,30 @@ $correoUsuario = isset($_SESSION['correo']) ? $_SESSION['correo'] : '';
         <li>
           <a href="index.php?controller=cuadres&action=index"
             class="block py-2 px-3 rounded-sm transition-colors <?= $controller === 'cuadres' ? 'text-blue-700 font-bold' : 'hover:text-blue-700' ?>">
-            Cuadre de Ventas
+            Cuadre
           </a>
         </li>
-        <li>
-          <a href="index.php?controller=usuario&action=index"
-            class="block py-2 px-3 rounded-sm transition-colors <?= $controller === 'usuario' ? 'text-blue-700 font-bold' : 'hover:text-blue-700' ?>">
-            Usuario
-          </a>
+        <li class="relative">
+          <button type="button"
+            class="flex items-center gap-1 py-2 px-3 rounded-sm transition-colors hover:text-blue-700 focus:outline-none"
+            id="btnUsuariosEstablecimientos">
+            Usuarios & Establecimientos
+            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          <div class="absolute left-0 mt-2 w-56 bg-white rounded-lg shadow-lg border hidden z-50"
+            id="submenuUsuariosEstablecimientos">
+            <a href="index.php?controller=usuario&action=index"
+              class="block px-4 py-2 hover:bg-blue-50 text-gray-900">Usuarios</a>
+            <a href="index.php?controller=establecimiento"
+              class="block px-4 py-2 hover:bg-blue-50 text-gray-900">Establecimientos</a>
+          </div>
         </li>
         <li>
-          <a href="index.php?controller=establecimiento"
-            class="block py-2 px-3 rounded-sm transition-colors <?= $controller === 'establecimiento' ? 'text-blue-700 font-bold' : 'hover:text-blue-700' ?>">
-            Establecimiento
+          <a href="index.php?controller=reporte&action=index"
+            class="block py-2 px-3 rounded-sm transition-colors <?= $controller === 'reporte' ? 'text-blue-700 font-bold' : 'hover:text-blue-700' ?>">
+            Reportes
           </a>
         </li>
       </ul>

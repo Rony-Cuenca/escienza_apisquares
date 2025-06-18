@@ -5,7 +5,8 @@
     "require": {
         "php": ">=8.1",
         "phpoffice/phpspreadsheet": "^1.29",
-        "box/spout": "^3.3"
+        "box/spout": "^3.3",
+        "firebase/php-jwt": "^6.11"
     },
     "autoload": {
         "psr-4": {

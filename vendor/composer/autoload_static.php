@@ -26,6 +26,10 @@ class ComposerStaticInit6507c6a9aaaf9726ae517f62398a30ed
         array (
             'Matrix\\' => 7,
         ),
+        'F' => 
+        array (
+            'Firebase\\JWT\\' => 13,
+        ),
         'C' => 
         array (
             'Composer\\Pcre\\' => 14,
@@ -66,6 +70,10 @@ class ComposerStaticInit6507c6a9aaaf9726ae517f62398a30ed
         'Matrix\\' => 
         array (
             0 => __DIR__ . '/..' . '/markbaker/matrix/classes/src',
+        ),
+        'Firebase\\JWT\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/firebase/php-jwt/src',
         ),
         'Composer\\Pcre\\' => 
         array (
