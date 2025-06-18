@@ -1,5 +1,5 @@
 <?php
-ini_set('memory_limit', '512M');
+//ini_set('memory_limit', '512M');
 use Box\Spout\Reader\Common\Creator\ReaderEntityFactory;
 require __DIR__ . '/../../vendor/autoload.php'; 
 require_once __DIR__ . '/../model/Cuadre.php';
@@ -15,73 +15,79 @@ class CuadresController {
     public function cuadre() {
         $ResultsSIRE = [];
         $ErrorSIRE = null;
-    
         $ResultsNUBOX = [];
         $ErrorNUBOX = null;
-        
+
         $RUCSIRE = null;
         $RUCNUBOX = null;
-    
-        if (isset($_FILES['exe_sire']) && $_FILES['exe_sire']['error'] == 0) {
-            // Procesar archivo SIRE
-            $nombTemp = $_FILES['exe_sire']['tmp_name'];
-            
-            if (($handle = fopen($nombTemp, "r")) != false) {
-                $header = fgetcsv($handle);
-                if ($header !== false && isset($header[0])) {
-                    // Check for UTF-8 BOM (EF BB BF) and remove it
-                    if (substr($header[0], 0, 3) == "\xEF\xBB\xBF") {
-                        $header[0] = substr($header[0], 3);
+        $fechaSIRE = null;
+        $fechaNUBOX = null;
+
+        //Procesar RUC SIRE
+        $nombTemp = $_FILES['exe_sire']['tmp_name'];
+        if (($handle = fopen($nombTemp, "r")) != false) {
+            $header = fgetcsv($handle);
+            if ($header !== false && isset($header[0])) {
+                if (substr($header[0], 0, 3) == "\xEF\xBB\xBF") {
+                    $header[0] = substr($header[0], 3);
+            }
+            }
+            $colRUC = array_search('Ruc', $header);
+            $colFecha = array_search('Fecha de emisión', $header);
+            $dataRow = fgetcsv($handle);
+            $RUCSIRE = trim($dataRow[$colRUC]);
+            $fechaSIRE = trim($dataRow[$colFecha]);
+            fclose($handle);
+        } else {
+            $ErrorSIRE = "No se pudo abrir el archivo SIRE.";
+        }
+        $fechaSIRE = date('Y-d-01', strtotime($fechaSIRE));
+
+        //Procesar RUC NUBOX
+        $nombTemp = $_FILES['exe_nubox']['tmp_name'];
+        $reader = ReaderEntityFactory::createXLSXReader();
+        $reader->open($nombTemp);
+        $fila = 1;
+        $RUCNUBOX = null;
+        foreach ($reader->getSheetIterator() as $sheet) {
+            foreach ($sheet->getRowIterator() as $row) {
+                if ($fila == 3) {
+                    $cells = $row->toArray();
+                    $RUCNUBOX = $cells[1];
                 }
+                if ($fila == 5) {
+                    $cells = $row->toArray();
+                    $fechaNUBOX = $cells[4];
+                    //$fecha_obj = DateTime::createFromFormat('d-m-Y', $fechaNUBOX);
+                    //$fechaNUBOX = $fecha_obj->format('Y/m/01');
                 }
-                $colRUC = array_search('Ruc', $header);
-                
-                $dataRow = fgetcsv($handle);
-                $RUCSIRE = trim($dataRow[$colRUC]);
-                fclose($handle);
-            } else {
-                $ErrorSIRE = "No se pudo abrir el archivo SIRE.";
+                // Terminar el bucle si ya se capturaron ambos valores
+                if ($RUCNUBOX !== null && $fechaNUBOX !== null) {
+                    break 2;
+                }
+                $fila++;
             }
         }
-    
-        if (isset($_FILES['exe_nubox']) && $_FILES['exe_nubox']['error'] == 0) {
-            // Procesar archivo NUBOX (XLSX)
-            try {
-                $nombTemp = $_FILES['exe_nubox']['tmp_name'];
-                $reader = ReaderEntityFactory::createXLSXReader();
-                $reader->open($nombTemp);
+        $reader->close();
+        $fechaNUBOX = date('Y-m-01', strtotime($fechaNUBOX));
 
-                $fila = 1;
-                $RUCNUBOX = null;
-                foreach ($reader->getSheetIterator() as $sheet) {
-                    foreach ($sheet->getRowIterator() as $row) {
-                        if ($fila == 3) {
-                            $cells = $row->toArray();
-                            // La columna B es índice 1 (arrays empiezan en 0)
-                            $RUCNUBOX = $cells[1];
-                            break 2;
-                        }
-                        $fila++;
+        if ($RUCSIRE == $RUCNUBOX) {
+            if ($fechaSIRE == $fechaNUBOX) {
+                $existeFecha = Cuadre::existeFecha($fechaSIRE);
+                if (!$existeFecha) {
+                    extract($this->sire($_FILES['exe_sire'], $_GET['user']));
+                    $nuboxResponse = $this->carga_nubox($_FILES['exe_nubox'], 1);
+                    if (isset($nuboxResponse['resultados']) && $nuboxResponse['estado'] == 1) {
+                        extract($this->procesarDatosNubox($nuboxResponse['resultados']));
                     }
+                } else {
+                    $ErrorSIRE = "Ya existe un cuadre para la fecha seleccionada.";
                 }
-                $reader->close();
-                //throw new Exception($RUCNUBOX);
-            } catch (Exception $e) {
-                $ErrorNUBOX = $e->getMessage();
-            }
-        }
-
-        if (!empty($RUCNUBOX) && !empty($RUCSIRE)) {
-            if ($RUCSIRE == $RUCNUBOX) {
-                extract($this->sire($_FILES['exe_sire'], $_GET['user']));
-                extract($this->nubox($_FILES['exe_nubox'], $_GET['user']));
             } else {
-                $ErrorSIRE = "Los RUC de los archivos no coinciden.";
+                $ErrorSIRE = "Las fechas de los archivos no coinciden.";
             }
-        } elseif (empty($RUCNUBOX)) {
-            $ErrorNUBOX = "No se encontró el RUC en el archivo NUBOX.";
-        } elseif (empty($RUCSIRE)) {
-            $ErrorSIRE = "No se encontró el RUC en el archivo SIRE.";
+        } else {
+            $ErrorSIRE = "Los RUC de los archivos no coinciden.";
         }
 
         $contenido = 'view/components/cuadre.php';
@@ -93,220 +99,142 @@ class CuadresController {
         $ResultsSIRE = [];
         $reporte = 2;
 
-        try {
-            // Inicializar variables para almacenar datos por serie
-            $nombTemp = $_FILES['exe_sire']['tmp_name'];
-            $DataSerieGraSIRE = [];
-            $DataSerieExoSIRE = [];
-            $DataSerieInaSIRE = [];
-            $DataSerieIGVSIRE = [];
-            $conteoSeriesSIRE = [];
-                
-            if (($handle = fopen($nombTemp, "r")) != false) {
-                // Leer el encabezado del CSV
-                $header = fgetcsv($handle);
-                
-                // Buscar las columnas necesarias en el CSV
-                $colSerie = array_search('Serie del CDP', $header);
-                $colGrav = array_search('BI Gravada', $header);
-                $colExo = array_search('Mto Exonerado', $header);
-                $colIna = array_search('Mto Inafecto', $header);
-                $colIGV = array_search('IGV / IPM', $header);
+        $nombTemp = $_FILES['exe_sire']['tmp_name'];
+        $DataSerieGraSIRE = [];
+        $DataSerieExoSIRE = [];
+        $DataSerieInaSIRE = [];
+        $DataSerieIGVSIRE = [];
+        $conteoSeriesSIRE = [];
+            
+        if (($handle = fopen($nombTemp, "r")) != false) {
+            $header = fgetcsv($handle);
+            
+            $colSerie = array_search('Serie del CDP', $header);
+            $colGrav = array_search('BI Gravada', $header);
+            $colExo = array_search('Mto Exonerado', $header);
+            $colIna = array_search('Mto Inafecto', $header);
+            $colIGV = array_search('IGV / IPM', $header);
+            $colFecha = array_search('Fecha de emisión', $header);
 
-                // Verificar si todas las columnas existen
-                if ($colSerie != false && $colGrav != false && $colExo != false && 
-                    $colIna != false && $colIGV != false) {
-                    // Procesar cada fila del CSV
-                    while (($datos = fgetcsv($handle, 0, ",")) !== false) {
-                        $serieSIRE = $datos[$colSerie];
-                        $GravSIRE = $datos[$colGrav];
-                        $ExoSIRE = $datos[$colExo];
-                        $InaSIRE = $datos[$colIna];
-                        $IGVSIRE = $datos[$colIGV];
+            if ($colSerie != false && $colGrav != false && $colExo != false && 
+                $colIna != false && $colIGV != false && $colFecha != false) {
+                if (($fila = fgetcsv($handle)) !== false) {
+                    $fechaSIRE = $fila[$colFecha];
+                    $fechaSIRE = date('Y-d-01', strtotime($fechaSIRE));
+                }
+                while (($datos = fgetcsv($handle, 0, ",")) !== false) {
+                    $serieSIRE = $datos[$colSerie];
+                    $GravSIRE = $datos[$colGrav];
+                    $ExoSIRE = $datos[$colExo];
+                    $InaSIRE = $datos[$colIna];
+                    $IGVSIRE = $datos[$colIGV];
 
-                        // Inicializar valores si es la primera vez que se ve la serie
-                        if (!isset($DataSerieGraSIRE[$serieSIRE])) {
-                            $DataSerieGraSIRE[$serieSIRE] = 0;
-                            $DataSerieExoSIRE[$serieSIRE] = 0;
-                            $DataSerieInaSIRE[$serieSIRE] = 0;
-                            $DataSerieIGVSIRE[$serieSIRE] = 0;
-                            $conteoSeriesSIRE[$serieSIRE] = 0;
-                        }
-
-                        // Acumular valores por serie
-                        $DataSerieGraSIRE[$serieSIRE] += floatval($GravSIRE);
-                        $DataSerieExoSIRE[$serieSIRE] += floatval($ExoSIRE);
-                        $DataSerieInaSIRE[$serieSIRE] += floatval($InaSIRE);
-                        $DataSerieIGVSIRE[$serieSIRE] += floatval($IGVSIRE);
-                        $conteoSeriesSIRE[$serieSIRE]++;
+                    if (!isset($DataSerieGraSIRE[$serieSIRE])) {
+                        $DataSerieGraSIRE[$serieSIRE] = 0;
+                        $DataSerieExoSIRE[$serieSIRE] = 0;
+                        $DataSerieInaSIRE[$serieSIRE] = 0;
+                        $DataSerieIGVSIRE[$serieSIRE] = 0;
+                        $conteoSeriesSIRE[$serieSIRE] = 0;
                     }
-
-                    // Ordenar las series
-                    ksort($DataSerieGraSIRE);
                     
-                    // Generar el array de resultados
-                    foreach ($DataSerieGraSIRE as $serie => $totalBI) {
-                        $TExoSIRE = $DataSerieExoSIRE[$serie];
-                        $TInaSIRE = $DataSerieInaSIRE[$serie];
-                        $TIGVSIRE = $DataSerieIGVSIRE[$serie];
-                        $TTotalSIRE = $totalBI + $TExoSIRE + $TInaSIRE + $TIGVSIRE;
-
-                        $this->guardarCuadre($serie,$conteoSeriesSIRE[$serie],$totalBI,$TExoSIRE,$TInaSIRE,$TIGVSIRE,$TTotalSIRE,$reporte);
-                            
-                        $ResultsSIRE[] = [
-                            'serie' => $serie,
-                            'conteo' => $conteoSeriesSIRE[$serie],
-                            'bi' => $totalBI,
-                            'exonerado' => $TExoSIRE,
-                            'inafecto' => $TInaSIRE,
-                            'igv' => $TIGVSIRE,
-                            'total' => $TTotalSIRE
-                        ];
-                    }
-                } else {
-                    $ErrorSIRE = "No se encontraron las columnas necesarias en el archivo";
+                    $DataSerieGraSIRE[$serieSIRE] += floatval($GravSIRE);
+                    $DataSerieExoSIRE[$serieSIRE] += floatval($ExoSIRE);
+                    $DataSerieInaSIRE[$serieSIRE] += floatval($InaSIRE);
+                    $DataSerieIGVSIRE[$serieSIRE] += floatval($IGVSIRE);
+                    $conteoSeriesSIRE[$serieSIRE]++;
                 }
-                fclose($handle);
-            } else {
-                $ErrorSIRE = "Error al abrir el archivo.";
-            }
-        } catch (Exception $e) {
-            $ErrorSIRE = "Error al procesar el archivo: " . $e->getMessage();
-        }
 
-        // Pasar los resultados a la vista
-        return compact('ErrorSIRE', 'ResultsSIRE');
-    }
-    
-    public function nubox() {
-        $ErrorNUBOX = null;
-        $ResultsNUBOX = [];
-        $reporte = 1;
-        
-        try {
-            $nombTemp = $_FILES['exe_nubox']['tmp_name'];
-            $DataSerieGraNubox = [];
-            $DataSerieExoNubox = [];
-            $DataSerieInaNubox = [];
-            $DataSerieIGVNubox = [];
-            $conteoSeriesNubox = [];
-
-            // Crear el lector
-            $reader = ReaderEntityFactory::createXLSXReader();
-            $reader->open($nombTemp);
-
-            // Leer el encabezado (fila 8)
-            $header = null;
-            $filaActual = 1;
-            foreach ($reader->getSheetIterator() as $sheet) {
-                foreach ($sheet->getRowIterator() as $row) {
-                    if ($filaActual == 4) { // Solo cuando llegamos a la fila 8
-                        $cells = $row->toArray();
-                        $header = $cells;
-                        break;
-                    }
-                    $filaActual++;
-                }
-                if ($header !== null) break;
-            }
-
-            // Verificar si todas las columnas existen
-            $colSerie = array_search('Número', $header);
-            $colGravado = array_search('Total Gravado', $header);
-            $colExonerado = array_search('Total Exonerado', $header);
-            $colInafecto = array_search('Total Inafecto', $header);
-            $colIGV = array_search('Total IGV', $header);
-
-            if ($colSerie !== false && $colGravado !== false && $colExonerado !== false && 
-                $colInafecto !== false && $colIGV !== false) {
+                ksort($DataSerieGraSIRE);
                 
-                // Procesar cada fila (empezando desde la fila 9)
-                foreach ($reader->getSheetIterator() as $sheet) {
-                    $filaActual = 1;
-                    foreach ($sheet->getRowIterator() as $row) {
-                        if ($filaActual < 5) { // Saltar las filas 1-8
-                            $filaActual++;
-                            continue;
-                        }
+                foreach ($DataSerieGraSIRE as $serie => $totalBI) {
+                    $TExoSIRE = $DataSerieExoSIRE[$serie];
+                    $TInaSIRE = $DataSerieInaSIRE[$serie];
+                    $TIGVSIRE = $DataSerieIGVSIRE[$serie];
+                    $TTotalSIRE = $totalBI + $TExoSIRE + $TInaSIRE + $TIGVSIRE;
+
+                    $this->guardarCuadre($serie,$conteoSeriesSIRE[$serie],$totalBI,$TExoSIRE,$TInaSIRE,$TIGVSIRE,$TTotalSIRE,$reporte,$fechaSIRE);
                         
-                        $cells = $row->toArray();
-
-                        if (
-                            !isset($cells[$colSerie]) || trim($cells[$colSerie]) === '' ||
-                            !isset($cells[$colGravado]) || trim($cells[$colGravado]) === '' ||
-                            !isset($cells[$colExonerado]) || trim($cells[$colExonerado]) === '' ||
-                            !isset($cells[$colInafecto]) || trim($cells[$colInafecto]) === '' ||
-                            !isset($cells[$colIGV]) || trim($cells[$colIGV]) === ''
-                        ) {
-                            $filaActual++;
-                            continue; // Saltar esta fila si hay campos faltantes o en blanco real
-                        }
-                        
-                        // Extraer solo la parte antes del guion
-                        $serie = explode('-', $cells[$colSerie])[0];
-                        
-                        $TGraNubox = floatval($cells[$colGravado]);
-                        $TExoNubox = floatval($cells[$colExonerado]);
-                        $TInaNubox = floatval($cells[$colInafecto]);
-                        $TIGVNubox = floatval($cells[$colIGV]);
-
-                        // Inicializar valores si es la primera vez que se ve la serie
-                        if (!isset($DataSerieGraNubox[$serie])) {
-                            $DataSerieGraNubox[$serie] = 0;
-                            $DataSerieExoNubox[$serie] = 0;
-                            $DataSerieInaNubox[$serie] = 0;
-                            $DataSerieIGVNubox[$serie] = 0;
-                            $conteoSeriesNubox[$serie] = 0;
-                        }
-
-                        // Acumular valores por serie
-                        $DataSerieGraNubox[$serie] += $TGraNubox;
-                        $DataSerieExoNubox[$serie] += $TExoNubox;
-                        $DataSerieInaNubox[$serie] += $TInaNubox;
-                        $DataSerieIGVNubox[$serie] += $TIGVNubox;
-                        $conteoSeriesNubox[$serie]++;
-                    }
-                }
-
-                // Ordenar las series
-                ksort($DataSerieGraNubox);
-                
-                // Generar el array de resultados
-                foreach ($DataSerieGraNubox as $serie => $totalGraNubox) {
-                    $totalExoNubox = $DataSerieExoNubox[$serie];
-                    $totalInaNubox = $DataSerieInaNubox[$serie];
-                    $totalIGVNubox = $DataSerieIGVNubox[$serie];
-                    $totalTotal = $totalGraNubox + $totalExoNubox + $totalInaNubox + $totalIGVNubox;
-
-                    $this->guardarCuadre($serie, $conteoSeriesNubox[$serie], $totalGraNubox, 
-                        $totalExoNubox, $totalInaNubox, $totalIGVNubox, $totalTotal, $reporte);
-                        
-                    $ResultsNUBOX[] = [
+                    $ResultsSIRE[] = [
                         'serie' => $serie,
-                        'conteo' => $conteoSeriesNubox[$serie],
-                        'bi' => $totalGraNubox,
-                        'exonerado' => $totalExoNubox,
-                        'inafecto' => $totalInaNubox,
-                        'igv' => $totalIGVNubox,
-                        'total' => $totalTotal
+                        'conteo' => $conteoSeriesSIRE[$serie],
+                        'bi' => $totalBI,
+                        'exonerado' => $TExoSIRE,
+                        'inafecto' => $TInaSIRE,
+                        'igv' => $TIGVSIRE,
+                        'total' => $TTotalSIRE
                     ];
                 }
             } else {
-                $ErrorNUBOX = "No se encontraron las columnas necesarias en el archivo";
+                $ErrorSIRE = "No se encontraron las columnas necesarias en el archivo";
             }
-            
-            // Cerrar el lector
-            $reader->close();
-            
-        } catch (Exception $e) {
-            $ErrorNUBOX = "Error al procesar el archivo: " . $e->getMessage();
+            fclose($handle);
+        } else {
+            $ErrorSIRE = "Error al abrir el archivo.";
         }
 
-        // Pasar los resultados a la vista
-        return compact('ErrorNUBOX', 'ResultsNUBOX');
+        return compact('ErrorSIRE', 'ResultsSIRE');
     }
 
-    public function guardarCuadre($serie,$conteo,$Gravada,$Exonerada,$Inafecto,$IGV,$Total,$reporte) {
+    public function carga_nubox($archivo,$estado) {
+        $uploadDir = __DIR__ . '/../../uploads/';
+        //Sirve para cargar la carpeta por si no existe
+        //if (!file_exists($uploadDir)) {
+        //    mkdir($uploadDir, 0777, true);
+        //}
+
+        $nuboxPath = $uploadDir . uniqid('nubox_') . '.xlsx';
+        
+        if (!move_uploaded_file($archivo['tmp_name'], $nuboxPath)) {
+            throw new Exception('No se pudo guardar el archivo en el servidor');
+        }
+
+        // Llamar al servicio Python con la ruta del archivo
+        $respuesta = $this->llamarApiPython($nuboxPath, $estado);
+
+        // Opcional: Eliminar el archivo después de procesarlo
+        unlink($nuboxPath);
+
+        return $respuesta;
+    }
+    
+    private function llamarApiPython($archivoPath, $estado) {
+        $url = 'http://localhost:5000/procesar?estado='.$estado;
+
+        $cfile = new CURLFile(
+            $archivoPath, 
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 
+            'nubox.xlsx'
+        );
+
+        $ch = curl_init();
+        curl_setopt_array($ch, [
+            CURLOPT_URL => $url,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => ['file' => $cfile],
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER => ['Content-Type: multipart/form-data'],
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_VERBOSE => true  // Para debugging
+        ]);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        
+        if (curl_errno($ch)) {
+            throw new Exception("cURL error: " . curl_error($ch));
+        }
+
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($httpCode !== 200) {
+            throw new Exception("API Python error ($httpCode)");
+        }
+
+        return json_decode($response, true);
+    }
+    
+    public function guardarCuadre($serie,$conteo,$Gravada,$Exonerada,$Inafecto,$IGV,$Total,$reporte,$fecha_registro) {
         $user = Usuario::obtenerId($_GET['user']);
         
         $user_create = $user['usuario'];
@@ -325,6 +253,7 @@ class CuadresController {
             'user_create' => $user_create,
             'user_update' => $user_update,
             'id_sucursal' => $id_sucursal,
+            'fecha_registro' => $fecha_registro,
             'estado' => 1
         ];
 
@@ -336,5 +265,42 @@ class CuadresController {
 
         Cuadre::Insertar($data);
     }
-}
 
+    private function procesarDatosNubox($datosNubox) {
+        $ErrorNUBOX = null;
+        $ResultsNUBOX = [];
+        $reporte = 1;
+        try {
+            foreach ($datosNubox as $resultado) {
+                $fecha = isset($resultado['fecha']) ? date('Y-m-01', strtotime($resultado['fecha'])) : date('Y-m-01');
+                $this->guardarCuadre(
+                    $resultado['serie'],
+                    $resultado['conteo'],
+                    $resultado['gravado'],
+                    $resultado['exonerado'],
+                    $resultado['inafecto'],
+                    $resultado['igv'],
+                    $resultado['total'],
+                    $reporte,
+                    $fecha
+                );
+    
+                $ResultsNUBOX[] = [
+                    'serie' => $resultado['serie'],
+                    'conteo' => $resultado['conteo'],
+                    'gravado' => $resultado['gravado'],
+                    'exonerado' => $resultado['exonerado'],
+                    'inafecto' => $resultado['inafecto'],
+                    'igv' => $resultado['igv'],
+                    'total' => $resultado['total']
+                ];
+            }
+        } catch (Exception $e) {
+            throw $e;
+        }
+    
+        return compact('ErrorNUBOX', 'ResultsNUBOX');
+    }
+
+
+}

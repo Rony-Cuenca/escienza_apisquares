@@ -54,8 +54,6 @@
         }
     </script>
 <?php endif; ?>
-
-<?php if (!empty($ResultsSIRE) || !empty($ResultsNUBOX)): ?>
     <div class="flex flex-col xl:flex-row gap-8 mx-auto w-full px-4 mt-8">
         <?php if (!empty($ResultsSIRE)): ?>
             <div class="w-full xl:w-1/2 bg-white rounded-lg shadow-md overflow-hidden">
@@ -91,7 +89,7 @@
                     </div>
                 </div>
             </div>
-        <?php endif; ?>
+        <?php else: echo "No hay resultados"; endif; ?>
 
         <?php if (!empty($ResultsNUBOX)): ?>
             <div class="w-full xl:w-1/2 bg-white rounded-lg shadow-md overflow-hidden">
@@ -115,7 +113,7 @@
                                     <tr class="hover:bg-gray-50">
                                         <td class="px-4 py-2 text-sm text-gray-900"><?php echo $resultado['serie']; ?></td>
                                         <td class="px-4 py-2 text-sm text-gray-900"><?php echo $resultado['conteo']; ?></td>
-                                        <td class="px-4 py-2 text-sm text-gray-900"><?php echo number_format($resultado['bi'], 2); ?></td>
+                                        <td class="px-4 py-2 text-sm text-gray-900"><?php echo number_format($resultado['gravado'], 2); ?></td>
                                         <td class="px-4 py-2 text-sm text-gray-900"><?php echo number_format($resultado['exonerado'], 2); ?></td>
                                         <td class="px-4 py-2 text-sm text-gray-900"><?php echo number_format($resultado['inafecto'], 2); ?></td>
                                         <td class="px-4 py-2 text-sm text-gray-900"><?php echo number_format($resultado['igv'], 2); ?></td>
@@ -127,7 +125,41 @@
                     </div>
                 </div>
             </div>
-        <?php endif; ?>
-
+        <?php else: echo "No hay resultados"; endif; ?>
     </div>
-<?php endif; ?>
+    <?php if (!empty($ResultsEDSUITE)): ?>
+            <div class="w-full xl:w-1/2 bg-white rounded-lg shadow-md overflow-hidden">
+                <div class="p-4">
+                    <h3 class="text-2xl text-center font-semibold text-gray-900 mb-4">Resumen de Series - EDSUITE</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full whitespace-nowrap">
+                            <thead class="bg-gray-50 text-xs uppercase">
+                                <tr>
+                                    <th class="px-4 py-2 text-left font-medium">Serie</th>
+                                    <th class="px-4 py-2 text-left font-medium">Conteo</th>
+                                    <th class="px-4 py-2 text-left font-medium">BI Gravada</th>
+                                    <th class="px-4 py-2 text-left font-medium">Exonerado</th>
+                                    <th class="px-4 py-2 text-left font-medium">Inafecto</th>
+                                    <th class="px-4 py-2 text-left font-medium">IGV</th>
+                                    <th class="px-4 py-2 text-left font-medium">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                <?php foreach ($ResultsEDSUITE as $resultado): ?>
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-4 py-2 text-sm text-gray-900"><?php echo $resultado['serie']; ?></td>
+                                        <td class="px-4 py-2 text-sm text-gray-900"><?php echo $resultado['conteo']; ?></td>
+                                        <td class="px-4 py-2 text-sm text-gray-900"><?php echo number_format($resultado['gravado'], 2); ?></td>
+                                        <td class="px-4 py-2 text-sm text-gray-900"><?php echo number_format($resultado['exonerado'], 2); ?></td>
+                                        <td class="px-4 py-2 text-sm text-gray-900"><?php echo number_format($resultado['inafecto'], 2); ?></td>
+                                        <td class="px-4 py-2 text-sm text-gray-900"><?php echo number_format($resultado['igv'], 2); ?></td>
+                                        <td class="px-4 py-2 text-sm text-gray-900 font-semibold"><?php echo number_format($resultado['total'], 2); ?></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+    <?php endif; ?>
+
