@@ -5,7 +5,7 @@
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-center gap-4 sm:gap-8 w-full">
       <div class="flex flex-col w-full sm:w-auto">
         <label class="block text-base font-semibold text-slate-700 mb-1" for="select-sucursal">Establecimiento</label>
-        <select id="select-sucursal" class="border border-gray-300 rounded-lg px-4 py-2 text-base w-full sm:w-64 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white">
+        <select id="select-sucursal" class="border border-gray-300 rounded-lg px-4 py-2 text-base w-full md:w-[400px] sm:w-64 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white">
           <?php foreach ($sucursales as $s): ?>
             <option value="<?= $s['id'] ?>"><?= htmlspecialchars($s['razon_social']) ?></option>
           <?php endforeach; ?>
@@ -55,7 +55,7 @@
 
   <!-- Gráfico de Pastel -->
   <div class="bg-white rounded-xl shadow p-4 sm:p-6 w-full md:w-[500px] flex flex-col items-center">
-    <h1 class="text-2xl font-bold text-center mb-4">SERIES CON MÁS VENTA</h1>
+    <h1 class="text-xl font-bold text-center mb-4">SERIES CON MÁS VENTA</h1>
     <div class="flex flex-col sm:flex-row items-center justify-center mb-2 gap-2 w-full">
       <select id="select-tipo" class="border rounded px-2 py-1 text-sm w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-blue-400">
         <option value="">Selecciona una opción</option>
