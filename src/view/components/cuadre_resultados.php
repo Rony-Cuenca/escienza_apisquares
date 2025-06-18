@@ -54,7 +54,7 @@
         }
     </script>
 <?php endif; ?>
-    <div class="flex flex-col xl:flex-row gap-8 mx-auto w-full px-4 mt-8">
+    <div class="flex flex-col xl:flex-row gap-8 mx-auto w-full mt-8">
         <?php if (!empty($ResultsSIRE)): ?>
             <div class="w-full xl:w-1/2 bg-white rounded-lg shadow-md overflow-hidden">
                 <div class="p-4">

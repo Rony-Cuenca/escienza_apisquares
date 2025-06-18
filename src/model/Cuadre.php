@@ -43,11 +43,11 @@ class Cuadre
         return true;
     }
 
-    public static function existeFecha($fecha) {
+    public static function existeFecha($fecha, $id_sucursal) {
         try {
             $conn = Conexion::conectar();
-            $stmt = $conn->prepare("SELECT COUNT(*) FROM resumen_comprobante WHERE fecha_registro = ?");
-            $stmt->bind_param("s", $fecha);
+            $stmt = $conn->prepare("SELECT COUNT(*) FROM resumen_comprobante WHERE fecha_registro = ? AND id_sucursal = ?");
+            $stmt->bind_param("si", $fecha, $id_sucursal);
             $stmt->execute();
             $stmt->bind_result($count);
             $stmt->fetch();

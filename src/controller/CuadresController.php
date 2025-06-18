@@ -73,7 +73,9 @@ class CuadresController {
 
         if ($RUCSIRE == $RUCNUBOX) {
             if ($fechaSIRE == $fechaNUBOX) {
-                $existeFecha = Cuadre::existeFecha($fechaSIRE);
+                $user = Usuario::obtenerId($_GET['user']);
+                $id_sucursal = $user['id_sucursal'];
+                $existeFecha = Cuadre::existeFecha($fechaSIRE, $id_sucursal);
                 if (!$existeFecha) {
                     extract($this->sire($_FILES['exe_sire'], $_GET['user']));
                     $nuboxResponse = $this->carga_nubox($_FILES['exe_nubox'], 1);
