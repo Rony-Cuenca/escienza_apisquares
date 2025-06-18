@@ -180,9 +180,9 @@ class CuadresController {
     public function carga_nubox($archivo,$estado) {
         $uploadDir = __DIR__ . '/../../uploads/';
         //Sirve para cargar la carpeta por si no existe
-        //if (!file_exists($uploadDir)) {
-        //    mkdir($uploadDir, 0777, true);
-        //}
+        if (!file_exists($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
 
         $nuboxPath = $uploadDir . uniqid('nubox_') . '.xlsx';
         
