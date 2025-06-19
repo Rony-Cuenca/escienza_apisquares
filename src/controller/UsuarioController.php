@@ -25,12 +25,13 @@ class UsuarioController
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $datos = $this->limpiarDatos($_POST);
             $error = $this->validarDatos($datos);
-
             if ($error) {
                 $contenido = __DIR__ . '/../view/components/error.php';
                 require 'view/layout.php';
                 exit;
             }
+
+            $id_usuario = 0;
 
             if (Usuario::existeUsuario($datos['usuario'])) {
                 $contenido = __DIR__ . '/../view/components/error.php';
@@ -46,6 +47,7 @@ class UsuarioController
 
             $hashed_password = password_hash($datos['contraseña'], PASSWORD_BCRYPT);
             Usuario::insertar(
+
                 $datos['usuario'],
                 $datos['correo'],
                 $datos['rol'],
@@ -113,7 +115,6 @@ class UsuarioController
                 $_SESSION['rol'] = $datos['rol'];
                 $_SESSION['id_sucursal'] = $datos['id_sucursal'];
             }
-
             header('Location: index.php?controller=usuario');
             exit;
         }

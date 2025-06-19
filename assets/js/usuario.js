@@ -69,6 +69,26 @@ class ModalCrudController {
 
         const isEdicion = !!values.id;
         const sucursalSelect = this.inputs.sucursal;
+        const esPropioUsuario = values.id && window.ID_USUARIO_LOGUEADO && String(values.id) === String(window.ID_USUARIO_LOGUEADO);
+        const inputSucursalReadonly = document.getElementById('modalUsuarioSucursalReadonly');
+        const inputSucursalHidden = document.getElementById('modalUsuarioSucursalHidden');
+
+        if (esPropioUsuario) {
+            if (sucursalSelect) sucursalSelect.style.display = 'none';
+            if (inputSucursalReadonly) {
+                inputSucursalReadonly.style.display = '';
+                inputSucursalReadonly.value = values.sucursal_nombre || '';
+            }
+            if (inputSucursalHidden) {
+                inputSucursalHidden.value = values.sucursal || '';
+                inputSucursalHidden.disabled = false;
+            }
+        } else {
+            if (sucursalSelect) sucursalSelect.style.display = '';
+            if (inputSucursalReadonly) inputSucursalReadonly.style.display = 'none';
+            if (inputSucursalHidden) inputSucursalHidden.disabled = true;
+        }
+
         if (!isEdicion) {
             Array.from(sucursalSelect.options).forEach(opt => {
                 if (opt.value && opt.value !== String(window.ID_SUCURSAL_LOGUEADO)) {
@@ -90,8 +110,11 @@ class ModalCrudController {
         }
 
         if (values.id && window.ID_USUARIO_LOGUEADO && String(values.id) === String(window.ID_USUARIO_LOGUEADO)) {
+            this.inputs.rol.disabled = true;
             this.inputs.sucursal.disabled = true;
-            this.inputs.sucursal.classList.add('bg-gray-100', 'cursor-not-allowed');
+        } else {
+            this.inputs.rol.disabled = false;
+            if (isEdicion) this.inputs.sucursal.disabled = false;
         }
 
         if (values.id) {
@@ -106,6 +129,9 @@ class ModalCrudController {
             this.inputs.contraseña.required = true;
             this.inputs.confirmar_contraseña.required = true;
         }
+
+        if (this.inputs.sucursal.disabled) this.inputs.sucursal.disabled = false;
+        if (this.inputs.rol.disabled) this.inputs.rol.disabled = false;
 
         this.modal.classList.remove('hidden');
         setTimeout(() => this.inputs.usuario.focus(), 100);
@@ -248,6 +274,7 @@ class ModalCrudController {
                         correo: btn.dataset.correo,
                         rol: btn.dataset.rol,
                         sucursal: btn.dataset.sucursal,
+                        sucursal_nombre: btn.closest('tr').querySelector('td:nth-child(5)').textContent.trim(),
                         estado: btn.dataset.estado
                     }
                 });
@@ -289,7 +316,24 @@ class ModalCrudController {
                 e.stopPropagation();
                 this.cerrarMenus();
                 const menu = btn.nextElementSibling;
-                if (menu) menu.classList.toggle('hidden');
+                if (menu) {
+                    menu.classList.toggle('hidden');
+                    menu.style.left = '';
+                    menu.style.right = '';
+                    const rect = menu.getBoundingClientRect();
+                    if (rect.right > window.innerWidth) {
+                        menu.style.right = 'auto';
+                        menu.style.left = '0';
+                    } else {
+                        menu.style.right = '0';
+                        menu.style.left = 'auto';
+                    }
+                    if (window.innerWidth < 640) {
+                        menu.style.minWidth = '60vw';
+                    } else {
+                        menu.style.minWidth = '120px';
+                    }
+                }
             });
         });
         document.addEventListener('click', () => this.cerrarMenus());

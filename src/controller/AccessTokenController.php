@@ -1,5 +1,6 @@
 <?php
 require_once 'model/AccessToken.php';
+require_once __DIR__ . '/../model/Establecimiento.php';
 require_once __DIR__ . '/../../vendor/autoload.php';
 
 use Firebase\JWT\JWT;
@@ -94,7 +95,7 @@ class AccessTokenController
     public function validar()
     {
         $hashcode = trim($_POST['hashcode'] ?? '');
-        $token = AccessToken::obtenerPorHash($hashcode);
+        $token = \AccessToken::obtenerPorHash($hashcode);
         header('Content-Type: application/json');
         if (!$token) {
             echo json_encode(['success' => false, 'error' => 'Código no válido']);
@@ -108,7 +109,23 @@ class AccessTokenController
             echo json_encode(['success' => false, 'error' => 'El código ha expirado']);
             exit;
         }
-        echo json_encode(['success' => true, 'token' => $token]);
+
+        try {
+            $secret = 'ESCIENZA2025';
+            $decoded = \Firebase\JWT\JWT::decode($hashcode, new \Firebase\JWT\Key($secret, 'HS256'));
+            $id_sucursal = $decoded->id_sucursal ?? $token['id_sucursal'];
+            $id_cliente = $token['id_cliente'] ?? null;
+            $sucursal = \Establecimiento::obtenerPorId($id_sucursal, $id_cliente);
+            $nombre_sucursal = $sucursal ? $sucursal['razon_social'] : $id_sucursal;
+            echo json_encode([
+                'success' => true,
+                'token' => $token,
+                'decoded' => $decoded,
+                'nombre_sucursal' => $nombre_sucursal
+            ]);
+        } catch (\Exception $e) {
+            echo json_encode(['success' => false, 'error' => 'Código inválido o alterado']);
+        }
         exit;
     }
 

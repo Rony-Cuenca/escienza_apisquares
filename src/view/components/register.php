@@ -28,41 +28,98 @@ $error = $error ?? ($_GET['error'] ?? '');
     <div class="md:w-1/2 flex flex-col justify-center items-center px-8 bg-white">
         <div class="w-full max-w-md">
             <img src="images/Logo.png" alt="Logo" class="w-25 mb-6">
-            <h1 class="text-3xl font-bold mb-2 flex items-center gap-2 text-[#0018F4]">
+            <h1 class="text-3xl font-bold mb-4 flex items-center gap-2 text-[#0018F4]">
                 <span>📝</span> Crear cuenta
             </h1>
-            <p class="mb-6 text-gray-600">Completa los datos para registrarte</p>
             <?php if (!empty($error)): ?>
                 <div class="mb-4 text-red-600 bg-red-100 rounded px-4 py-2 animate-shake"><?= htmlspecialchars($error) ?></div>
             <?php endif; ?>
-            <form method="post" action="index.php?controller=auth&action=register" class="space-y-4" autocomplete="off">
-                <div>
-                    <label class="block mb-1 font-semibold text-sm text-gray-700">Usuario</label>
-                    <input type="text" name="usuario" required placeholder="Elige un usuario"
-                        class="w-full border rounded px-3 py-2 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#0018F4]" autocomplete="username" />
+
+            <!-- Paso 1: Código de acceso -->
+            <div id="stepAccessToken">
+                <p id="stepAccessTokenMsg" class="mb-4 text-gray-600">
+                    Verifica tu código de acceso para continuar con el registro.
+                </p>
+                <label class="block mb-1 font-semibold text-sm text-gray-700">Código de acceso</label>
+                <div class="flex gap-2">
+                    <input type="text" id="inputAccessToken" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="Pega tu código de acceso" required>
+                    <button type="button" id="btnVerificarToken" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded">Verificar</button>
                 </div>
-                <div>
-                    <label class="block mb-1 font-semibold text-sm text-gray-700">Correo electrónico</label>
-                    <input type="email" name="correo" required placeholder="Tu correo"
-                        class="w-full border rounded px-3 py-2 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#0018F4]" autocomplete="email" />
+                <div id="accessTokenFeedback" class="text-sm mt-2"></div>
+                <div class="mt-4 flex justify-between">
+                    <a href="index.php?controller=auth&action=login" class="text-blue-600 hover:underline flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                        </svg>
+                        Volver al inicio de sesión
+                    </a>
                 </div>
-                <div>
-                    <label class="block mb-1 font-semibold text-sm text-gray-700">Contraseña</label>
-                    <div class="relative">
-                        <input type="password" name="contrasena" id="reg_contrasena" required placeholder="Crea una contraseña"
-                            class="w-full border rounded px-3 py-2 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#0018F4]" autocomplete="new-password" />
-                        <button type="button" onclick="toggleRegPassword()" class="absolute right-2 top-2 text-gray-400" tabindex="-1" aria-label="Mostrar/Ocultar contraseña">
-                            <svg id="regEyeIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
-                        </button>
+            </div>
+
+            <!-- Paso 2: Formulario de registro -->
+            <form id="formRegister" method="post" action="index.php?controller=auth&action=register" class="space-y-4 mt-6 hidden" autocomplete="off">
+                <p id="formRegisterMsg" class="mb-4 text-gray-600">
+                    <!-- Este mensaje se mostrará solo cuando se muestre el formulario -->
+                    Completa los datos para registrarte
+                </p>
+                <input type="hidden" name="id_sucursal" id="reg_id_sucursal">
+                <input type="hidden" name="rol" id="reg_rol">
+                <input type="hidden" name="access_token" id="reg_access_token">
+
+                <div class="grid grid-cols-1 md:grid-cols-1 gap-4">
+                    <div>
+                        <label class="block mb-1 font-semibold text-sm text-gray-700">Usuario</label>
+                        <input type="text" name="usuario" id="reg_usuario" required placeholder="Ingrese su nombre de usuario"
+                            class="w-full border rounded px-3 py-2 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#0018F4]" autocomplete="username" />
+                        <div id="errorRegisterUsuario" class="text-red-600 text-sm mb-1 hidden flex items-center gap-1 pt-1"></div>
+                    </div>
+                    <div>
+                        <label class="block mb-1 font-semibold text-sm text-gray-700">Correo electrónico</label>
+                        <input type="email" name="correo" id="reg_correo" required placeholder="Ingrese su correo"
+                            class="w-full border rounded px-3 py-2 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#0018F4]" autocomplete="email" />
+                        <div id="errorRegisterCorreo" class="text-red-600 text-sm mb-1 hidden flex items-center gap-1 pt-1"></div>
                     </div>
                 </div>
-                <div>
-                    <label class="block mb-1 font-semibold text-sm text-gray-700">Confirmar Contraseña</label>
-                    <input type="password" name="confirmar_contrasena" required placeholder="Repite la contraseña"
-                        class="w-full border rounded px-3 py-2 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#0018F4]" autocomplete="new-password" />
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block mb-1 font-semibold text-sm text-gray-700">Contraseña</label>
+                        <div class="relative">
+                            <input type="password" name="contrasena" id="reg_contrasena" required placeholder="Crea una contraseña"
+                                class="w-full border rounded px-3 py-2 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#0018F4]" autocomplete="new-password" />
+                            <button type="button" class="toggle-password absolute right-2 top-2 text-gray-400" data-target="reg_contrasena" tabindex="-1" aria-label="Mostrar/Ocultar contraseña">
+                                <svg id="regEyeIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block mb-1 font-semibold text-sm text-gray-700">Confirmar Contraseña</label>
+                        <div class="relative">
+                            <input type="password" name="confirmar_contrasena" id="reg_confirmar_contrasena" required placeholder="Repite la contraseña"
+                                class="w-full border rounded px-3 py-2 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#0018F4]" autocomplete="new-password" />
+                            <button type="button" class="toggle-password absolute right-2 top-2 text-gray-400" data-target="reg_confirmar_contrasena" tabindex="-1" aria-label="Mostrar/Ocultar contraseña">
+                                <svg id="regEyeIconConfirm" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div id="errorRegisterContrasena" class="text-red-600 text-sm mb-1 hidden flex items-center gap-1 pt-1">
+                            <!-- El icono y mensaje se insertan por JS -->
+                        </div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-1 gap-4">
+                    <div class="flex-1">
+                        <label class="block mb-1 font-semibold text-sm text-gray-700">Sucursal</label>
+                        <input type="text" id="reg_sucursal_nombre" class="w-full border rounded px-3 py-2 bg-gray-100" disabled>
+                    </div>
+                    <div class="flex-1">
+                        <label class="block mb-1 font-semibold text-sm text-gray-700">Rol</label>
+                        <input type="text" id="reg_rol_nombre" class="w-full border rounded px-3 py-2 bg-gray-100" disabled>
+                    </div>
                 </div>
                 <button type="submit" id="btnRegister" class="w-full bg-[#0018F4] hover:bg-blue-700 text-white font-semibold py-2 rounded-lg shadow transition-colors duration-200 flex items-center justify-center gap-2">
                     <span>Registrarme</span>
@@ -74,80 +131,22 @@ $error = $error ?? ($_GET['error'] ?? '');
         </div>
     </div>
 </div>
-
-<style>
-    @keyframes shake {
-
-        10%,
-        90% {
-            transform: translateX(-2px);
-        }
-
-        20%,
-        80% {
-            transform: translateX(4px);
-        }
-
-        30%,
-        50%,
-        70% {
-            transform: translateX(-8px);
-        }
-
-        40%,
-        60% {
-            transform: translateX(8px);
-        }
-    }
-
-    .animate-shake {
-        animation: shake 0.4s;
-    }
-</style>
-
 <script>
-    function toggleRegPassword() {
-        const input = document.getElementById('reg_contrasena');
-        const icon = document.getElementById('regEyeIcon');
-        if (input.type === "password") {
-            input.type = "text";
-            icon.classList.add('text-[#0018F4]');
-        } else {
-            input.type = "password";
-            icon.classList.remove('text-[#0018F4]');
-        }
-    }
-
+    // Cambia el mensaje cuando se muestre el formulario de registro
     document.addEventListener('DOMContentLoaded', function() {
-        const form = document.querySelector('form[action*="register"]');
-        const usuario = form.querySelector('input[name="usuario"]');
-        const correo = form.querySelector('input[name="correo"]');
-        const pass = form.querySelector('input[name="contrasena"]');
-        const confirm = form.querySelector('input[name="confirmar_contrasena"]');
-        const btn = document.getElementById('btnRegister');
-
-        form.addEventListener('submit', function(e) {
-            let errorMsg = '';
-            if (!usuario.value.trim()) {
-                errorMsg = 'El usuario es obligatorio.';
-            } else if (!correo.value.trim()) {
-                errorMsg = 'El correo es obligatorio.';
-            } else if (!pass.value.trim()) {
-                errorMsg = 'La contraseña es obligatoria.';
-            } else if (pass.value !== confirm.value) {
-                errorMsg = 'Las contraseñas no coinciden.';
-            }
-            if (errorMsg) {
-                e.preventDefault();
-                if (!document.querySelector('.mb-4.text-red-600')) {
-                    const errorDiv = document.createElement('div');
-                    errorDiv.className = 'mb-4 text-red-600 bg-red-100 rounded px-4 py-2 animate-shake';
-                    errorDiv.textContent = errorMsg;
-                    form.parentNode.insertBefore(errorDiv, form);
+        const stepAccessToken = document.getElementById('stepAccessToken');
+        const formRegister = document.getElementById('formRegister');
+        const stepMsg = document.getElementById('stepAccessTokenMsg');
+        const formMsg = document.getElementById('formRegisterMsg');
+        // Este evento ya lo maneja tu JS, pero aquí aseguramos el cambio de mensaje
+        document.getElementById('btnVerificarToken').addEventListener('click', function() {
+            setTimeout(function() {
+                if (formRegister && !formRegister.classList.contains('hidden')) {
+                    stepAccessToken.classList.add('hidden');
+                    formMsg.textContent = 'Completa los datos para registrarte';
                 }
-                return false;
-            }
-            btn.disabled = true;
+            }, 500);
         });
     });
 </script>
+<script src="../assets/js/register.js"></script>

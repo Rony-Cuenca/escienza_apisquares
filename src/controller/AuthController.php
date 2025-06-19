@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../model/Usuario.php';
+require_once __DIR__ . '/../model/AccessToken.php';
 
 class AuthController
 {
@@ -44,10 +45,62 @@ class AuthController
     public function register()
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // Procesar registro (validar, insertar usuario, etc)
-            // Redirigir o mostrar errores
+            $access_token = trim($_POST['access_token'] ?? '');
+            $id_sucursal = intval($_POST['id_sucursal'] ?? 0);
+            $rol = trim($_POST['rol'] ?? '');
+            $usuario = trim($_POST['usuario'] ?? '');
+            $correo = trim($_POST['correo'] ?? '');
+            $contrasena = $_POST['contrasena'] ?? '';
+            $confirmar = $_POST['confirmar_contrasena'] ?? '';
+
+            $token = AccessToken::obtenerPorHash($access_token);
+            if (!$token || $token['estado'] != 1 || ($token['date_expired'] && strtotime($token['date_expired']) < time())) {
+                $error = 'El código de acceso no es válido o ya fue usado.';
+                $contenido = 'view/components/register.php';
+                require 'view/layout.php';
+                return;
+            }
+
+            if (!$usuario || !$correo || !$contrasena || !$confirmar) {
+                $error = 'Todos los campos son obligatorios.';
+                $contenido = 'view/components/register.php';
+                require 'view/layout.php';
+                return;
+            }
+            if ($contrasena !== $confirmar) {
+                $error = 'Las contraseñas no coinciden.';
+                $contenido = 'view/components/register.php';
+                require 'view/layout.php';
+                return;
+            }
+
+            $hashed_password = password_hash($contrasena, PASSWORD_BCRYPT);
+            $ok = Usuario::insertar(
+                $usuario,
+                $correo,
+                $rol,
+                $id_sucursal,
+                1,
+                $token['id_cliente'],
+                $hashed_password,
+                $usuario
+            );
+
+            if ($ok) {
+                AccessToken::marcarComoUsado(
+                    $token['id_token'],
+                    $usuario,
+                    $_SERVER['REMOTE_ADDR']
+                );
+                header('Location: index.php?controller=auth&action=login&success=Cuenta creada');
+                exit;
+            } else {
+                $error = 'No se pudo crear el usuario.';
+                $contenido = 'view/components/register.php';
+                require 'view/layout.php';
+                return;
+            }
         } else {
-            // Mostrar formulario de registro
             $contenido = 'view/components/register.php';
             require 'view/layout.php';
         }

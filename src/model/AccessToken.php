@@ -140,10 +140,15 @@ class AccessToken
 
     public static function marcarComoUsado($id_token, $user_used, $ip_used)
     {
-        return self::actualizarEstado($id_token, 2, [
-            'date_used' => date('Y-m-d H:i:s'),
-            'user_used' => $user_used,
-            'ip_used' => $ip_used
-        ]);
+        $conn = Conexion::conectar();
+        $sql = "UPDATE access_token 
+            SET estado = 2, 
+                user_used = ?, 
+                date_used = NOW(), 
+                ip_used = ?
+            WHERE id_token = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("ssi", $user_used, $ip_used, $id_token);
+        return $stmt->execute();
     }
 }

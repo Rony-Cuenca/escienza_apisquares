@@ -5,7 +5,7 @@
         <?php if ($_SESSION['rol'] === 'Administrador'): ?>
             <div class="flex gap-2">
                 <button id="btnNuevoUsuario"
-                    class="flex items-center gap-2 bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-normal py-2 px-4 rounded-lg shadow"
+                    class="flex items-center gap-2 bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-normal py-1.5 px-3 md:py-2 md:px-4 rounded-lg shadow text-sm md:text-base"
                     data-correo-cliente="<?= htmlspecialchars($correo_cliente) ?>">
                     <span class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-white">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="rgba(0,0,0,0.3)" stroke-width="2">
@@ -14,7 +14,7 @@
                     </span>
                     Nuevo
                 </button>
-                <button id="btnGenerarCodigo" class="bg-green-600 hover:bg-green-700 text-white font-normal py-2 px-4 rounded-lg shadow flex items-center gap-2">
+                <button id="btnGenerarCodigo" class="bg-green-600 hover:bg-green-700 text-white font-normal py-1.5 px-3 md:py-2 md:px-4 rounded-lg shadow flex items-center gap-2 text-sm md:text-base">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 010 5.656l-3.535 3.535a4 4 0 01-5.657-5.657l2.121-2.121m6.364-6.364a4 4 0 015.657 5.657l-2.121 2.121" />
                     </svg>
@@ -107,34 +107,36 @@
                                 </td>
                                 <td class="py-2 px-1 text-center relative">
                                     <?php if ($_SESSION['rol'] === 'Administrador'): ?>
-                                        <button data-action="toggleMenu" type="button" class="focus:outline-none" aria-label="Abrir menú de usuario">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24">
-                                                <circle cx="12" cy="5" r="2" fill="#000" />
-                                                <circle cx="12" cy="12" r="2" fill="#000" />
-                                                <circle cx="12" cy="19" r="2" fill="#000" />
-                                            </svg>
-                                        </button>
-                                        <div id="menuUsuario" class="hidden fixed z-50 w-32 bg-white rounded-lg shadow-lg border min-w-[120px]">
-                                            <a href="javascript:void(0);"
-                                                data-action="editar"
-                                                data-id="<?= $row['id'] ?>"
-                                                data-usuario="<?= htmlspecialchars($row['usuario']) ?>"
-                                                data-correo="<?= htmlspecialchars($row['correo']) ?>"
-                                                data-rol="<?= htmlspecialchars($row['rol']) ?>"
-                                                data-sucursal="<?= $row['id_sucursal'] ?>"
-                                                data-estado="<?= $row['estado'] ?>"
-                                                class="block w-full text-left px-4 py-2 hover:bg-gray-100 text-black">
-                                                Editar
-                                            </a>
-                                            <?php if ($row['id'] != $_SESSION['id_usuario']): ?>
-                                                <?php if ($row['estado'] != 3): ?>
-                                                    <a href="javascript:void(0);" data-action="cambiarEstado" data-id="<?= $row['id'] ?>" data-estado="3"
-                                                        class="block w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100">Deshabilitar</a>
-                                                <?php else: ?>
-                                                    <a href="javascript:void(0);" data-action="cambiarEstado" data-id="<?= $row['id'] ?>" data-estado="1"
-                                                        class="block w-full text-left px-4 py-2 text-green-600 hover:bg-gray-100">Habilitar</a>
+                                        <div class="relative inline-block text-left">
+                                            <button data-action="toggleMenu" type="button" class="focus:outline-none" aria-label="Abrir menú de usuario">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24">
+                                                    <circle cx="12" cy="5" r="2" fill="#000" />
+                                                    <circle cx="12" cy="12" r="2" fill="#000" />
+                                                    <circle cx="12" cy="19" r="2" fill="#000" />
+                                                </svg>
+                                            </button>
+                                            <div id="menuUsuario" class="hidden absolute right-0 z-50 w-32 bg-white rounded-lg shadow-lg border min-w-[120px]">
+                                                <a href="javascript:void(0);"
+                                                    data-action="editar"
+                                                    data-id="<?= $row['id'] ?>"
+                                                    data-usuario="<?= htmlspecialchars($row['usuario']) ?>"
+                                                    data-correo="<?= htmlspecialchars($row['correo']) ?>"
+                                                    data-rol="<?= htmlspecialchars($row['rol']) ?>"
+                                                    data-sucursal="<?= $row['id_sucursal'] ?>"
+                                                    data-estado="<?= $row['estado'] ?>"
+                                                    class="block w-full text-left px-4 py-2 hover:bg-gray-100 text-black">
+                                                    Editar
+                                                </a>
+                                                <?php if ($row['id'] != $_SESSION['id_usuario']): ?>
+                                                    <?php if ($row['estado'] != 3): ?>
+                                                        <a href="javascript:void(0);" data-action="cambiarEstado" data-id="<?= $row['id'] ?>" data-estado="3"
+                                                            class="block w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100">Deshabilitar</a>
+                                                    <?php else: ?>
+                                                        <a href="javascript:void(0);" data-action="cambiarEstado" data-id="<?= $row['id'] ?>" data-estado="1"
+                                                            class="block w-full text-left px-4 py-2 text-green-600 hover:bg-gray-100">Habilitar</a>
+                                                    <?php endif; ?>
                                                 <?php endif; ?>
-                                            <?php endif; ?>
+                                            </div>
                                         </div>
                                     <?php endif; ?>
                                 </td>
@@ -203,15 +205,25 @@
                         <option value="Vendedor">Vendedor</option>
                     </select>
                 </div>
-                <div>
-                    <label class="block mb-1 font-semibold text-sm text-gray-700">Sucursal</label>
-                    <select name="id_sucursal" id="modalUsuarioSucursal" required class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400">
-                        <option value="">Selecciona una sucursal</option>
-                        <?php foreach ($sucursales as $suc): ?>
-                            <option value="<?= $suc['id'] ?>"><?= htmlspecialchars($suc['razon_social']) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
+                <?php if (isset($_SESSION['id_usuario']) && isset($editingUserId) && $_SESSION['id_usuario'] == $editingUserId): ?>
+                    <div>
+                        <label class="block mb-1 font-semibold text-sm text-gray-700">Sucursal</label>
+                        <input type="text" value="<?= htmlspecialchars($sucursalNombre) ?>" class="w-full border rounded px-3 py-2 bg-gray-100" readonly>
+                        <input type="hidden" name="id_sucursal" value="<?= htmlspecialchars($idSucursal) ?>">
+                    </div>
+                <?php else: ?>
+                    <div>
+                        <label class="block mb-1 font-semibold text-sm text-gray-700">Sucursal</label>
+                        <select name="id_sucursal" id="modalUsuarioSucursal" required class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                            <option value="">Selecciona una sucursal</option>
+                            <?php foreach ($sucursales as $suc): ?>
+                                <option value="<?= $suc['id'] ?>"><?= htmlspecialchars($suc['razon_social']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <input type="text" id="modalUsuarioSucursalReadonly" class="w-full border rounded px-3 py-2 bg-gray-100 mt-2" readonly style="display:none;">
+                        <input type="hidden" name="id_sucursal" id="modalUsuarioSucursalHidden" />
+                    </div>
+                <?php endif; ?>
             </div>
             <div id="cambiarContrasenaWrapper" class="md:col-span-2 mt-4 mb-2 hidden">
                 <label class="inline-flex items-center">
@@ -290,5 +302,6 @@
     window.ROL_USUARIO_LOGUEADO = <?= json_encode($_SESSION['rol']) ?>;
     window.ID_SUCURSAL_LOGUEADO = <?= json_encode($_SESSION['id_sucursal']) ?>;
 </script>
+
 <script src="../assets/js/usuario.js"></script>
 <script src="../assets/js/access_token.js"></script>

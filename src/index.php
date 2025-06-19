@@ -8,7 +8,12 @@ $action = $_GET['action'] ?? null;
 $controlador = null;
 
 if (!isset($_SESSION['id_cliente'])) {
-    if ($controller !== 'auth' || !in_array($action, ['login', 'register'])) {
+    $accionesPublicas = [
+        'auth' => ['login', 'register'],
+        'accessToken' => ['validar'],
+        'usuario' => ['verificarUsuario', 'verificarCorreo']
+    ];
+    if (!isset($accionesPublicas[$controller]) || !in_array($action, $accionesPublicas[$controller])) {
         header('Location: index.php?controller=auth&action=login');
         exit;
     }
@@ -26,9 +31,14 @@ if (!isset($_SESSION['id_cliente'])) {
 $controller = $controller ?? (isset($_SESSION['id_cliente']) ? 'home' : 'auth');
 $action = $action ?? (isset($_SESSION['id_cliente']) ? 'index' : 'login');
 
-if ($controller !== 'auth') {
+if (
+    isset($_SESSION['id_cliente']) &&
+    !($controller === 'auth' && in_array($action, ['login', 'register'])) &&
+    !($controller === 'accessToken' && $action === 'validar')
+) {
     AuthController::verificarSesionActiva();
 }
+
 
 switch ($controller) {
     case 'auth':
