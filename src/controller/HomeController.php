@@ -18,7 +18,7 @@ class HomeController
 
         // Obtener años disponibles
         $anios = [];
-        $sqlAnio = "SELECT DISTINCT YEAR(date_create) as year FROM resumen_comprobante ORDER BY year DESC";
+        $sqlAnio = "SELECT DISTINCT YEAR(fecha_registro) as year FROM resumen_comprobante ORDER BY year DESC";
         $result2 = $conn->query($sqlAnio);
         while ($row = $result2->fetch_assoc()) {
             $anios[] = $row['year'];
@@ -35,11 +35,11 @@ class HomeController
         $sucursal = $_GET['sucursal'] ?? '';
         $anio = $_GET['anio'] ?? date('Y');
 
-        $sql = "SELECT DATE_FORMAT(rc.date_create, '%m') AS mes, tr.descripcion AS tipo, SUM(rc.monto_total) AS total
+        $sql = "SELECT DATE_FORMAT(rc.fecha_registro, '%m') AS mes, tr.descripcion AS tipo, SUM(rc.monto_total) AS total
                 FROM resumen_comprobante rc
                 JOIN sucursal s ON rc.id_sucursal = s.id
                 JOIN tipo_reportedoc tr ON rc.id_reporte = tr.id
-                WHERE s.id = ? AND YEAR(rc.date_create) = ?
+                WHERE s.id = ? AND YEAR(rc.fecha_registro) = ?
                 GROUP BY mes, tipo
                 ORDER BY mes, tipo";
         $stmt = $conn->prepare($sql);
@@ -69,7 +69,7 @@ class HomeController
         $sql = "SELECT rc.serie, SUM(rc.monto_total) AS total
                 FROM resumen_comprobante rc
                 JOIN tipo_reportedoc tr ON rc.id_reporte = tr.id
-                WHERE rc.id_sucursal = ? AND YEAR(rc.date_create) = ? AND MONTH(rc.date_create) = ? AND tr.descripcion = ?
+                WHERE rc.id_sucursal = ? AND YEAR(rc.fecha_registro) = ? AND MONTH(rc.fecha_registro) = ? AND tr.descripcion = ?
                 GROUP BY rc.serie
                 HAVING total > 0
                 ORDER BY total DESC";
