@@ -39,6 +39,7 @@ def procesar():
         data_serie_ina = {}
         data_serie_igv = {}
         conteo_series = {}
+        validarNubox = []
 
         primer_valor_fecha = df.iloc[8, col_fecha]
 
@@ -50,7 +51,7 @@ def procesar():
                 serie = str(row[col_serie]).split('-')[0].strip()
                 if not serie:
                     continue
-
+                
                 def clean_number(num):
                     if pd.isna(num):
                         return 0.0
@@ -62,6 +63,12 @@ def procesar():
                 exonerado = clean_number(row[col_exonerado])
                 inafecto = clean_number(row[col_inafecto])
                 igv = clean_number(row[col_igv])
+
+                total_fila = gravado + exonerado + inafecto + igv
+                validarNubox.append({
+                    'serie': serie,
+                    'total': total_fila
+                })
 
                 if serie not in data_serie_gra:
                     data_serie_gra[serie] = 0.0
@@ -101,19 +108,11 @@ def procesar():
         return jsonify({
             'status': 'success',
             'estado': estado,
-            'resultados': resultados
+            'resultados': resultados,
+            'validarNubox': validarNubox
         })
-        
-    elif estado == 2:
-        header = df.iloc[3].tolist()
-        resultado = header[1] if len(header) > 1 else None
 
-        return jsonify({
-            'status': 'success',
-            'estado': estado,
-            'resultados': resultado
-        })
-    elif estado == 3:
+    elif estado == 2:  # EDSuite
         if len(df) <= 1:
             return jsonify({'status': 'error', 'message': 'Not enough rows'}), 400
 
@@ -135,7 +134,8 @@ def procesar():
                 continue
 
             try:
-                if not col_serie:
+                serie = str(row[col_serie]).strip()
+                if not serie:
                     continue
 
                 def clean_number(num):
@@ -144,18 +144,18 @@ def procesar():
                     if isinstance(num, (int, float)):
                         return float(num)
                     return float(str(num).replace(',', ''))
-                
+                    
                 total = clean_number(row[col_total])
                 igv = clean_number(row[col_igv])
 
-                if col_serie not in data_serie_total:
-                    data_serie_total[col_serie] = 0.0
-                    data_serie_igv[col_serie] = 0.0
-                    conteo_series[col_serie] = 0
+                if serie not in data_serie_total:
+                    data_serie_total[serie] = 0.0
+                    data_serie_igv[serie] = 0.0
+                    conteo_series[serie] = 0
 
-                data_serie_total[col_serie] += total
-                data_serie_igv[col_serie] += igv
-                conteo_series[col_serie] += 1
+                data_serie_total[serie] += total
+                data_serie_igv[serie] += igv
+                conteo_series[serie] += 1
 
             except Exception:
                 continue
@@ -164,13 +164,13 @@ def procesar():
         for serie in sorted(data_serie_total.keys()):
             total_total = data_serie_total[serie]
             total_igv = data_serie_igv[serie]
-
+            conteo = conteo_series[serie]
+            
             resultados.append({
                 'serie': serie,
-                'conteo': conteo_series[serie],
+                'conteo': conteo,
                 'igv': round(total_igv, 2),
-                'total': round(total_total, 2),
-                'fecha': primer_valor_fecha
+                'total': round(total_total, 2)
             })
 
         return jsonify({
@@ -178,6 +178,6 @@ def procesar():
             'estado': estado,
             'resultados': resultados
         })
-   
+    
 if __name__ == '__main__':
     app.run(port=5000, debug=False)  # Disable debug mode for production

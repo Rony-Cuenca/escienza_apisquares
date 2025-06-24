@@ -1,25 +1,21 @@
 <?php
-//ini_set('memory_limit', '512M');
 use Box\Spout\Reader\Common\Creator\ReaderEntityFactory;
 require __DIR__ . '/../../vendor/autoload.php'; 
 require_once __DIR__ . '/../model/Cuadre.php';
 require_once __DIR__ . '/../model/Usuario.php';
+require_once __DIR__ . '/../model/SerieAjena.php';
 
 
 class CuadresController {
+    public $validarNubox = [];
+    public $validarSire = [];
+
     public function index() {
         $contenido = 'view/components/cuadre.php';
         require 'view/layout.php';
     }
 
     public function cuadre() {
-        $ResultsSIRE = [];
-        $ErrorSIRE = null;
-        $ResultsNUBOX = [];
-        $ErrorNUBOX = null;
-
-        $RUCSIRE = null;
-        $RUCNUBOX = null;
         $fechaSIRE = null;
         $fechaNUBOX = null;
 
@@ -58,8 +54,6 @@ class CuadresController {
                 if ($fila == 5) {
                     $cells = $row->toArray();
                     $fechaNUBOX = $cells[4];
-                    //$fecha_obj = DateTime::createFromFormat('d-m-Y', $fechaNUBOX);
-                    //$fechaNUBOX = $fecha_obj->format('Y/m/01');
                 }
                 // Terminar el bucle si ya se capturaron ambos valores
                 if ($RUCNUBOX !== null && $fechaNUBOX !== null) {
@@ -78,10 +72,13 @@ class CuadresController {
                 $existeFecha = Cuadre::existeFecha($fechaSIRE, $id_sucursal);
                 if (!$existeFecha) {
                     extract($this->sire($_FILES['exe_sire'], $_GET['user']));
-                    $nuboxResponse = $this->carga_nubox($_FILES['exe_nubox'], 1);
-                    if (isset($nuboxResponse['resultados']) && $nuboxResponse['estado'] == 1) {
+                    $nuboxResponse = $this->cargar_archivo($_FILES['exe_nubox'], 1);
+                    if (isset($nuboxResponse['resultados']) && $nuboxResponse['estado'] == 1 && isset($nuboxResponse['validarNubox'])) {
                         extract($this->procesarDatosNubox($nuboxResponse['resultados']));
+                        $this->validarNubox = $nuboxResponse['validarNubox'];
                     }
+                    extract($this->Validar_series());
+                    //print_r($this->validarNubox);
                 } else {
                     $ErrorSIRE = "Ya existe un cuadre para la fecha seleccionada.";
                 }
@@ -91,6 +88,15 @@ class CuadresController {
         } else {
             $ErrorSIRE = "Los RUC de los archivos no coinciden.";
         }
+
+        //$edsuiteResponse = $this->cargar_archivo($_FILES['exe_edsuite'], 2);
+        //print_r($edsuiteResponse);
+        /*if (isset($edsuiteResponse['resultados']) && $edsuiteResponse['estado'] == 2) {
+            extract($this->procesarDatosEDSuite($edsuiteResponse['resultados']));
+            //echo "Se cargo correctamente";
+        } elseif (isset($edsuiteResponse['message'])) {
+            $ErrorEDSUITE = $edsuiteResponse['message'];
+        }*/
 
         $contenido = 'view/components/cuadre.php';
         require 'view/layout.php';
@@ -112,25 +118,41 @@ class CuadresController {
             $header = fgetcsv($handle);
             
             $colSerie = array_search('Serie del CDP', $header);
+            $colnumero = array_search('Nro CP o Doc. Nro Inicial (Rango)', $header);
             $colGrav = array_search('BI Gravada', $header);
             $colExo = array_search('Mto Exonerado', $header);
             $colIna = array_search('Mto Inafecto', $header);
             $colIGV = array_search('IGV / IPM', $header);
             $colFecha = array_search('Fecha de emisión', $header);
 
-            if ($colSerie != false && $colGrav != false && $colExo != false && 
+            if ($colSerie != false && $colnumero != false && $colGrav != false && $colExo != false && 
                 $colIna != false && $colIGV != false && $colFecha != false) {
-                if (($fila = fgetcsv($handle)) !== false) {
-                    $fechaSIRE = $fila[$colFecha];
-                    $fechaSIRE = date('Y-d-01', strtotime($fechaSIRE));
-                }
-                while (($datos = fgetcsv($handle, 0, ",")) !== false) {
-                    $serieSIRE = $datos[$colSerie];
-                    $GravSIRE = $datos[$colGrav];
-                    $ExoSIRE = $datos[$colExo];
-                    $InaSIRE = $datos[$colIna];
-                    $IGVSIRE = $datos[$colIGV];
 
+                $filas = [];
+                while (($fila = fgetcsv($handle)) !== false) {
+                    $filas[] = $fila;
+                }
+                fclose($handle);
+
+                if (isset($filas[0][$colFecha])) {
+                    $fechaSIRE = date('Y-d-01', strtotime($filas[0][$colFecha]));
+                }
+
+                foreach ($filas as $fila) {
+                    $serieSIRE = $fila[$colSerie];
+                    $numeroSIRE = $fila[$colnumero];
+
+                    $GravSIRE = $fila[$colGrav];
+                    $ExoSIRE = $fila[$colExo];
+                    $InaSIRE = $fila[$colIna];
+                    $IGVSIRE = $fila[$colIGV];
+
+                    $total_fila = $GravSIRE + $ExoSIRE + $InaSIRE + $IGVSIRE;
+                    $this->validarSire[] = [
+                        'serie' => $serieSIRE,
+                        'total' => $total_fila
+                    ];
+    
                     if (!isset($DataSerieGraSIRE[$serieSIRE])) {
                         $DataSerieGraSIRE[$serieSIRE] = 0;
                         $DataSerieExoSIRE[$serieSIRE] = 0;
@@ -138,14 +160,15 @@ class CuadresController {
                         $DataSerieIGVSIRE[$serieSIRE] = 0;
                         $conteoSeriesSIRE[$serieSIRE] = 0;
                     }
-                    
+    
                     $DataSerieGraSIRE[$serieSIRE] += floatval($GravSIRE);
                     $DataSerieExoSIRE[$serieSIRE] += floatval($ExoSIRE);
                     $DataSerieInaSIRE[$serieSIRE] += floatval($InaSIRE);
                     $DataSerieIGVSIRE[$serieSIRE] += floatval($IGVSIRE);
                     $conteoSeriesSIRE[$serieSIRE]++;
                 }
-
+                //print_r($this->validarSire);
+    
                 ksort($DataSerieGraSIRE);
                 
                 foreach ($DataSerieGraSIRE as $serie => $totalBI) {
@@ -169,7 +192,6 @@ class CuadresController {
             } else {
                 $ErrorSIRE = "No se encontraron las columnas necesarias en el archivo";
             }
-            fclose($handle);
         } else {
             $ErrorSIRE = "Error al abrir el archivo.";
         }
@@ -177,24 +199,24 @@ class CuadresController {
         return compact('ErrorSIRE', 'ResultsSIRE');
     }
 
-    public function carga_nubox($archivo,$estado) {
+    public function cargar_archivo($archivo,$estado) {
         $uploadDir = __DIR__ . '/../../uploads/';
         //Sirve para cargar la carpeta por si no existe
         if (!file_exists($uploadDir)) {
             mkdir($uploadDir, 0777, true);
         }
 
-        $nuboxPath = $uploadDir . uniqid('nubox_') . '.xlsx';
+        $archivoPath = $uploadDir . uniqid('archivo_') . '.xlsx';
         
-        if (!move_uploaded_file($archivo['tmp_name'], $nuboxPath)) {
+        if (!move_uploaded_file($archivo['tmp_name'], $archivoPath)) {
             throw new Exception('No se pudo guardar el archivo en el servidor');
         }
 
         // Llamar al servicio Python con la ruta del archivo
-        $respuesta = $this->llamarApiPython($nuboxPath, $estado);
+        $respuesta = $this->llamarApiPython($archivoPath, $estado);
 
         // Opcional: Eliminar el archivo después de procesarlo
-        unlink($nuboxPath);
+        unlink($archivoPath);
 
         return $respuesta;
     }
@@ -304,5 +326,146 @@ class CuadresController {
         return compact('ErrorNUBOX', 'ResultsNUBOX');
     }
 
+    private function procesarDatosEDSuite($datosEDSuite) {
+        $ErrorEDSUITE = null;
+        $ResultsEDSUITE = [];
+        $reporte = 3;
+        
+        // Verificar si hay datos recibidos
+        if (empty($datosEDSuite)) {
+            $ErrorEDSUITE = "No se recibieron datos para procesar";
+            return compact('ErrorEDSUITE', 'ResultsEDSUITE');
+        }
+        
+        foreach ($datosEDSuite as $resultado) {
+            // Validar estructura de cada resultado
+            if (!isset($resultado['serie'], $resultado['conteo'], $resultado['igv'], $resultado['total'])) {
+                $ErrorEDSUITE = "Estructura de datos incorrecta";
+                return compact('ErrorEDSUITE', 'ResultsEDSUITE');
+            }
+            $fecha_original = "01-04-2025";
+            $fecha_formateada = date('Y-m-01', strtotime($fecha_original));
+            
+            // Guardar en base de datos y capturar resultado
+            $guardado = $this->guardarCuadre(
+                $resultado['serie'],
+                $resultado['conteo'],
+                0,
+                0,
+                0,
+                $resultado['igv'],
+                $resultado['total'],
+                $reporte,
+                $fecha_formateada
+            );
+            
+            
+            $ResultsEDSUITE[] = [
+                'serie' => $resultado['serie'],
+                'conteo' => $resultado['conteo'],
+                'igv' => $resultado['igv'],
+                'total' => $resultado['total']
+            ];
+        }
+        return compact('ErrorEDSUITE', 'ResultsEDSUITE');
+    }
+
+    private function Validar_series() {
+        $user = Usuario::obtenerId($_GET['user']);
+        
+        $user_create = $user['usuario'];
+        $user_update = $user['usuario'];
+        $id_sucursal = $user['id_sucursal'];
+
+
+        $ErrorValidarSeries = null;
+        $ResultsValidarSeries = [];
+
+        $sire = $this->validarSire;
+        $nubox = $this->validarNubox;
+
+        $numeros_sire = array_column($sire, 'serie');
+        $numeros_nubox = array_column($nubox, 'serie');
+
+        $faltantes_en_nubox = array_diff($numeros_sire, $numeros_nubox);
+        $faltantes_en_sire = array_diff($numeros_nubox, $numeros_sire);
+
+        $resultado = [];
+    
+        foreach ($faltantes_en_nubox as $serie) {
+            $dato = null;
+            foreach ($sire as $item) {
+                if ($item['serie'] === $serie) {
+                    $dato = $item;
+                    break;
+                }
+            }
+
+            $resultado[] = [
+                'serie' => $serie,
+                'total' => $dato['total'] ?? 0,
+                'cuadre' => 'NUBOX'
+            ];
+        }
+    
+        foreach ($faltantes_en_sire as $serie) {
+            $dato = null;
+            foreach ($nubox as $item) {
+                if ($item['serie'] === $serie) {
+                    $dato = $item;
+                    break;
+                }
+            }
+    
+            $resultado[] = [
+                'serie' => $serie,
+                'total' => $dato['total'] ?? 0,
+                'cuadre' => 'SIRE'
+            ];
+        }
+
+        $agrupados = [];
+
+        foreach ($resultado as $item) {
+            $serie = $item['serie'];
+            $total = $item['total'];
+            $cuadre = $item['cuadre'];
+
+            if (!isset($agrupados[$serie])) {
+                $agrupados[$serie] = [
+                    'serie' => $serie,
+                    'conteo' => 0,
+                    'total' => 0,
+                    'cuadre' => $cuadre
+                ];
+            }
+
+            $agrupados[$serie]['conteo']++;
+            $agrupados[$serie]['total'] += $total;
+
+            $data = [
+                'serie' => $serie,
+                'conteo' => $agrupados[$serie]['conteo'],
+                'total' => $agrupados[$serie]['total'],
+                'user_create' => $user_create,
+                'user_update' => $user_update,
+                'id_sucursal' => $id_sucursal,
+                'estado' => 1
+            ];
+    
+            foreach ($data as $key => $value) {
+                if ($value = false) {
+                    throw new Exception("Dato inválido en campo $key");
+                }
+            }
+    
+            SerieAjena::Insertar($data);
+        }
+
+        // Si deseas que sea array con índices numéricos:
+        $ResultsValidarSeries = array_values($agrupados);
+    
+        return compact('ErrorValidarSeries', 'ResultsValidarSeries');
+    }
 
 }

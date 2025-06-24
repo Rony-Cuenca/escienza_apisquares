@@ -1,7 +1,7 @@
 <div class="w-full items-center px-2 md:px-5 py-10 bg-gray-200 flex-1 flex flex-col">
     <div class="flex flex-col items-center w-full">
         <div class="w-full">
-            <div class="mx-auto bg-white rounded-lg shadow-lg overflow-hidden max-w-7xlº    ">
+            <div class="mx-auto bg-white rounded-lg shadow-lg overflow-hidden max-w-7xl">
                 <div class="p-8">
                     <h2 class="text-4xl font-semibold text-gray-900 text-center mb-8 uppercase">Comparación de Reportes</h2>
                     <form action="index.php?controller=cuadres&action=cuadre&user=<?php echo $_SESSION['id_usuario'] ?>" method="post" enctype="multipart/form-data">
@@ -13,7 +13,7 @@
                                     <label for="sire" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-r-lg border border-l-0 hover:bg-gray-300">
                                         Seleccionar archivo
                                     </label>
-                                    <input type="file" name="exe_sire" id="sire" accept=".csv" class="hidden" onchange="update(this, 'file-sire')" required>
+                                    <input type="file" name="exe_sire" id="sire" accept=".csv" class="hidden" onchange="update(this, 'file-sire')">
                                 </div>
                             </div>
                             <div class="flex-1">
@@ -23,17 +23,17 @@
                                     <label for="nubox" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-r-lg border border-l-0 hover:bg-gray-300">
                                         Seleccionar archivo
                                     </label>
-                                    <input type="file" name="exe_nubox" id="nubox" accept=".xlsx" class="hidden" onchange="update(this, 'file-nubox')" required>
+                                    <input type="file" name="exe_nubox" id="nubox" accept=".xlsx" class="hidden" onchange="update(this, 'file-nubox')">
                                 </div>
                             </div>
                             <div class="flex-1">
                                 <label class="block font-medium mb-1">Archivo EDSuite</label>
                                 <div class="flex">
-                                    <input type="text" id="" class="flex-grow px-2 py-2 border rounded-l-lg bg-gray-50" readonly placeholder="Ningún archivo seleccionado">
-                                    <label for="" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-r-lg border border-l-0 hover:bg-gray-300">
+                                    <input type="text" id="file-edsuite" class="flex-grow px-2 py-2 border rounded-l-lg bg-gray-50" readonly placeholder="Ningún archivo seleccionado">
+                                    <label for="edsuite" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-r-lg border border-l-0 hover:bg-gray-300">
                                         Seleccionar archivo
                                     </label>
-                                    <input type="file" name="" id="" accept="" class="hidden" onchange="">
+                                    <input type="file" name="exe_edsuite" id="edsuite" accept=".xlsx" class="hidden" onchange="update(this, 'file-edsuite')">
                                 </div>
                             </div>
                         </div>
