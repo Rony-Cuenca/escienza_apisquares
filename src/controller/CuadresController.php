@@ -89,14 +89,14 @@ class CuadresController {
             $ErrorSIRE = "Los RUC de los archivos no coinciden.";
         }
 
-        $edsuiteResponse = $this->cargar_archivo($_FILES['exe_edsuite'], 2);
+        //$edsuiteResponse = $this->cargar_archivo($_FILES['exe_edsuite'], 2);
         //print_r($edsuiteResponse);
-        if (isset($edsuiteResponse['resultados']) && $edsuiteResponse['estado'] == 2) {
+        /*if (isset($edsuiteResponse['resultados']) && $edsuiteResponse['estado'] == 2) {
             extract($this->procesarDatosEDSuite($edsuiteResponse['resultados']));
             //echo "Se cargo correctamente";
         } elseif (isset($edsuiteResponse['message'])) {
             $ErrorEDSUITE = $edsuiteResponse['message'];
-        }
+        }*/
 
         $contenido = 'view/components/cuadre.php';
         require 'view/layout.php';
