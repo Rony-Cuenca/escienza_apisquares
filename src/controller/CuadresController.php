@@ -89,14 +89,14 @@ class CuadresController {
             $ErrorSIRE = "Los RUC de los archivos no coinciden.";
         }
 
-        //$edsuiteResponse = $this->cargar_archivo($_FILES['exe_edsuite'], 2);
+        $edsuiteResponse = $this->cargar_archivo($_FILES['exe_edsuite'], 2);
         //print_r($edsuiteResponse);
-        /*if (isset($edsuiteResponse['resultados']) && $edsuiteResponse['estado'] == 2) {
+        if (isset($edsuiteResponse['resultados']) && $edsuiteResponse['estado'] == 2) {
             extract($this->procesarDatosEDSuite($edsuiteResponse['resultados']));
             //echo "Se cargo correctamente";
         } elseif (isset($edsuiteResponse['message'])) {
             $ErrorEDSUITE = $edsuiteResponse['message'];
-        }*/
+        }
 
         $contenido = 'view/components/cuadre.php';
         require 'view/layout.php';
@@ -112,21 +112,24 @@ class CuadresController {
         $DataSerieExoSIRE = [];
         $DataSerieInaSIRE = [];
         $DataSerieIGVSIRE = [];
+        $DataSerieDscBISIRE = [];
+        $DataSerieDscIGVSIRE = [];
         $conteoSeriesSIRE = [];
             
         if (($handle = fopen($nombTemp, "r")) != false) {
             $header = fgetcsv($handle);
             
             $colSerie = array_search('Serie del CDP', $header);
-            $colnumero = array_search('Nro CP o Doc. Nro Inicial (Rango)', $header);
             $colGrav = array_search('BI Gravada', $header);
             $colExo = array_search('Mto Exonerado', $header);
             $colIna = array_search('Mto Inafecto', $header);
             $colIGV = array_search('IGV / IPM', $header);
+            $colDscBI = array_search('Dscto BI', $header);
+            $colDscIGV = array_search('Dscto IGV / IPM', $header);
             $colFecha = array_search('Fecha de emisión', $header);
 
-            if ($colSerie != false && $colnumero != false && $colGrav != false && $colExo != false && 
-                $colIna != false && $colIGV != false && $colFecha != false) {
+            if ($colSerie != false && $colGrav != false && $colExo != false && 
+                $colIna != false && $colIGV != false && $colDscBI != false && $colDscIGV != false && $colFecha != false) {
 
                 $filas = [];
                 while (($fila = fgetcsv($handle)) !== false) {
@@ -140,14 +143,14 @@ class CuadresController {
 
                 foreach ($filas as $fila) {
                     $serieSIRE = $fila[$colSerie];
-                    $numeroSIRE = $fila[$colnumero];
-
                     $GravSIRE = $fila[$colGrav];
                     $ExoSIRE = $fila[$colExo];
                     $InaSIRE = $fila[$colIna];
                     $IGVSIRE = $fila[$colIGV];
+                    $DscBISIRE = $fila[$colDscBI];
+                    $DscIGVSIRE = $fila[$colDscIGV];
 
-                    $total_fila = $GravSIRE + $ExoSIRE + $InaSIRE + $IGVSIRE;
+                    $total_fila = $GravSIRE + $ExoSIRE + $InaSIRE + $IGVSIRE + $DscBISIRE + $DscIGVSIRE;
                     $this->validarSire[] = [
                         'serie' => $serieSIRE,
                         'total' => $total_fila
@@ -158,6 +161,8 @@ class CuadresController {
                         $DataSerieExoSIRE[$serieSIRE] = 0;
                         $DataSerieInaSIRE[$serieSIRE] = 0;
                         $DataSerieIGVSIRE[$serieSIRE] = 0;
+                        $DataSerieDscBISIRE[$serieSIRE] = 0;
+                        $DataSerieDscIGVSIRE[$serieSIRE] = 0;
                         $conteoSeriesSIRE[$serieSIRE] = 0;
                     }
     
@@ -165,6 +170,8 @@ class CuadresController {
                     $DataSerieExoSIRE[$serieSIRE] += floatval($ExoSIRE);
                     $DataSerieInaSIRE[$serieSIRE] += floatval($InaSIRE);
                     $DataSerieIGVSIRE[$serieSIRE] += floatval($IGVSIRE);
+                    $DataSerieDscBISIRE[$serieSIRE] += floatval($DscBISIRE);
+                    $DataSerieDscIGVSIRE[$serieSIRE] += floatval($DscIGVSIRE);
                     $conteoSeriesSIRE[$serieSIRE]++;
                 }
                 //print_r($this->validarSire);
@@ -175,17 +182,27 @@ class CuadresController {
                     $TExoSIRE = $DataSerieExoSIRE[$serie];
                     $TInaSIRE = $DataSerieInaSIRE[$serie];
                     $TIGVSIRE = $DataSerieIGVSIRE[$serie];
-                    $TTotalSIRE = $totalBI + $TExoSIRE + $TInaSIRE + $TIGVSIRE;
+                    $TDscBISIRE = $DataSerieDscBISIRE[$serie];
+                    $TDscIGVSIRE = $DataSerieDscIGVSIRE[$serie];
+                    $TTotalSIRE = $totalBI + $TExoSIRE + $TInaSIRE + $TIGVSIRE + $TDscBISIRE + $TDscIGVSIRE;
 
-                    $this->guardarCuadre($serie,$conteoSeriesSIRE[$serie],$totalBI,$TExoSIRE,$TInaSIRE,$TIGVSIRE,$TTotalSIRE,$reporte,$fechaSIRE);
+                    if ($TDscBISIRE == 0 && $TDscIGVSIRE == 0){
+                        $BI_Gravada = $totalBI;
+                        $IGV = $TIGVSIRE;
+                    } else {
+                        $BI_Gravada = $TDscBISIRE;
+                        $IGV = $TDscIGVSIRE;
+                    }
+
+                    $this->guardarCuadre($serie,$conteoSeriesSIRE[$serie],$BI_Gravada,$TExoSIRE,$TInaSIRE,$IGV,$TTotalSIRE,$reporte,$fechaSIRE);
                         
                     $ResultsSIRE[] = [
                         'serie' => $serie,
                         'conteo' => $conteoSeriesSIRE[$serie],
-                        'bi' => $totalBI,
+                        'bi' => $BI_Gravada,
                         'exonerado' => $TExoSIRE,
                         'inafecto' => $TInaSIRE,
-                        'igv' => $TIGVSIRE,
+                        'igv' => $IGV,
                         'total' => $TTotalSIRE
                     ];
                 }
