@@ -125,6 +125,10 @@ def procesar():
             col_serie = header.index('Serie')
             col_igv = header.index('IGV')
             col_total = header.index('Total')
+            col_fecha = header.index('Fecha')
+
+            col_producto = header.index('Producto')
+            col_cantidad = header.index('Cantidad')
         except ValueError as e:
             return jsonify({'status': 'error', 'message': f'Missing columns: {str(e)}'}), 400
 
@@ -132,12 +136,18 @@ def procesar():
         data_serie_igv = {}
         conteo_series = {}
 
+        data_cantidad = {}
+
+        primer_valor_fecha = df.iloc[2, col_fecha]  
+
         for _, row in df.iloc[2:].iterrows():
-            if pd.isna(row[col_serie]) or pd.isna(row[col_igv]) or pd.isna(row[col_total]):
+            if pd.isna(row[col_serie]) or pd.isna(row[col_igv]) or pd.isna(row[col_total]) or pd.isna(row[col_producto]) or pd.isna(row[col_cantidad]):
                 continue
 
             try:
                 serie = str(row[col_serie]).strip()
+                producto = str(row[col_producto]).strip()
+                
                 if not serie:
                     continue
 
@@ -151,6 +161,8 @@ def procesar():
                 total = clean_number(row[col_total])
                 igv = clean_number(row[col_igv])
 
+                cantidad = clean_number(row[col_cantidad])
+
                 if serie not in data_serie_total:
                     data_serie_total[serie] = 0.0
                     data_serie_igv[serie] = 0.0
@@ -160,10 +172,15 @@ def procesar():
                 data_serie_igv[serie] += igv
                 conteo_series[serie] += 1
 
+                if producto not in data_cantidad:
+                    data_cantidad[producto] = 0.0
+
+                data_cantidad[producto] += cantidad
             except Exception:
                 continue
 
         resultados = []
+        total_total = 0.0
         for serie in sorted(data_serie_total.keys()):
             total_total = data_serie_total[serie]
             total_igv = data_serie_igv[serie]
@@ -173,84 +190,92 @@ def procesar():
                 'serie': serie,
                 'conteo': conteo,
                 'igv': round(total_igv, 2),
+                'total': round(total_total, 2),
+                'fecha': primer_valor_fecha
+            })
+
+        resultados_productos = []
+        for producto in sorted(data_cantidad.keys()):
+            cantidad = data_cantidad[producto]
+            
+            resultados_productos.append({
+                'producto': producto,
+                'cantidad': cantidad,
                 'total': round(total_total, 2)
             })
 
         return jsonify({
             'status': 'success',
             'estado': estado,
-            'resultados': resultados
+            'resultados': resultados,
+            'resultados_productos': resultados_productos
         })
-        
 @app.route('/unificar', methods=['POST'])
 def unificar_archivos():
+    # Verificar si hay archivos en la solicitud
     if not request.files:
         return jsonify({'status': 'error', 'message': 'No files received'}), 400
-    """
-    Unifica múltiples archivos Excel en uno solo.
     
-    El cliente debe enviar los archivos en un formulario con múltiples campos 'files[]'
-    """
-    # Crear un directorio temporal para guardar los archivos
+    # Obtener todos los archivos (nota el getlist para array)
+    files = request.files.getlist('file[]')  # Cambiado a 'file[]' para coincidir con PHP
+    
+    if not files:
+        return jsonify({'status': 'error', 'message': 'No valid files uploaded'}), 400
+    
     temp_dir = tempfile.mkdtemp()
-    archivos = []
+    temp_files = []
     
     try:
-        # Guardar todos los archivos recibidos
-        for file in request.files.getlist('files[]'):
-            if not file.filename.lower().endswith(('.xlsx', '.xls')):
-                return jsonify({'status': 'error', 'message': 'Solo se aceptan archivos Excel'}), 400
-            
-            temp_path = os.path.join(temp_dir, file.filename)
+        # Guardar archivos temporalmente
+        for i, file in enumerate(files):
+            if file.filename == '':
+                continue
+                
+            if not (file.filename.endswith('.xlsx') or file.filename.endswith('.xls')):
+                continue
+                
+            temp_path = os.path.join(temp_dir, f'temp_{i}.xlsx')
             file.save(temp_path)
-            archivos.append(temp_path)
-            
-        if not archivos:
-            return jsonify({'status': 'error', 'message': 'No se recibieron archivos'}), 400
+            temp_files.append(temp_path)
         
-        # Leer todos los archivos
+        if not temp_files:
+            return jsonify({'status': 'error', 'message': 'No valid Excel files to process'}), 400
+        
+        # Procesar archivos
         dfs = []
-        for archivo in archivos:
+        for file_path in temp_files:
             try:
-                df = pd.read_excel(archivo)
-                df['Archivo_Origen'] = os.path.basename(archivo)
+                df = pd.read_excel(file_path)
+                df['Archivo_Origen'] = os.path.basename(file_path)
                 dfs.append(df)
             except Exception as e:
-                return jsonify({'status': 'error', 'message': f'Error al procesar {archivo}: {str(e)}'}), 400
+                print(f"Error processing {file_path}: {str(e)}")
+                continue
         
         if not dfs:
-            return jsonify({'status': 'error', 'message': 'No se pudo leer ningún archivo Excel válido'}), 400
+            return jsonify({'status': 'error', 'message': 'Could not read any Excel file'}), 400
         
-        # Unificar todos los DataFrames
+        # Unificar DataFrames
         df_unificado = pd.concat(dfs, ignore_index=True)
         
-        # Generar nombre de salida
-        fecha = datetime.now().strftime("%Y%m%d_%H%M%S")
-        salida = f"unificado_{fecha}.xlsx"
+        # Crear respuesta
+        output = io.BytesIO()
+        df_unificado.to_excel(output, index=False)
+        output.seek(0)
         
-        # Guardar el archivo unificado
-        salida_path = os.path.join(temp_dir, salida)
-        df_unificado.to_excel(salida_path, index=False)
-        
-        # Leer el archivo unificado como bytes
-        with open(salida_path, 'rb') as f:
-            contenido = f.read()
-        
-        # Eliminar el directorio temporal
-        shutil.rmtree(temp_dir)
-        
-        return jsonify({
-            'status': 'success',
-            'archivo': contenido.decode('latin1') if contenido else None,
-            'nombre': salida,
-            'filas': len(df_unificado),
-            'columnas': len(df_unificado.columns)
-        })
+        return send_file(
+            output,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            as_attachment=True,
+            download_name=f'unificado_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+        )
         
     except Exception as e:
-        # En caso de error, eliminar el directorio temporal
-        shutil.rmtree(temp_dir, ignore_errors=True)
-        return jsonify({'status': 'error', 'message': str(e)}), 500
-
+        return jsonify({'status': 'error', 'message': f'Error processing files: {str(e)}'}), 500
+    
+    finally:
+        # Limpiar archivos temporales
+        if os.path.exists(temp_dir):
+            shutil.rmtree(temp_dir)
 if __name__ == '__main__':
     app.run(port=5000, debug=False)  # Disable debug mode for production

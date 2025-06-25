@@ -4,6 +4,7 @@ require __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/../model/Cuadre.php';
 require_once __DIR__ . '/../model/Usuario.php';
 require_once __DIR__ . '/../model/SerieAjena.php';
+require_once __DIR__ . '/../model/VentaGlobal.php';
 
 
 class CuadresController {
@@ -89,14 +90,18 @@ class CuadresController {
             $ErrorSIRE = "Los RUC de los archivos no coinciden.";
         }
 
-        //$edsuiteResponse = $this->cargar_archivo($_FILES['exe_edsuite'], 2);
-        //print_r($edsuiteResponse);
-        /*if (isset($edsuiteResponse['resultados']) && $edsuiteResponse['estado'] == 2) {
-            extract($this->procesarDatosEDSuite($edsuiteResponse['resultados']));
-            //echo "Se cargo correctamente";
-        } elseif (isset($edsuiteResponse['message'])) {
-            $ErrorEDSUITE = $edsuiteResponse['message'];
-        }*/
+        if (!isset($_FILES['exe_edsuite']) || $_FILES['exe_edsuite']['error'] !== UPLOAD_ERR_OK) {
+            $ErrorEDSUITE = "No se selecciono EDSUITE.";
+        } else {
+            $edsuiteResponse = $this->cargar_archivo($_FILES['exe_edsuite'], 2);
+            //print_r($edsuiteResponse['resultados_productos']);
+            if (isset($edsuiteResponse['resultados']) && $edsuiteResponse['estado'] == 2) {
+                extract($this->procesarDatosEDSuite($edsuiteResponse['resultados']));
+                $this->guardarDatosEdSuite($edsuiteResponse['resultados_productos']);
+            } elseif (isset($edsuiteResponse['message'])) {
+                $ErrorEDSUITE = $edsuiteResponse['message'];
+            }
+        }
 
         $contenido = 'view/components/cuadre.php';
         require 'view/layout.php';
@@ -104,14 +109,16 @@ class CuadresController {
 
     public function unirExcel() {
         if (!isset($_FILES['archivos_excel'])) {
-            echo "No se recibieron archivos.";
+            echo json_encode(['status' => 'error', 'message' => 'No se recibieron archivos.']);
             return;
         }
     
+        // Reorganizar archivos para facilitar el procesamiento
         $archivos = $_FILES['archivos_excel'];
-        $archivos_reorganizados = []; 
+        $archivos_reorganizados = [];
+        
         for ($i = 0; $i < count($archivos['name']); $i++) {
-            if ($archivos['error'][$i] === 0) {
+            if ($archivos['error'][$i] === UPLOAD_ERR_OK) {
                 $archivos_reorganizados[] = [
                     'name' => $archivos['name'][$i],
                     'type' => $archivos['type'][$i],
@@ -121,76 +128,116 @@ class CuadresController {
                 ];
             }
         }
-
-        $uploadDir = __DIR__ . '/../../uploads/';
+    
+        // Directorio para guardar archivos temporalmente
+        $uploadDir = __DIR__ . '/../../uploads/unificar/';
         if (!file_exists($uploadDir)) {
             mkdir($uploadDir, 0777, true);
         }
-
+    
+        // Guardar archivos temporalmente
         $archivosPaths = [];
         foreach ($archivos_reorganizados as $archivo) {
-            $rutaTemp = $uploadDir . uniqid('excel_') . '.xlsx';
+            $extension = pathinfo($archivo['name'], PATHINFO_EXTENSION);
+            $nombreUnico = uniqid('excel_') . '.' . $extension;
+            $rutaTemp = $uploadDir . $nombreUnico;
+            
             if (move_uploaded_file($archivo['tmp_name'], $rutaTemp)) {
                 $archivosPaths[] = $rutaTemp;
             }
         }
-
-        $respuesta = $this->llamarApiPythonMultiple($archivosPaths);
-
-        foreach ($archivosPaths as $path) {
-            if (file_exists($path)) {
-                unlink($path);
-            }
+    
+        if (empty($archivosPaths)) {
+            echo json_encode(['status' => 'error', 'message' => 'No se pudieron guardar los archivos temporales.']);
+            return;
         }
-
-        // Crear archivo temporal para guardar la respuesta
-        $tempFile = tempnam(sys_get_temp_dir(), 'excel_unificado');
-        file_put_contents($tempFile, $respuesta);
-
-        // Mostrar enlace para descargar el archivo
-        $outputPath = $tempFile;
-        echo "Unificación completada: <a href='$outputPath' download='archivo_unificado.xlsx'>Descargar archivo</a>";
-        
+    
+        try {
+            // Llamar a la API Python
+            $resultado = $this->llamarApiPythonMultiple($archivosPaths);
+            
+            // Directorio para archivos unificados
+            $unifiedDir = __DIR__ . '/../../unified/';
+            if (!file_exists($unifiedDir)) {
+                mkdir($unifiedDir, 0777, true);
+            }
+            
+            // Guardar el archivo unificado
+            $fecha = date('Ymd_His');
+            $outputFilename = 'unificado_' . $fecha . '.xlsx';
+            $outputPath = $unifiedDir . $outputFilename;
+            
+            // Si la API devuelve el contenido directamente (no JSON)
+            file_put_contents($outputPath, $resultado);
+            
+            // Limpiar archivos temporales
+            foreach ($archivosPaths as $path) {
+                if (file_exists($path)) {
+                    unlink($path);
+                }
+            }
+    
+            echo json_encode([
+                'status' => 'success',
+                'message' => 'Archivos unificados correctamente',
+                'file_path' => $outputPath,
+                'file_name' => $outputFilename
+            ]);
+            
+        } catch (Exception $e) {
+            // Limpiar archivos temporales en caso de error
+            foreach ($archivosPaths as $path) {
+                if (file_exists($path)) {
+                    @unlink($path);
+                }
+            }
+            
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Error al unificar archivos: ' . $e->getMessage()
+            ]);
+        }
     }
 
-    private function llamarApiPythonMultiple(array $archivoPaths){
+    private function llamarApiPythonMultiple(array $archivoPaths) {
         $url = 'http://localhost:5000/unificar';
-
+        
         $postFields = [];
-        foreach ($archivoPaths as $index => $path) {
-            $postFields["file$index"] = new CURLFile(
+        foreach ($archivoPaths as $path) {
+            // Usar el mismo nombre 'file[]' para todos los archivos (nota los corchetes)
+            $postFields['file[]'] = new CURLFile(
                 $path,
-                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                "archivo$index.xlsx"
+                mime_content_type($path),
+                basename($path)
             );
         }
-
+    
         $ch = curl_init();
         curl_setopt_array($ch, [
             CURLOPT_URL => $url,
             CURLOPT_POST => true,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_HTTPHEADER => ['Accept: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
             CURLOPT_POSTFIELDS => $postFields,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HTTPHEADER => ['Content-Type: multipart/form-data'],
             CURLOPT_TIMEOUT => 60,
         ]);
-
+    
         $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-
+        
         if (curl_errno($ch)) {
-            throw new Exception("cURL error: " . curl_error($ch));
+            $error = curl_error($ch);
+            curl_close($ch);
+            throw new Exception("cURL error: " . $error);
         }
-
+    
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
-
+    
         if ($httpCode !== 200) {
-            throw new Exception("API Python error ($httpCode)");
+            throw new Exception("API Python error ($httpCode): " . $response);
         }
-
-        return json_decode($response, true);
+    
+        return $response;
     }
 
 
@@ -475,9 +522,19 @@ class CuadresController {
                 $ErrorEDSUITE = "Estructura de datos incorrecta";
                 return compact('ErrorEDSUITE', 'ResultsEDSUITE');
             }
-            $fecha_original = "01-04-2025";
-            $fecha_formateada = date('Y-m-01', strtotime($fecha_original));
+            $fecha = isset($resultado['fecha']) ? date('Y-d-01', strtotime($resultado['fecha'])) : date('Y-d-01');
             
+            if ($resultado['total'] < 0) {
+                $tipo_comprobante = 3;
+            } else {
+                $letra = substr($resultado['serie'], 0, 1);
+                if ($letra == 'B') {
+                    $tipo_comprobante = 1;
+                } else {
+                    $tipo_comprobante = 2;
+                }
+            }
+
             // Guardar en base de datos y capturar resultado
             $guardado = $this->guardarCuadre(
                 $resultado['serie'],
@@ -487,8 +544,9 @@ class CuadresController {
                 0,
                 $resultado['igv'],
                 $resultado['total'],
+                $tipo_comprobante,
                 $reporte,
-                $fecha_formateada
+                $fecha
             );
             
             
@@ -600,4 +658,31 @@ class CuadresController {
         return compact('ErrorValidarSeries', 'ResultsValidarSeries');
     }
 
+    public function guardarDatosEdSuite($resultados) {
+        $user = Usuario::obtenerId($_GET['user']);
+        
+        $user_create = $user['usuario'];
+        $user_update = $user['usuario'];
+        $id_sucursal = $user['id_sucursal'];
+
+        foreach ($resultados as $resultado) {
+            $data = [
+                'producto' => $resultado['producto'],
+                'cantidad' => $resultado['cantidad'],
+                'total' => $resultado['total'],
+                'user_create' => $user_create,
+                'user_update' => $user_update,
+                'id_sucursal' => $id_sucursal,
+                'estado' => 1
+            ];  
+
+            foreach ($data as $key => $value) {
+                if ($value = false) {
+                    throw new Exception("Dato inválido en campo $key");
+                }
+            }
+    
+            VentaGlobal::Insertar($data);
+        }
+    }
 }
