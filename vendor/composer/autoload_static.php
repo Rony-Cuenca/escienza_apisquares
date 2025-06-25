@@ -6,14 +6,15 @@ namespace Composer\Autoload;
 
 class ComposerStaticInit6507c6a9aaaf9726ae517f62398a30ed
 {
-    public static $files = array (
-        '2cffec82183ee1cea088009cef9a6fc3' => __DIR__ . '/..' . '/ezyang/htmlpurifier/library/HTMLPurifier.composer.php',
-    );
-
     public static $prefixLengthsPsr4 = array (
         'Z' => 
         array (
             'ZipStream\\' => 10,
+        ),
+        'S' => 
+        array (
+            'Svg\\' => 4,
+            'Sabberworm\\CSS\\' => 15,
         ),
         'P' => 
         array (
@@ -25,10 +26,16 @@ class ComposerStaticInit6507c6a9aaaf9726ae517f62398a30ed
         'M' => 
         array (
             'Matrix\\' => 7,
+            'Masterminds\\' => 12,
         ),
         'F' => 
         array (
+            'FontLib\\' => 8,
             'Firebase\\JWT\\' => 13,
+        ),
+        'D' => 
+        array (
+            'Dompdf\\' => 7,
         ),
         'C' => 
         array (
@@ -49,6 +56,14 @@ class ComposerStaticInit6507c6a9aaaf9726ae517f62398a30ed
         'ZipStream\\' => 
         array (
             0 => __DIR__ . '/..' . '/maennchen/zipstream-php/src',
+        ),
+        'Svg\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/dompdf/php-svg-lib/src/Svg',
+        ),
+        'Sabberworm\\CSS\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/sabberworm/php-css-parser/src',
         ),
         'Psr\\SimpleCache\\' => 
         array (
@@ -71,9 +86,21 @@ class ComposerStaticInit6507c6a9aaaf9726ae517f62398a30ed
         array (
             0 => __DIR__ . '/..' . '/markbaker/matrix/classes/src',
         ),
+        'Masterminds\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/masterminds/html5/src',
+        ),
+        'FontLib\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/dompdf/php-font-lib/src/FontLib',
+        ),
         'Firebase\\JWT\\' => 
         array (
             0 => __DIR__ . '/..' . '/firebase/php-jwt/src',
+        ),
+        'Dompdf\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/dompdf/dompdf/src',
         ),
         'Composer\\Pcre\\' => 
         array (
@@ -93,18 +120,9 @@ class ComposerStaticInit6507c6a9aaaf9726ae517f62398a30ed
         ),
     );
 
-    public static $prefixesPsr0 = array (
-        'H' => 
-        array (
-            'HTMLPurifier' => 
-            array (
-                0 => __DIR__ . '/..' . '/ezyang/htmlpurifier/library',
-            ),
-        ),
-    );
-
     public static $classMap = array (
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
+        'Dompdf\\Cpdf' => __DIR__ . '/..' . '/dompdf/dompdf/lib/Cpdf.php',
     );
 
     public static function getInitializer(ClassLoader $loader)
@@ -112,7 +130,6 @@ class ComposerStaticInit6507c6a9aaaf9726ae517f62398a30ed
         return \Closure::bind(function () use ($loader) {
             $loader->prefixLengthsPsr4 = ComposerStaticInit6507c6a9aaaf9726ae517f62398a30ed::$prefixLengthsPsr4;
             $loader->prefixDirsPsr4 = ComposerStaticInit6507c6a9aaaf9726ae517f62398a30ed::$prefixDirsPsr4;
-            $loader->prefixesPsr0 = ComposerStaticInit6507c6a9aaaf9726ae517f62398a30ed::$prefixesPsr0;
             $loader->classMap = ComposerStaticInit6507c6a9aaaf9726ae517f62398a30ed::$classMap;
 
         }, null, ClassLoader::class);
