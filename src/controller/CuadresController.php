@@ -102,6 +102,98 @@ class CuadresController {
         require 'view/layout.php';
     }
 
+    public function unirExcel() {
+        if (!isset($_FILES['archivos_excel'])) {
+            echo "No se recibieron archivos.";
+            return;
+        }
+    
+        $archivos = $_FILES['archivos_excel'];
+        $archivos_reorganizados = []; 
+        for ($i = 0; $i < count($archivos['name']); $i++) {
+            if ($archivos['error'][$i] === 0) {
+                $archivos_reorganizados[] = [
+                    'name' => $archivos['name'][$i],
+                    'type' => $archivos['type'][$i],
+                    'tmp_name' => $archivos['tmp_name'][$i],
+                    'error' => $archivos['error'][$i],
+                    'size' => $archivos['size'][$i],
+                ];
+            }
+        }
+
+        $uploadDir = __DIR__ . '/../../uploads/';
+        if (!file_exists($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
+
+        $archivosPaths = [];
+        foreach ($archivos_reorganizados as $archivo) {
+            $rutaTemp = $uploadDir . uniqid('excel_') . '.xlsx';
+            if (move_uploaded_file($archivo['tmp_name'], $rutaTemp)) {
+                $archivosPaths[] = $rutaTemp;
+            }
+        }
+
+        $respuesta = $this->llamarApiPythonMultiple($archivosPaths);
+
+        foreach ($archivosPaths as $path) {
+            if (file_exists($path)) {
+                unlink($path);
+            }
+        }
+
+        // Crear archivo temporal para guardar la respuesta
+        $tempFile = tempnam(sys_get_temp_dir(), 'excel_unificado');
+        file_put_contents($tempFile, $respuesta);
+
+        // Mostrar enlace para descargar el archivo
+        $outputPath = $tempFile;
+        echo "Unificación completada: <a href='$outputPath' download='archivo_unificado.xlsx'>Descargar archivo</a>";
+        
+    }
+
+    private function llamarApiPythonMultiple(array $archivoPaths){
+        $url = 'http://localhost:5000/unificar';
+
+        $postFields = [];
+        foreach ($archivoPaths as $index => $path) {
+            $postFields["file$index"] = new CURLFile(
+                $path,
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                "archivo$index.xlsx"
+            );
+        }
+
+        $ch = curl_init();
+        curl_setopt_array($ch, [
+            CURLOPT_URL => $url,
+            CURLOPT_POST => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER => ['Accept: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
+            CURLOPT_POSTFIELDS => $postFields,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER => ['Content-Type: multipart/form-data'],
+            CURLOPT_TIMEOUT => 60,
+        ]);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+        if (curl_errno($ch)) {
+            throw new Exception("cURL error: " . curl_error($ch));
+        }
+
+        curl_close($ch);
+
+        if ($httpCode !== 200) {
+            throw new Exception("API Python error ($httpCode)");
+        }
+
+        return json_decode($response, true);
+    }
+
+
     public function sire() {
         $ErrorSIRE = null;
         $ResultsSIRE = [];
@@ -194,7 +286,18 @@ class CuadresController {
                         $IGV = $TDscIGVSIRE;
                     }
 
-                    $this->guardarCuadre($serie,$conteoSeriesSIRE[$serie],$BI_Gravada,$TExoSIRE,$TInaSIRE,$IGV,$TTotalSIRE,$reporte,$fechaSIRE);
+                    if ($TTotalSIRE < 0) {
+                        $tipo_comprobante = 3;
+                    } else {
+                        $letra = substr($serie, 0, 1);
+                        if ($letra == 'B') {
+                            $tipo_comprobante = 1;
+                        } else {
+                            $tipo_comprobante = 2;
+                        }
+                    }
+
+                    $this->guardarCuadre($serie,$conteoSeriesSIRE[$serie],$BI_Gravada,$TExoSIRE,$TInaSIRE,$IGV,$TTotalSIRE,$tipo_comprobante,$reporte,$fechaSIRE);
                         
                     $ResultsSIRE[] = [
                         'serie' => $serie,
@@ -237,7 +340,6 @@ class CuadresController {
 
         return $respuesta;
     }
-    
     private function llamarApiPython($archivoPath, $estado) {
         $url = 'http://localhost:5000/procesar?estado='.$estado;
 
@@ -275,7 +377,7 @@ class CuadresController {
         return json_decode($response, true);
     }
     
-    public function guardarCuadre($serie,$conteo,$Gravada,$Exonerada,$Inafecto,$IGV,$Total,$reporte,$fecha_registro) {
+    public function guardarCuadre($serie,$conteo,$Gravada,$Exonerada,$Inafecto,$IGV,$Total,$tipo_comprobante,$reporte,$fecha_registro) {
         $user = Usuario::obtenerId($_GET['user']);
         
         $user_create = $user['usuario'];
@@ -290,6 +392,7 @@ class CuadresController {
             'suma_inafecto' => $Inafecto,
             'suma_igv' => $IGV,
             'monto_total' => $Total,
+            'tipo_comprobante' => $tipo_comprobante,
             'id_reporte' => $reporte,
             'user_create' => $user_create,
             'user_update' => $user_update,
@@ -314,6 +417,17 @@ class CuadresController {
         try {
             foreach ($datosNubox as $resultado) {
                 $fecha = isset($resultado['fecha']) ? date('Y-m-01', strtotime($resultado['fecha'])) : date('Y-m-01');
+
+                if ($resultado['total'] < 0) {
+                    $tipo_comprobante = 3;
+                } else {
+                    $letra = substr($resultado['serie'], 0, 1);
+                    if ($letra == 'B') {
+                        $tipo_comprobante = 1;
+                    } else {
+                        $tipo_comprobante = 2;
+                    }
+                }
                 $this->guardarCuadre(
                     $resultado['serie'],
                     $resultado['conteo'],
@@ -322,6 +436,7 @@ class CuadresController {
                     $resultado['inafecto'],
                     $resultado['igv'],
                     $resultado['total'],
+                    $tipo_comprobante,
                     $reporte,
                     $fecha
                 );

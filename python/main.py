@@ -1,6 +1,9 @@
 from flask import Flask, jsonify, request
 import pandas as pd
-import io
+import os
+from datetime import datetime
+import tempfile
+import shutil
 
 app = Flask(__name__)
 
@@ -178,6 +181,76 @@ def procesar():
             'estado': estado,
             'resultados': resultados
         })
+        
+@app.route('/unificar', methods=['POST'])
+def unificar_archivos():
+    if not request.files:
+        return jsonify({'status': 'error', 'message': 'No files received'}), 400
+    """
+    Unifica múltiples archivos Excel en uno solo.
     
+    El cliente debe enviar los archivos en un formulario con múltiples campos 'files[]'
+    """
+    # Crear un directorio temporal para guardar los archivos
+    temp_dir = tempfile.mkdtemp()
+    archivos = []
+    
+    try:
+        # Guardar todos los archivos recibidos
+        for file in request.files.getlist('files[]'):
+            if not file.filename.lower().endswith(('.xlsx', '.xls')):
+                return jsonify({'status': 'error', 'message': 'Solo se aceptan archivos Excel'}), 400
+            
+            temp_path = os.path.join(temp_dir, file.filename)
+            file.save(temp_path)
+            archivos.append(temp_path)
+            
+        if not archivos:
+            return jsonify({'status': 'error', 'message': 'No se recibieron archivos'}), 400
+        
+        # Leer todos los archivos
+        dfs = []
+        for archivo in archivos:
+            try:
+                df = pd.read_excel(archivo)
+                df['Archivo_Origen'] = os.path.basename(archivo)
+                dfs.append(df)
+            except Exception as e:
+                return jsonify({'status': 'error', 'message': f'Error al procesar {archivo}: {str(e)}'}), 400
+        
+        if not dfs:
+            return jsonify({'status': 'error', 'message': 'No se pudo leer ningún archivo Excel válido'}), 400
+        
+        # Unificar todos los DataFrames
+        df_unificado = pd.concat(dfs, ignore_index=True)
+        
+        # Generar nombre de salida
+        fecha = datetime.now().strftime("%Y%m%d_%H%M%S")
+        salida = f"unificado_{fecha}.xlsx"
+        
+        # Guardar el archivo unificado
+        salida_path = os.path.join(temp_dir, salida)
+        df_unificado.to_excel(salida_path, index=False)
+        
+        # Leer el archivo unificado como bytes
+        with open(salida_path, 'rb') as f:
+            contenido = f.read()
+        
+        # Eliminar el directorio temporal
+        shutil.rmtree(temp_dir)
+        
+        return jsonify({
+            'status': 'success',
+            'archivo': contenido.decode('latin1') if contenido else None,
+            'nombre': salida,
+            'filas': len(df_unificado),
+            'columnas': len(df_unificado.columns)
+        })
+        
+    except Exception as e:
+        # En caso de error, eliminar el directorio temporal
+        shutil.rmtree(temp_dir, ignore_errors=True)
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
 if __name__ == '__main__':
     app.run(port=5000, debug=False)  # Disable debug mode for production
