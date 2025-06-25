@@ -54,20 +54,19 @@
 
   <!-- Fila 2: Variación mensual -->
   <div class="w-full flex flex-col items-center">
-    <?php require_once "graficos/variacion.php" ?>
-  </div>
+  <?php require_once "graficos/variacion.php" ?>
+</div>
 
   <!-- Fila 3: Gráficos secundarios en dos columnas -->
   <div class="w-full grid grid-cols-1 md:grid-cols-3 gap-8">
-    <div>
-      <?php require_once "graficos/pastel.php" ?>
-    </div>
-    <div>
-      <?php require_once "graficos/exoneracion.php" ?>
-    </div>
-    <div>
-      <?php require_once "graficos/promedio.php" ?>
-    </div>
+  <div>
+    <?php require_once "graficos/pastel.php" ?>
+  </div>
+  <div>
+    <?php require_once "graficos/exoneracion.php" ?>
+  </div>
+  <div>
+    <?php require_once "graficos/promedio.php" ?>
   </div>
 </div>
 

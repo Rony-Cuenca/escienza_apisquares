@@ -1,14 +1,19 @@
-<div class="bg-white rounded-xl shadow p-4 sm:p-6 w-full md:w-[900px]">
-    <select id="select-tipo-vari" class="border rounded px-2 py-1 text-sm w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-blue-400">
+
+<div class="bg-white rounded-xl shadow p-4 sm:p-6 w-full md:w-[900px] mb-8">
+    <select id="select-tipo-vari" class="border rounded px-2 py-1 text-sm w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-blue-400 mb-4">
         <option value="">Selecciona una opción</option>
         <option value="NUBOX360">Nubox</option>
         <option value="SIRE">SIRE</option>
         <option value="EDSUITE">EDSuite</option>
-      </select>
-  <h1 class="text-xl font-bold text-gray-800 mb-4">VENTAS RESPECTO AL MES ANTERIOR</h1>
-<canvas id="variacionVentasChart" height="120"></canvas>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
+    </select>
+    <h1 class="text-xl font-bold text-gray-800 mb-6">VENTAS RESPECTO AL MES ANTERIOR</h1>
+    <div class="overflow-x-auto pb-2">
+        <div style="width:100vw; min-width:600px; max-width:900px;">
+            <canvas id="variacionVentasChart" height="220" style="width:100% !important; min-width:600px; max-width:900px;"></canvas>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
 function drawVariacionVentasChart() {
     let anio = document.getElementById('select-anio').value;
   let tipovar = document.getElementById('select-tipo-vari').value;
@@ -127,4 +132,5 @@ document.getElementById('select-tipo-vari').addEventListener('change', drawVaria
 
 document.getElementById('select-sucursal').addEventListener('change', drawVariacionVentasChart);
 window.addEventListener('DOMContentLoaded', drawVariacionVentasChart);
-</script>
+    </script>
+</div>
