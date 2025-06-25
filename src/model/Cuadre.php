@@ -59,7 +59,7 @@ class Cuadre
             throw new Exception("Error al verificar la fecha: " . $e->getMessage());
         }
     }
-    
+
     public static function obtenerMesesDisponibles()
     {
         $conn = Conexion::conectar();
@@ -87,22 +87,14 @@ class Cuadre
         return $cuadres;
     }
 
-    // 1. Totales por tipo de documento y sistema
-    public static function obtenerTotalesPorTipoDoc($mes)
+    public static function obtenerTotalesPorTipoComprobante($mes)
     {
         $conn = Conexion::conectar();
         $sql = "
-        SELECT 
-            CASE 
-                WHEN LEFT(serie,1) = 'F' THEN 'FACTURA'
-                WHEN LEFT(serie,1) = 'B' THEN 'BOLETA'
-                ELSE 'OTRO'
-            END AS tipo_doc,
-            id_reporte,
-            SUM(monto_total) as total
+        SELECT tipo_comprobante, id_reporte, SUM(monto_total) as total
         FROM resumen_comprobante
         WHERE DATE_FORMAT(fecha_registro, '%Y-%m') = ?
-        GROUP BY tipo_doc, id_reporte
+        GROUP BY tipo_comprobante, id_reporte
     ";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("s", $mes);
@@ -110,12 +102,11 @@ class Cuadre
         $result = $stmt->get_result();
         $totales = [];
         while ($row = $result->fetch_assoc()) {
-            $totales[$row['tipo_doc']][$row['id_reporte']] = $row['total'];
+            $totales[$row['tipo_comprobante']][$row['id_reporte']] = $row['total'];
         }
         return $totales;
     }
 
-    // 2. Totales por serie y sistema
     public static function obtenerTotalesPorSerie($mes)
     {
         $conn = Conexion::conectar();

@@ -32,7 +32,6 @@
             <table class="w-full min-w-max text-sm">
                 <thead>
                     <tr class="bg-[#A9C3E8]">
-                        <th class="py-2 px-3 text-left">#</th>
                         <th class="py-2 px-3 text-left">Serie</th>
                         <th class="py-2 px-3 text-right">Cantidad</th>
                         <th class="py-2 px-3 text-right">Suma Gravada</th>
@@ -45,15 +44,14 @@
                 <tbody>
                     <?php if (!empty($cuadresSIRE)): ?>
                         <?php foreach ($cuadresSIRE as $i => $cuadre): ?>
-                            <tr class="border-b border-[#2563EB] transition <?= $cuadre['monto_total'] < 0 ? 'bg-[#dc3545] text-white' : 'hover:bg-blue-50' ?>">
-                                <td class="py-2 px-3 text-left"><?= $i + 1 ?></td>
+                            <tr class="border-b border-[#2563EB] transition <?= $cuadre['tipo_comprobante'] == 3 ? 'bg-[#dc3545] text-white font-bold' : 'hover:bg-blue-50' ?>">
                                 <td class="py-2 px-3 text-left"><?= htmlspecialchars($cuadre['serie']) ?></td>
                                 <td class="py-2 px-3 text-right"><?= $cuadre['cantidad_compr'] ?></td>
                                 <td class="py-2 px-3 text-right"><?= number_format($cuadre['suma_gravada'], 2) ?></td>
                                 <td class="py-2 px-3 text-right"><?= number_format($cuadre['suma_exonerada'], 2) ?></td>
                                 <td class="py-2 px-3 text-right"><?= number_format($cuadre['suma_inafecto'], 2) ?></td>
                                 <td class="py-2 px-3 text-right"><?= number_format($cuadre['suma_igv'], 2) ?></td>
-                                <td class="py-2 px-3 text-right font-bold"><?= number_format($cuadre['monto_total'], 2) ?></td>
+                                <td class="py-2 px-3 text-right"><?= number_format($cuadre['monto_total'], 2) ?></td>
                             </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
@@ -71,7 +69,6 @@
             <table class="w-full min-w-max text-sm">
                 <thead>
                     <tr class="bg-[#A9C3E8]">
-                        <th class="py-2 px-3">#</th>
                         <th class="py-2 px-3 text-left">Serie</th>
                         <th class="py-2 px-3 text-left">Cantidad</th>
                         <th class="py-2 px-3 text-right">Suma Gravada</th>
@@ -84,15 +81,14 @@
                 <tbody>
                     <?php if (!empty($cuadresNUBOX)): ?>
                         <?php foreach ($cuadresNUBOX as $i => $cuadre): ?>
-                            <tr class="border-b border-[#2563EB] transition <?= $cuadre['monto_total'] < 0 ? 'bg-[#dc3545] text-white' : 'hover:bg-blue-50' ?>">
-                                <td class="py-2 px-3 text-left"><?= $i + 1 ?></td>
+                            <tr class="border-b border-[#2563EB] transition <?= $cuadre['tipo_comprobante'] == 3 ? 'bg-[#dc3545] text-white font-bold' : 'hover:bg-blue-50' ?>">
                                 <td class="py-2 px-3 text-left"><?= htmlspecialchars($cuadre['serie']) ?></td>
                                 <td class="py-2 px-3 text-right"><?= $cuadre['cantidad_compr'] ?></td>
                                 <td class="py-2 px-3 text-right"><?= number_format($cuadre['suma_gravada'], 2) ?></td>
                                 <td class="py-2 px-3 text-right"><?= number_format($cuadre['suma_exonerada'], 2) ?></td>
                                 <td class="py-2 px-3 text-right"><?= number_format($cuadre['suma_inafecto'], 2) ?></td>
                                 <td class="py-2 px-3 text-right"><?= number_format($cuadre['suma_igv'], 2) ?></td>
-                                <td class="py-2 px-3 text-right font-bold"><?= number_format($cuadre['monto_total'], 2) ?></td>
+                                <td class="py-2 px-3 text-right"><?= number_format($cuadre['monto_total'], 2) ?></td>
                             </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
@@ -110,7 +106,6 @@
             <table class="w-full min-w-max text-sm">
                 <thead>
                     <tr class="bg-[#A9C3E8]">
-                        <th class="py-2 px-3">#</th>
                         <th class="py-2 px-3 text-left">Serie</th>
                         <th class="py-2 px-3 text-left">Cantidad</th>
                         <th class="py-2 px-3 text-right">Suma Gravada</th>
@@ -123,15 +118,14 @@
                 <tbody>
                     <?php if (!empty($cuadresEDSUITE)): ?>
                         <?php foreach ($cuadresEDSUITE as $i => $cuadre): ?>
-                            <tr class="border-b border-[#2563EB] transition <?= $cuadre['monto_total'] < 0 ? 'bg-[#dc3545] text-white' : 'hover:bg-blue-50' ?>">
-                                <td class="py-2 px-3 text-left"><?= $i + 1 ?></td>
+                            <tr class="border-b border-[#2563EB] transition <?= $cuadre['tipo_comprobante'] == 3 ? 'bg-[#dc3545] text-white font-bold' : 'hover:bg-blue-50' ?>">
                                 <td class="py-2 px-3 text-left"><?= htmlspecialchars($cuadre['serie']) ?></td>
                                 <td class="py-2 px-3 text-right"><?= $cuadre['cantidad_compr'] ?></td>
                                 <td class="py-2 px-3 text-right"><?= number_format($cuadre['suma_gravada'], 2) ?></td>
                                 <td class="py-2 px-3 text-right"><?= number_format($cuadre['suma_exonerada'], 2) ?></td>
                                 <td class="py-2 px-3 text-right"><?= number_format($cuadre['suma_inafecto'], 2) ?></td>
                                 <td class="py-2 px-3 text-right"><?= number_format($cuadre['suma_igv'], 2) ?></td>
-                                <td class="py-2 px-3 text-right font-bold"><?= number_format($cuadre['monto_total'], 2) ?></td>
+                                <td class="py-2 px-3 text-right"><?= number_format($cuadre['monto_total'], 2) ?></td>
                             </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
@@ -143,8 +137,8 @@
             </table>
         </div>
 
-        <!-- RESUMEN FACTURAS Y BOLETAS -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+        <!-- RESUMEN FACTURAS, BOLETAS Y NOTAS DE CRÉDITO -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
             <!-- FACTURAS -->
             <div class="bg-white rounded-xl border border-[#2563EB] shadow overflow-hidden">
                 <table class="w-full min-w-max text-sm">
@@ -154,23 +148,17 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr class="hover:bg-blue-50">
+                        <tr>
                             <td class="py-2 px-4 font-semibold border-b border-[#2563EB]">SIRE</td>
-                            <td class="py-2 px-4 text-right border-b border-[#2563EB]"><?= isset($totalesTipoDoc['FACTURA'][2]) ? 'S/ ' . number_format($totalesTipoDoc['FACTURA'][2], 2) : 'S/ 0.00' ?></td>
+                            <td class="py-2 px-4 text-right border-b border-[#2563EB]"><?= isset($totalesTipoDoc[2][2]) ? 'S/ ' . number_format($totalesTipoDoc[2][2], 2) : 'S/ 0.00' ?></td>
                         </tr>
-                        <tr class="hover:bg-blue-50">
+                        <tr>
                             <td class="py-2 px-4 font-semibold border-b border-[#2563EB]">NUBOX</td>
-                            <td class="py-2 px-4 text-right border-b border-[#2563EB]"><?= isset($totalesTipoDoc['FACTURA'][1]) ? 'S/ ' . number_format($totalesTipoDoc['FACTURA'][1], 2) : 'S/ 0.00' ?></td>
+                            <td class="py-2 px-4 text-right border-b border-[#2563EB]"><?= isset($totalesTipoDoc[2][1]) ? 'S/ ' . number_format($totalesTipoDoc[2][1], 2) : 'S/ 0.00' ?></td>
                         </tr>
                         <?php
-                        $faltanteFact = (isset($totalesTipoDoc['FACTURA'][2]) ? $totalesTipoDoc['FACTURA'][2] : 0) - (isset($totalesTipoDoc['FACTURA'][1]) ? $totalesTipoDoc['FACTURA'][1] : 0);
-                        if ($faltanteFact == 0) {
-                            $faltanteClass = 'bg-[#bbf7d0] text-[#166534]';
-                        } elseif ($faltanteFact != 0) {
-                            $faltanteClass = 'bg-[#dc3545] text-white';
-                        } else {
-                            $faltanteClass = 'bg-white';
-                        }
+                        $faltanteFact = (isset($totalesTipoDoc[2][2]) ? $totalesTipoDoc[2][2] : 0) - (isset($totalesTipoDoc[2][1]) ? $totalesTipoDoc[2][1] : 0);
+                        $faltanteClass = ($faltanteFact == 0) ? 'bg-[#bbf7d0] text-[#166534]' : 'bg-[#dc3545] text-white';
                         ?>
                         <tr class="font-bold <?= $faltanteClass ?>">
                             <td class="py-2 px-4 border-t border-[#2563EB]">FALTANTE</td>
@@ -188,27 +176,49 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr class="hover:bg-blue-50">
+                        <tr>
                             <td class="py-2 px-4 font-semibold border-b border-[#2563EB]">SIRE</td>
-                            <td class="py-2 px-4 text-right border-b border-[#2563EB]"><?= isset($totalesTipoDoc['BOLETA'][2]) ? 'S/ ' . number_format($totalesTipoDoc['BOLETA'][2], 2) : 'S/ 0.00' ?></td>
+                            <td class="py-2 px-4 text-right border-b border-[#2563EB]"><?= isset($totalesTipoDoc[1][2]) ? 'S/ ' . number_format($totalesTipoDoc[1][2], 2) : 'S/ 0.00' ?></td>
                         </tr>
-                        <tr class="hover:bg-blue-50">
+                        <tr>
                             <td class="py-2 px-4 font-semibold border-b border-[#2563EB]">NUBOX</td>
-                            <td class="py-2 px-4 text-right border-b border-[#2563EB]"><?= isset($totalesTipoDoc['BOLETA'][1]) ? 'S/ ' . number_format($totalesTipoDoc['BOLETA'][1], 2) : 'S/ 0.00' ?></td>
+                            <td class="py-2 px-4 text-right border-b border-[#2563EB]"><?= isset($totalesTipoDoc[1][1]) ? 'S/ ' . number_format($totalesTipoDoc[1][1], 2) : 'S/ 0.00' ?></td>
                         </tr>
                         <?php
-                        $faltanteBoleta = (isset($totalesTipoDoc['BOLETA'][2]) ? $totalesTipoDoc['BOLETA'][2] : 0) - (isset($totalesTipoDoc['BOLETA'][1]) ? $totalesTipoDoc['BOLETA'][1] : 0);
-                        if ($faltanteBoleta == 0) {
-                            $faltanteClassB = 'bg-[#bbf7d0] text-[#166534]';
-                        } elseif ($faltanteBoleta != 0) {
-                            $faltanteClassB = 'bg-[#dc3545] text-white';
-                        } else {
-                            $faltanteClassB = 'bg-white';
-                        }
+                        $faltanteBoleta = (isset($totalesTipoDoc[1][2]) ? $totalesTipoDoc[1][2] : 0) - (isset($totalesTipoDoc[1][1]) ? $totalesTipoDoc[1][1] : 0);
+                        $faltanteClassB = ($faltanteBoleta == 0) ? 'bg-[#bbf7d0] text-[#166534]' : 'bg-[#dc3545] text-white';
                         ?>
                         <tr class="font-bold <?= $faltanteClassB ?>">
                             <td class="py-2 px-4 border-t border-[#2563EB]">FALTANTE</td>
                             <td class="py-2 px-4 text-right border-t border-[#2563EB]">S/ <?= number_format($faltanteBoleta, 2) ?></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- NOTAS DE CRÉDITO -->
+            <div class="bg-white rounded-xl border border-[#2563EB] shadow overflow-hidden">
+                <table class="w-full min-w-max text-sm">
+                    <thead>
+                        <tr class="bg-[#A9C3E8]">
+                            <th colspan="2" class="py-3 px-4 text-left text-lg font-bold border-b border-[#2563EB]">NOTAS DE CRÉDITO</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="py-2 px-4 font-semibold border-b border-[#2563EB]">SIRE</td>
+                            <td class="py-2 px-4 text-right border-b border-[#2563EB]"><?= isset($totalesTipoDoc[3][2]) ? 'S/ ' . number_format($totalesTipoDoc[3][2], 2) : 'S/ 0.00' ?></td>
+                        </tr>
+                        <tr>
+                            <td class="py-2 px-4 font-semibold border-b border-[#2563EB]">NUBOX</td>
+                            <td class="py-2 px-4 text-right border-b border-[#2563EB]"><?= isset($totalesTipoDoc[3][1]) ? 'S/ ' . number_format($totalesTipoDoc[3][1], 2) : 'S/ 0.00' ?></td>
+                        </tr>
+                        <?php
+                        $faltanteNC = (isset($totalesTipoDoc[3][2]) ? $totalesTipoDoc[3][2] : 0) - (isset($totalesTipoDoc[3][1]) ? $totalesTipoDoc[3][1] : 0);
+                        $faltanteClassNC = ($faltanteNC == 0) ? 'bg-[#bbf7d0] text-[#166534]' : 'bg-[#dc3545] text-white';
+                        ?>
+                        <tr class="font-bold <?= $faltanteClassNC ?>">
+                            <td class="py-2 px-4 border-t border-[#2563EB]">FALTANTE</td>
+                            <td class="py-2 px-4 text-right border-t border-[#2563EB]">S/ <?= number_format($faltanteNC, 2) ?></td>
                         </tr>
                     </tbody>
                 </table>
@@ -235,8 +245,9 @@
                         $totalSire += $row['total_sire'];
                         $totalNubox += $row['total_nubox'];
                         $totalDif += $row['diferencia'];
+                        $rowClass = ($row['diferencia'] != 0) ? 'bg-[#dc3545] text-white font-bold' : '';
                     ?>
-                        <tr class="border-b border-[#2563EB] hover:bg-blue-50 transition">
+                        <tr class="border-b border-[#2563EB] hover:bg-blue-50 transition <?= $rowClass ?>">
                             <td class="py-2 px-3 text-left font-semibold"><?= htmlspecialchars($row['serie']) ?></td>
                             <td class="py-2 px-3 text-right"><?= number_format($row['total_sire'], 2) ?></td>
                             <td class="py-2 px-3 text-right"><?= number_format($row['total_nubox'], 2) ?></td>

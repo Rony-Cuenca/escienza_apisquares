@@ -53,6 +53,16 @@ foreach ($meses as $en => $es) {
             margin-bottom: 24px;
         }
 
+        .bg-red {
+            background: #dc3545 !important;
+            color: #fff !important;
+        }
+
+        .bg-total {
+            background: #f3f4f6;
+            font-weight: bold;
+        }
+
         th,
         td {
             padding: 6px 8px;
@@ -146,9 +156,18 @@ foreach ($meses as $en => $es) {
 
 <body>
     <!-- 1. DATOS GENERALES -->
-
+    <!-- CABECERA PDF -->
+    <table style="width:100%; margin-bottom: 24px; border: none;">
+        <tr>
+            <td style="width: 180px; border: none; vertical-align: middle;">
+                <img src="http://localhost/escienza_apisquares/public/img/logo.png" alt="Logo" style="width: 80px; margin: 0;">
+            </td>
+            <td style="text-align: right; border: none; vertical-align: middle; font-size: 13px; color: #2563EB; font-weight: bold;">
+                Sistema de Gestión Escienza &nbsp;|&nbsp; www.escienza.pe
+            </td>
+        </tr>
+    </table>
     <div style="height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-        <img src="http://localhost/escienza_apisquares/public/img/logo.png" alt="Logo" style="width:120px; margin-bottom: 16px;">
         <h2 style="font-size: 2rem; margin-bottom: 24px;"><?= 'REPORTE DE CUADRES - ' . strtoupper(htmlspecialchars($nombreMes)) ?></h2>
         <div style="background: #f3f4f6; border-radius: 12px; padding: 24px 36px; box-shadow: 0 2px 8px #0001; min-width: 350px;">
             <p style="margin: 0 0 8px 0;"><strong>Fecha de generación:</strong> <?= date('d/m/Y H:i:s') ?></p>
@@ -161,9 +180,6 @@ foreach ($meses as $en => $es) {
             <?php if (!empty($correoEmpresa)): ?>
                 <p style="margin: 0;"><strong>Correo:</strong> <?= htmlspecialchars($correoEmpresa) ?></p>
             <?php endif; ?>
-        </div>
-        <div style="margin-top: 24px; color: #888; font-size: 11px;">
-            Sistema de Gestión Escienza &nbsp;|&nbsp; www.escienza.pe
         </div>
         <div style="position: absolute; bottom: 30px; left: 0; width: 100%; text-align: center; color: #888; font-size: 10px;">
             © <?= date('Y') ?> Escienza. Todos los derechos reservados.
@@ -191,14 +207,14 @@ foreach ($meses as $en => $es) {
         <tbody>
             <?php if (!empty($cuadresSIRE)): ?>
                 <?php foreach ($cuadresSIRE as $i => $cuadre): ?>
-                    <tr class="<?= $cuadre['monto_total'] < 0 ? 'bg-red' : '' ?>">
+                    <tr class="<?= $cuadre['tipo_comprobante'] == 3 ? 'bg-red font-bold' : '' ?>">
                         <td class="text-left"><?= htmlspecialchars($cuadre['serie']) ?></td>
                         <td class="text-right"><?= $cuadre['cantidad_compr'] ?></td>
                         <td class="text-right"><?= number_format($cuadre['suma_gravada'], 2) ?></td>
                         <td class="text-right"><?= number_format($cuadre['suma_exonerada'], 2) ?></td>
                         <td class="text-right"><?= number_format($cuadre['suma_inafecto'], 2) ?></td>
                         <td class="text-right"><?= number_format($cuadre['suma_igv'], 2) ?></td>
-                        <td class="text-right font-bold"><?= number_format($cuadre['monto_total'], 2) ?></td>
+                        <td class="text-right"><?= number_format($cuadre['monto_total'], 2) ?></td>
                     </tr>
                 <?php endforeach; ?>
             <?php else: ?>
@@ -226,14 +242,14 @@ foreach ($meses as $en => $es) {
         <tbody>
             <?php if (!empty($cuadresNUBOX)): ?>
                 <?php foreach ($cuadresNUBOX as $i => $cuadre): ?>
-                    <tr class="<?= $cuadre['monto_total'] < 0 ? 'bg-red' : '' ?>">
+                    <tr class="<?= $cuadre['tipo_comprobante'] == 3 ? 'bg-red font-bold' : '' ?>">
                         <td class="text-left"><?= htmlspecialchars($cuadre['serie']) ?></td>
                         <td class="text-right"><?= $cuadre['cantidad_compr'] ?></td>
                         <td class="text-right"><?= number_format($cuadre['suma_gravada'], 2) ?></td>
                         <td class="text-right"><?= number_format($cuadre['suma_exonerada'], 2) ?></td>
                         <td class="text-right"><?= number_format($cuadre['suma_inafecto'], 2) ?></td>
                         <td class="text-right"><?= number_format($cuadre['suma_igv'], 2) ?></td>
-                        <td class="text-right font-bold"><?= number_format($cuadre['monto_total'], 2) ?></td>
+                        <td class="text-right"><?= number_format($cuadre['monto_total'], 2) ?></td>
                     </tr>
                 <?php endforeach; ?>
             <?php else: ?>
@@ -261,14 +277,14 @@ foreach ($meses as $en => $es) {
         <tbody>
             <?php if (!empty($cuadresEDSUITE)): ?>
                 <?php foreach ($cuadresEDSUITE as $i => $cuadre): ?>
-                    <tr class="<?= $cuadre['monto_total'] < 0 ? 'bg-red' : '' ?>">
+                    <tr class="<?= $cuadre['tipo_comprobante'] == 3 ? 'bg-red font-bold' : '' ?>">
                         <td class="text-left"><?= htmlspecialchars($cuadre['serie']) ?></td>
                         <td class="text-right"><?= $cuadre['cantidad_compr'] ?></td>
                         <td class="text-right"><?= number_format($cuadre['suma_gravada'], 2) ?></td>
                         <td class="text-right"><?= number_format($cuadre['suma_exonerada'], 2) ?></td>
                         <td class="text-right"><?= number_format($cuadre['suma_inafecto'], 2) ?></td>
                         <td class="text-right"><?= number_format($cuadre['suma_igv'], 2) ?></td>
-                        <td class="text-right font-bold"><?= number_format($cuadre['monto_total'], 2) ?></td>
+                        <td class="text-right"><?= number_format($cuadre['monto_total'], 2) ?></td>
                     </tr>
                 <?php endforeach; ?>
             <?php else: ?>
@@ -283,60 +299,95 @@ foreach ($meses as $en => $es) {
 
     <div style="page-break-after: always;"></div>
 
-    <!-- RESUMEN FACTURAS Y BOLETAS -->
-
+    <!-- RESUMEN DE COMPROBANTES Y DIFERENCIAS EN FILA (PDF FRIENDLY) -->
     <h3>DIFERENCIAS (SIRE - NUBOX)</h3>
-
-    <table>
-        <thead>
-            <tr>
-                <th colspan="2" class="bg-header font-bold">FACTURAS</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>SIRE</td>
-                <td class="text-right"><?= isset($totalesTipoDoc['FACTURA'][2]) ? 'S/ ' . number_format($totalesTipoDoc['FACTURA'][2], 2) : 'S/ 0.00' ?></td>
-            </tr>
-            <tr>
-                <td>NUBOX</td>
-                <td class="text-right"><?= isset($totalesTipoDoc['FACTURA'][1]) ? 'S/ ' . number_format($totalesTipoDoc['FACTURA'][1], 2) : 'S/ 0.00' ?></td>
-            </tr>
-            <?php
-            $faltanteFact = (isset($totalesTipoDoc['FACTURA'][2]) ? $totalesTipoDoc['FACTURA'][2] : 0) - (isset($totalesTipoDoc['FACTURA'][1]) ? $totalesTipoDoc['FACTURA'][1] : 0);
-            $faltanteClass = ($faltanteFact != 0) ? 'bg-red' : '';
-            ?>
-            <tr class="font-bold <?= $faltanteClass ?> bg-total">
-                <td>FALTANTE</td>
-                <td class="text-right">S/ <?= number_format($faltanteFact, 2) ?></td>
-            </tr>
-        </tbody>
-    </table>
-
-    <table>
-        <thead>
-            <tr>
-                <th colspan="2" class="bg-header font-bold">BOLETAS</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>SIRE</td>
-                <td class="text-right"><?= isset($totalesTipoDoc['BOLETA'][2]) ? 'S/ ' . number_format($totalesTipoDoc['BOLETA'][2], 2) : 'S/ 0.00' ?></td>
-            </tr>
-            <tr>
-                <td>NUBOX</td>
-                <td class="text-right"><?= isset($totalesTipoDoc['BOLETA'][1]) ? 'S/ ' . number_format($totalesTipoDoc['BOLETA'][1], 2) : 'S/ 0.00' ?></td>
-            </tr>
-            <?php
-            $faltanteBoleta = (isset($totalesTipoDoc['BOLETA'][2]) ? $totalesTipoDoc['BOLETA'][2] : 0) - (isset($totalesTipoDoc['BOLETA'][1]) ? $totalesTipoDoc['BOLETA'][1] : 0);
-            $faltanteClassB = ($faltanteBoleta != 0) ? 'bg-red' : '';
-            ?>
-            <tr class="font-bold <?= $faltanteClassB ?> bg-total">
-                <td>FALTANTE</td>
-                <td class="text-right">S/ <?= number_format($faltanteBoleta, 2) ?></td>
-            </tr>
-        </tbody>
+    <table style="width:100%; table-layout: fixed;">
+        <tr>
+            <!-- FACTURAS -->
+            <td style="vertical-align: top; width:33%;">
+                <table style="width:100%; margin-bottom:0;">
+                    <thead>
+                        <tr>
+                            <th colspan="2" class="bg-header font-bold">FACTURAS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>SIRE</td>
+                            <td class="text-right"><?= isset($totalesTipoDoc[2][2]) ? 'S/ ' . number_format($totalesTipoDoc[2][2], 2) : 'S/ 0.00' ?></td>
+                        </tr>
+                        <tr>
+                            <td>NUBOX</td>
+                            <td class="text-right"><?= isset($totalesTipoDoc[2][1]) ? 'S/ ' . number_format($totalesTipoDoc[2][1], 2) : 'S/ 0.00' ?></td>
+                        </tr>
+                        <?php
+                        $faltanteFact = (isset($totalesTipoDoc[2][2]) ? $totalesTipoDoc[2][2] : 0) - (isset($totalesTipoDoc[2][1]) ? $totalesTipoDoc[2][1] : 0);
+                        $faltanteClass = ($faltanteFact != 0) ? 'bg-red font-bold' : 'bg-total font-bold';
+                        ?>
+                        <tr class="<?= $faltanteClass ?>">
+                            <td>FALTANTE</td>
+                            <td class="text-right">S/ <?= number_format($faltanteFact, 2) ?></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </td>
+            <!-- BOLETAS -->
+            <td style="vertical-align: top; width:33%;">
+                <table style="width:100%; margin-bottom:0;">
+                    <thead>
+                        <tr>
+                            <th colspan="2" class="bg-header font-bold">BOLETAS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>SIRE</td>
+                            <td class="text-right"><?= isset($totalesTipoDoc[1][2]) ? 'S/ ' . number_format($totalesTipoDoc[1][2], 2) : 'S/ 0.00' ?></td>
+                        </tr>
+                        <tr>
+                            <td>NUBOX</td>
+                            <td class="text-right"><?= isset($totalesTipoDoc[1][1]) ? 'S/ ' . number_format($totalesTipoDoc[1][1], 2) : 'S/ 0.00' ?></td>
+                        </tr>
+                        <?php
+                        $faltanteBoleta = (isset($totalesTipoDoc[1][2]) ? $totalesTipoDoc[1][2] : 0) - (isset($totalesTipoDoc[1][1]) ? $totalesTipoDoc[1][1] : 0);
+                        $faltanteClassB = ($faltanteBoleta != 0) ? 'bg-red font-bold' : 'bg-total font-bold';
+                        ?>
+                        <tr class="<?= $faltanteClassB ?>">
+                            <td>FALTANTE</td>
+                            <td class="text-right">S/ <?= number_format($faltanteBoleta, 2) ?></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </td>
+            <!-- NOTAS DE CRÉDITO -->
+            <td style="vertical-align: top; width:33%;">
+                <table style="width:100%; margin-bottom:0;">
+                    <thead>
+                        <tr>
+                            <th colspan="2" class="bg-header font-bold">NOTAS DE CRÉDITO</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>SIRE</td>
+                            <td class="text-right"><?= isset($totalesTipoDoc[3][2]) ? 'S/ ' . number_format($totalesTipoDoc[3][2], 2) : 'S/ 0.00' ?></td>
+                        </tr>
+                        <tr>
+                            <td>NUBOX</td>
+                            <td class="text-right"><?= isset($totalesTipoDoc[3][1]) ? 'S/ ' . number_format($totalesTipoDoc[3][1], 2) : 'S/ 0.00' ?></td>
+                        </tr>
+                        <?php
+                        $faltanteNC = (isset($totalesTipoDoc[3][2]) ? $totalesTipoDoc[3][2] : 0) - (isset($totalesTipoDoc[3][1]) ? $totalesTipoDoc[3][1] : 0);
+                        $faltanteClassNC = ($faltanteNC != 0) ? 'bg-red font-bold' : 'bg-total font-bold';
+                        ?>
+                        <tr class="<?= $faltanteClassNC ?>">
+                            <td>FALTANTE</td>
+                            <td class="text-right">S/ <?= number_format($faltanteNC, 2) ?></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </td>
+        </tr>
     </table>
 
     <!-- DIFERENCIAS -->
@@ -359,12 +410,13 @@ foreach ($meses as $en => $es) {
                 $totalSire += $row['total_sire'];
                 $totalNubox += $row['total_nubox'];
                 $totalDif += $row['diferencia'];
+                $difClass = ($row['diferencia'] != 0) ? 'bg-red font-bold' : '';
             ?>
                 <tr>
                     <td class="text-left"><?= htmlspecialchars($row['serie']) ?></td>
                     <td class="text-right"><?= number_format($row['total_sire'], 2) ?></td>
                     <td class="text-right"><?= number_format($row['total_nubox'], 2) ?></td>
-                    <td class="text-right"><?= number_format($row['diferencia'], 2) ?></td>
+                    <td class="text-right <?= $difClass ?>"><?= number_format($row['diferencia'], 2) ?></td>
                 </tr>
             <?php endforeach; ?>
             <tr class="bg-total">
