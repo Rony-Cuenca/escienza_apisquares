@@ -16,13 +16,14 @@ class Cuadre
             suma_inafecto,
             suma_igv,
             monto_total,
+            tipo_comprobante,
             id_reporte,
             user_create,
             user_update,
             id_sucursal,
             fecha_registro,
             estado
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         $stmt = $conn->prepare($sql);
         $stmt->execute([
@@ -33,6 +34,7 @@ class Cuadre
             $data['suma_inafecto'],
             $data['suma_igv'],
             $data['monto_total'],
+            $data['tipo_comprobante'],
             $data['id_reporte'],
             $data['user_create'],
             $data['user_update'],

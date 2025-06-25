@@ -1,107 +1,66 @@
 import pandas as pd
-import sys
-
 import os
+import argparse
+from datetime import datetime
 
-def procesar_edsuite(ruta_archivo):
-    # Normalizar la ruta del archivo
-    ruta_archivo = os.path.abspath(ruta_archivo)
-    print(f"Procesando archivo: {ruta_archivo}")
+def unificar_excels(ruta_archivo, salida=None, hoja=0):
+    """
+    Une múltiples archivos Excel en uno solo.
     
-    # Leer el archivo Excel
-    try:
-        df = pd.read_excel(ruta_archivo, header=None, engine='openpyxl')
-        print("\nContenido del archivo:")
-        print(df)
-        
-        if len(df) <= 1:
-            return jsonify({'status': 'error', 'message': 'Not enough rows'}), 400
-
-        header = df.iloc[1].tolist()
-        
-        try:
-            col_serie = header.index('Serie')
-            col_igv = header.index('IGV')
-            col_total = header.index('Total')
-        except ValueError as e:
-            return jsonify({'status': 'error', 'message': f'Missing columns: {str(e)}'}), 400
-
-        data_serie_total = {}
-        data_serie_igv = {}
-        conteo_series = {}
-
-        for _, row in df.iloc[2:].iterrows():
-            if pd.isna(row[col_serie]) or pd.isna(row[col_igv]) or pd.isna(row[col_total]):
-                continue
-
-            try:
-                serie = str(row[col_serie]).strip()
-                if not serie:
-                    continue
-
-                def clean_number(num):
-                    if pd.isna(num):
-                        return 0.0
-                    if isinstance(num, (int, float)):
-                        return float(num)
-                    return float(str(num).replace(',', ''))
-                    
-                total = clean_number(row[col_total])
-                igv = clean_number(row[col_igv])
-
-                if serie not in data_serie_total:
-                    data_serie_total[serie] = 0.0
-                    data_serie_igv[serie] = 0.0
-                    conteo_series[serie] = 0
-
-                data_serie_total[serie] += total
-                data_serie_igv[serie] += igv
-                conteo_series[serie] += 1
-
-            except Exception:
-                continue
-        # Generar resultados
-        print("\nResultados finales:")
-        resultados = []
-        for serie in sorted(data_serie_total.keys()):
-            total_total = data_serie_total[serie]
-            total_igv = data_serie_igv[serie]
-            conteo = conteo_series[serie]
-            
-            print(f"\nSerie: {serie}")
-            print(f"Conteo: {conteo}")
-            print(f"IGV: {total_igv}")
-            print(f"Total: {total_total}")
-            
-            resultados.append({
-                'serie': serie,
-                'conteo': conteo,
-                'igv': round(total_igv, 2),
-                'total': round(total_total, 2)
-            })
-
-        return resultados
-
-    except Exception as e:
-        print(f"Error general: {str(e)}")
-        return None
-
-# Ejemplo de uso
-if __name__ == '__main__':
-    if len(sys.argv) != 2:
-        print("Uso: python prueba.py <ruta_archivo_excel>")
-        print("Ejemplo: python prueba.py C:\\Users\\user\\Desktop\\Prueba.xlsx")
-        sys.exit(1)
-    
-    # Ruta del archivo que quieres procesar
-    ruta_archivo = sys.argv[1]
-    
-    # Procesar el archivo
-    resultados = procesar_edsuite(ruta_archivo)
-    
-    if resultados:
-        print("\nResultados finales:")
-        for resultado in resultados:
-            print(resultado)
+    Args:
+        ruta_archivo (str): Ruta del archivo Excel o directorio con archivos Excel
+        salida (str, optional): Nombre del archivo de salida. Por defecto es 'unificado_<fecha>.xlsx'
+        hoja (int/str, optional): Nombre o índice de la hoja a leer. Por defecto es 0 (primera hoja)
+    """
+    # Determinar si es archivo o directorio
+    if os.path.isfile(ruta_archivo):
+        archivos = [ruta_archivo]
+    elif os.path.isdir(ruta_archivo):
+        archivos = [os.path.join(ruta_archivo, f) for f in os.listdir(ruta_archivo) 
+                    if f.endswith(('.xlsx', '.xls'))]
     else:
-        print("\nNo se pudieron procesar los datos")
+        raise ValueError("La ruta proporcionada no es un archivo ni un directorio válido")
+    
+    if not archivos:
+        raise ValueError("No se encontraron archivos Excel para unificar")
+    
+    # Leer todos los archivos
+    dfs = []
+    for archivo in archivos:
+        try:
+            df = pd.read_excel(archivo, sheet_name=hoja)
+            df['Archivo_Origen'] = os.path.basename(archivo)
+            dfs.append(df)
+            print(f"Procesado: {archivo}")
+        except Exception as e:
+            print(f"Error al procesar {archivo}: {str(e)}")
+    
+    if not dfs:
+        raise ValueError("No se pudo leer ningún archivo Excel válido")
+    
+    # Unificar todos los DataFrames
+    df_unificado = pd.concat(dfs, ignore_index=True)
+    
+    # Generar nombre de salida si no se proporciona
+    if salida is None:
+        fecha = datetime.now().strftime("%Y%m%d_%H%M%S")
+        salida = f"unificado_{fecha}.xlsx"
+    
+    # Guardar el archivo unificado
+    df_unificado.to_excel(salida, index=False)
+    print(f"\nArchivos unificados guardados en: {os.path.abspath(salida)}")
+    return salida
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Unificar archivos Excel en uno solo')
+    parser.add_argument('ruta', help='Ruta del archivo Excel o directorio con archivos Excel')
+    parser.add_argument('-o', '--output', help='Nombre del archivo de salida (opcional)')
+    parser.add_argument('-s', '--sheet', default=0, 
+                        help='Nombre o índice de la hoja a leer (por defecto: 0)')
+    
+    args = parser.parse_args()
+    
+    try:
+        archivo_salida = unificar_excels(args.ruta, args.output, args.sheet)
+    except Exception as e:
+        print(f"Error: {str(e)}")
