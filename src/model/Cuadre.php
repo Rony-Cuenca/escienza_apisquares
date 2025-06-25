@@ -1,9 +1,9 @@
-<?php   
+<?php
 require_once 'config/conexion.php';
 
 class Cuadre
 {
- 
+
     public static function Insertar($data)
     {
         $conn = Conexion::conectar();
@@ -45,7 +45,8 @@ class Cuadre
         return true;
     }
 
-    public static function existeFecha($fecha, $id_sucursal) {
+    public static function existeFecha($fecha, $id_sucursal)
+    {
         try {
             $conn = Conexion::conectar();
             $stmt = $conn->prepare("SELECT COUNT(*) FROM resumen_comprobante WHERE fecha_registro = ? AND id_sucursal = ?");
@@ -58,5 +59,83 @@ class Cuadre
             throw new Exception("Error al verificar la fecha: " . $e->getMessage());
         }
     }
+    
+    public static function obtenerMesesDisponibles()
+    {
+        $conn = Conexion::conectar();
+        $sql = "SELECT DISTINCT DATE_FORMAT(fecha_registro, '%Y-%m') as mes, DATE_FORMAT(fecha_registro, '%M %Y') as mes_nombre FROM resumen_comprobante ORDER BY mes DESC";
+        $stmt = $conn->query($sql);
+        $meses = [];
+        while ($row = $stmt->fetch_assoc()) {
+            $meses[] = $row;
+        }
+        return $meses;
+    }
 
+    public static function obtenerCuadresPorMes($mes)
+    {
+        $conn = Conexion::conectar();
+        $sql = "SELECT * FROM resumen_comprobante WHERE DATE_FORMAT(fecha_registro, '%Y-%m') = ? ORDER BY fecha_registro DESC";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("s", $mes);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $cuadres = [];
+        while ($row = $result->fetch_assoc()) {
+            $cuadres[] = $row;
+        }
+        return $cuadres;
+    }
+
+    // 1. Totales por tipo de documento y sistema
+    public static function obtenerTotalesPorTipoDoc($mes)
+    {
+        $conn = Conexion::conectar();
+        $sql = "
+        SELECT 
+            CASE 
+                WHEN LEFT(serie,1) = 'F' THEN 'FACTURA'
+                WHEN LEFT(serie,1) = 'B' THEN 'BOLETA'
+                ELSE 'OTRO'
+            END AS tipo_doc,
+            id_reporte,
+            SUM(monto_total) as total
+        FROM resumen_comprobante
+        WHERE DATE_FORMAT(fecha_registro, '%Y-%m') = ?
+        GROUP BY tipo_doc, id_reporte
+    ";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("s", $mes);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $totales = [];
+        while ($row = $result->fetch_assoc()) {
+            $totales[$row['tipo_doc']][$row['id_reporte']] = $row['total'];
+        }
+        return $totales;
+    }
+
+    // 2. Totales por serie y sistema
+    public static function obtenerTotalesPorSerie($mes)
+    {
+        $conn = Conexion::conectar();
+        $sql = "
+        SELECT 
+            serie,
+            id_reporte,
+            SUM(monto_total) as total
+        FROM resumen_comprobante
+        WHERE DATE_FORMAT(fecha_registro, '%Y-%m') = ?
+        GROUP BY serie, id_reporte
+    ";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("s", $mes);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $series = [];
+        while ($row = $result->fetch_assoc()) {
+            $series[$row['serie']][$row['id_reporte']] = $row['total'];
+        }
+        return $series;
+    }
 }
