@@ -22,43 +22,54 @@
     </div>
   </div>
 </div>
+<!-- Google Charts Scripts -->
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 
-<div class="flex flex-col gap-8 mt-8 md:flex-row md:justify-center">
-  <!-- Gráfico de Barras -->
-  <div class="bg-white rounded-xl shadow p-4 sm:p-6 w-full md:w-[900px]">
+<!-- Layout principal de gráficos -->
+<div class="flex flex-col gap-8 mt-8">
+
+  <!-- Fila 1: Resumen de ventas -->
+  <div class="w-full flex flex-col items-center">
+    <div class="bg-white rounded-xl shadow p-4 sm:p-6 w-full md:w-[900px]">
       <h1 class="text-xl font-bold text-gray-800">RESUMEN DE VENTAS</h1>
-
-    <div class="flex items-center justify-between mb-4">
-      <div class="flex items-center space-x-3">
-        <!-- Selectores ocultos, ya están arriba -->
+      <div class="flex items-center space-x-6 mb-2">
+        <div class="flex items-center space-x-2">
+          <span class="inline-block w-3 h-3 rounded-full bg-blue-600"></span>
+          <span class="text-xs text-gray-700">Nubox</span>
+        </div>
+        <div class="flex items-center space-x-2">
+          <span class="inline-block w-3 h-3 rounded-full bg-pink-500"></span>
+          <span class="text-xs text-gray-700">EDSuite</span>
+        </div>
+        <div class="flex items-center space-x-2">
+          <span class="inline-block w-3 h-3 rounded-full bg-green-500"></span>
+          <span class="text-xs text-gray-700">SIRE</span>
+        </div>
       </div>
-    </div>
-    <div class="flex items-center space-x-6 mb-2">
-      <div class="flex items-center space-x-2">
-        <span class="inline-block w-3 h-3 rounded-full bg-blue-600"></span>
-        <span class="text-xs text-gray-700">Nubox</span>
+      <div class="overflow-x-auto">
+        <div id="columnchart_material" class="min-w-[700px] h-[350px]"></div>
       </div>
-      <div class="flex items-center space-x-2">
-        <span class="inline-block w-3 h-3 rounded-full bg-pink-500"></span>
-        <span class="text-xs text-gray-700">EDSuite</span>
-      </div>
-      <div class="flex items-center space-x-2">
-        <span class="inline-block w-3 h-3 rounded-full bg-green-500"></span>
-        <span class="text-xs text-gray-700">SIRE</span>
-      </div>
-    </div>
-    <!-- Contenedor con scroll horizontal en móvil -->
-    <div class="overflow-x-auto">
-      <div id="columnchart_material" class="min-w-[700px] h-[350px]"></div>
     </div>
   </div>
 
+  <!-- Fila 2: Variación mensual -->
+  <div class="w-full flex flex-col items-center">
+    <?php require_once "graficos/variacion.php" ?>
+  </div>
 
+  <!-- Fila 3: Gráficos secundarios en dos columnas -->
+  <div class="w-full grid grid-cols-1 md:grid-cols-3 gap-8">
+    <div>
+      <?php require_once "graficos/pastel.php" ?>
+    </div>
+    <div>
+      <?php require_once "graficos/exoneracion.php" ?>
+    </div>
+    <div>
+      <?php require_once "graficos/promedio.php" ?>
+    </div>
+  </div>
 </div>
-
-
-<!-- Google Charts Scripts -->
-<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 
 
 <script>
@@ -97,23 +108,5 @@ function drawChart() {
 
 document.getElementById('select-anio').addEventListener('change', drawChart);
 document.getElementById('select-sucursal').addEventListener('change', drawChart);
-
-
 </script>
-<div class="flex flex-col gap-8 mt-8 md:flex-row md:justify-center">
-<?php  require_once "graficos/pastel.php"?>
-
-<!-- //Record exoneracion de IGV with chart js -->
-<?php require_once "graficos/exoneracion.php" ?>
-</div>
-
-<div class="">
-  <!--Promedio de venta por comprobante (serie)!-->
-<?php require_once "graficos/promedio.php" ?>
-  <!-- Ventas respecto al mes anterior (% crecimiento/caída) -->
- <?php require_once "graficos/variacion.php" ?>
-
-
-
-</div>
 
