@@ -1,4 +1,5 @@
 <?php
+ini_set('memory_limit', '512M');
 use Box\Spout\Reader\Common\Creator\ReaderEntityFactory;
 require __DIR__ . '/../../vendor/autoload.php'; 
 require_once __DIR__ . '/../model/Cuadre.php';
@@ -20,51 +21,61 @@ class CuadresController {
         $fechaSIRE = null;
         $fechaNUBOX = null;
 
-        //Procesar RUC SIRE
-        $nombTemp = $_FILES['exe_sire']['tmp_name'];
-        if (($handle = fopen($nombTemp, "r")) != false) {
-            $header = fgetcsv($handle);
-            if ($header !== false && isset($header[0])) {
-                if (substr($header[0], 0, 3) == "\xEF\xBB\xBF") {
-                    $header[0] = substr($header[0], 3);
-            }
-            }
-            $colRUC = array_search('Ruc', $header);
-            $colFecha = array_search('Fecha de emisión', $header);
-            $dataRow = fgetcsv($handle);
-            $RUCSIRE = trim($dataRow[$colRUC]);
-            $fechaSIRE = trim($dataRow[$colFecha]);
-            fclose($handle);
-        } else {
-            $ErrorSIRE = "No se pudo abrir el archivo SIRE.";
-        }
-        $fechaSIRE = date('Y-d-01', strtotime($fechaSIRE));
 
-        //Procesar RUC NUBOX
-        $nombTemp = $_FILES['exe_nubox']['tmp_name'];
-        $reader = ReaderEntityFactory::createXLSXReader();
-        $reader->open($nombTemp);
-        $fila = 1;
-        $RUCNUBOX = null;
-        foreach ($reader->getSheetIterator() as $sheet) {
-            foreach ($sheet->getRowIterator() as $row) {
-                if ($fila == 3) {
-                    $cells = $row->toArray();
-                    $RUCNUBOX = $cells[1];
+        if (isset($_FILES['exe_sire']) && $_FILES['exe_sire']['error'] === 0) {
+            //Procesar RUC SIRE
+            $nombTemp = $_FILES['exe_sire']['tmp_name'];
+            if (($handle = fopen($nombTemp, "r")) != false) {
+                $header = fgetcsv($handle);
+                if ($header !== false && isset($header[0])) {
+                    if (substr($header[0], 0, 3) == "\xEF\xBB\xBF") {
+                        $header[0] = substr($header[0], 3);
                 }
-                if ($fila == 5) {
-                    $cells = $row->toArray();
-                    $fechaNUBOX = $cells[4];
                 }
-                // Terminar el bucle si ya se capturaron ambos valores
-                if ($RUCNUBOX !== null && $fechaNUBOX !== null) {
-                    break 2;
-                }
-                $fila++;
+                $colRUC = array_search('Ruc', $header);
+                $colFecha = array_search('Fecha de emisión', $header);
+                $dataRow = fgetcsv($handle);
+                $RUCSIRE = trim($dataRow[$colRUC]);
+                $fechaSIRE = trim($dataRow[$colFecha]);
+                fclose($handle);
+            } else {
+                $ErrorSIRE = "No se pudo abrir el archivo SIRE.";
             }
+            $fechaSIRE = date('Y-d-01', strtotime($fechaSIRE));
+        } else {
+            $ErrorSIRE = "No se subió ningún archivo válido.";
+
         }
-        $reader->close();
-        $fechaNUBOX = date('Y-m-01', strtotime($fechaNUBOX));
+
+        if (isset($_FILES['exe_nubox']) && $_FILES['exe_nubox']['error'] === 0) {
+            //Procesar RUC NUBOX
+            $nombTemp = $_FILES['exe_nubox']['tmp_name'];
+            $reader = ReaderEntityFactory::createXLSXReader();
+            $reader->open($nombTemp);
+            $fila = 1;
+            $RUCNUBOX = null;
+            foreach ($reader->getSheetIterator() as $sheet) {
+                foreach ($sheet->getRowIterator() as $row) {
+                    if ($fila == 3) {
+                        $cells = $row->toArray();
+                        $RUCNUBOX = $cells[1];
+                    }
+                    if ($fila == 5) {
+                        $cells = $row->toArray();
+                        $fechaNUBOX = $cells[4];
+                    }
+                    // Terminar el bucle si ya se capturaron ambos valores
+                    if ($RUCNUBOX !== null && $fechaNUBOX !== null) {
+                        break 2;
+                    }
+                    $fila++;
+                }
+            }
+            $reader->close();
+            $fechaNUBOX = date('Y-m-01', strtotime($fechaNUBOX));
+        } else {
+            $ErrorNUBOX = "No se subió ningún archivo válido.";
+        }
 
         if ($RUCSIRE == $RUCNUBOX) {
             if ($fechaSIRE == $fechaNUBOX) {
@@ -109,93 +120,45 @@ class CuadresController {
 
     public function unirExcel() {
         if (!isset($_FILES['archivos_excel'])) {
-            echo json_encode(['status' => 'error', 'message' => 'No se recibieron archivos.']);
-            return;
+            die("No se recibieron archivos");
         }
     
-        // Reorganizar archivos para facilitar el procesamiento
         $archivos = $_FILES['archivos_excel'];
-        $archivos_reorganizados = [];
-        
-        for ($i = 0; $i < count($archivos['name']); $i++) {
-            if ($archivos['error'][$i] === UPLOAD_ERR_OK) {
-                $archivos_reorganizados[] = [
-                    'name' => $archivos['name'][$i],
-                    'type' => $archivos['type'][$i],
-                    'tmp_name' => $archivos['tmp_name'][$i],
-                    'error' => $archivos['error'][$i],
-                    'size' => $archivos['size'][$i],
-                ];
-            }
+    
+        // Preparar CURL para enviar archivos
+        $curl = curl_init();
+        $cfileArray = [];
+    
+        foreach ($archivos['tmp_name'] as $idx => $tmpPath) {
+            $nombre = $archivos['name'][$idx];
+            $cfile = new CURLFile($tmpPath, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', $nombre);
+            $cfileArray["archivos[]"] = $cfile; // array de múltiples archivos
         }
     
-        // Directorio para guardar archivos temporalmente
-        $uploadDir = __DIR__ . '/../../uploads/unificar/';
-        if (!file_exists($uploadDir)) {
-            mkdir($uploadDir, 0777, true);
-        }
+        curl_setopt_array($curl, [
+            CURLOPT_URL => "http://localhost:5000/unificar",
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => $cfileArray,
+        ]);
     
-        // Guardar archivos temporalmente
-        $archivosPaths = [];
-        foreach ($archivos_reorganizados as $archivo) {
-            $extension = pathinfo($archivo['name'], PATHINFO_EXTENSION);
-            $nombreUnico = uniqid('excel_') . '.' . $extension;
-            $rutaTemp = $uploadDir . $nombreUnico;
-            
-            if (move_uploaded_file($archivo['tmp_name'], $rutaTemp)) {
-                $archivosPaths[] = $rutaTemp;
-            }
-        }
+
+        $response = curl_exec($curl);
+        $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        curl_close($curl);
     
-        if (empty($archivosPaths)) {
-            echo json_encode(['status' => 'error', 'message' => 'No se pudieron guardar los archivos temporales.']);
-            return;
-        }
+        $respuesta = json_decode($response, true);
     
-        try {
-            // Llamar a la API Python
-            $resultado = $this->llamarApiPythonMultiple($archivosPaths);
-            
-            // Directorio para archivos unificados
-            $unifiedDir = __DIR__ . '/../../unified/';
-            if (!file_exists($unifiedDir)) {
-                mkdir($unifiedDir, 0777, true);
-            }
-            
-            // Guardar el archivo unificado
-            $fecha = date('Ymd_His');
-            $outputFilename = 'unificado_' . $fecha . '.xlsx';
-            $outputPath = $unifiedDir . $outputFilename;
-            
-            // Si la API devuelve el contenido directamente (no JSON)
-            file_put_contents($outputPath, $resultado);
-            
-            // Limpiar archivos temporales
-            foreach ($archivosPaths as $path) {
-                if (file_exists($path)) {
-                    unlink($path);
-                }
-            }
-    
-            echo json_encode([
-                'status' => 'success',
-                'message' => 'Archivos unificados correctamente',
-                'file_path' => $outputPath,
-                'file_name' => $outputFilename
-            ]);
-            
-        } catch (Exception $e) {
-            // Limpiar archivos temporales en caso de error
-            foreach ($archivosPaths as $path) {
-                if (file_exists($path)) {
-                    @unlink($path);
-                }
-            }
-            
-            echo json_encode([
-                'status' => 'error',
-                'message' => 'Error al unificar archivos: ' . $e->getMessage()
-            ]);
+        if ($httpCode === 200 && isset($respuesta['status']) && $respuesta['status'] === 'ok') {
+            $archivo = $respuesta['archivo'];
+            $url_descarga = "http://localhost:5000/descargas/" . urlencode($archivo);
+
+            // Redirige con el archivo como parámetro (opcional: base64 o rawurlencode si es muy largo)
+            header("Location: index.php?controller=cuadres&modal=unificacionExitosa&archivo=" . urlencode($archivo));
+            exit;
+        } else {
+            $error = $respuesta['error'] ?? 'Error al unir los archivos.';
+            echo "<script>alert('Error: {$error}'); window.history.back();</script>";
         }
     }
 
@@ -239,7 +202,6 @@ class CuadresController {
     
         return $response;
     }
-
 
     public function sire() {
         $ErrorSIRE = null;
@@ -289,7 +251,7 @@ class CuadresController {
                     $DscBISIRE = $fila[$colDscBI];
                     $DscIGVSIRE = $fila[$colDscIGV];
 
-                    $total_fila = $GravSIRE + $ExoSIRE + $InaSIRE + $IGVSIRE + $DscBISIRE + $DscIGVSIRE;
+                    $total_fila = floatval($GravSIRE) + floatval($ExoSIRE) + floatval($InaSIRE) + floatval($IGVSIRE) + floatval($DscBISIRE) + floatval($DscIGVSIRE);
                     $this->validarSire[] = [
                         'serie' => $serieSIRE,
                         'total' => $total_fila
@@ -387,6 +349,7 @@ class CuadresController {
 
         return $respuesta;
     }
+
     private function llamarApiPython($archivoPath, $estado) {
         $url = 'http://localhost:5000/procesar?estado='.$estado;
 

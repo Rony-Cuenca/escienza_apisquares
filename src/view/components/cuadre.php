@@ -120,7 +120,31 @@
                 <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2 rounded-lg shadow">
                     Unificar
                 </button>
-            </div
+            </div>
+            <?php if (isset($_GET['modal']) && $_GET['modal'] === 'unificacionExitosa' && isset($_GET['archivo'])): ?>
+                <script>
+                    window.addEventListener('DOMContentLoaded', () => {
+                        const modal = document.getElementById('modalUnirExcel');
+                        modal.classList.remove('hidden');
+
+                        const submitBtnContainer = document.getElementById('submitBtnContainer');
+                        if (submitBtnContainer) {
+                            submitBtnContainer.innerHTML = `
+                                <a href="http://localhost:5000/descargas/<?php echo urlencode($_GET['archivo']); ?>" 
+                                target="_blank"
+                                class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg shadow mr-3 inline-block">
+                                    Descargar Excel
+                                </a>
+                                <button onclick="cerrarModal()" 
+                                        class="bg-gray-600 hover:bg-gray-700 text-white font-semibold px-6 py-2 rounded-lg shadow">
+                                    Cargar Excel
+                                </button>
+                            `;
+                            submitBtnContainer.classList.remove('hidden');
+                        }
+                    });
+                </script>
+            <?php endif; ?>
         </form>
     </div>
 </div>

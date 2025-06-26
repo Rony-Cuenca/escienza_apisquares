@@ -1,9 +1,11 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_file, send_from_directory
+from werkzeug.utils import secure_filename
 import pandas as pd
 import os
 from datetime import datetime
 import tempfile
 import shutil
+
 
 app = Flask(__name__)
 
@@ -212,70 +214,45 @@ def procesar():
         })
 @app.route('/unificar', methods=['POST'])
 def unificar_archivos():
-    # Verificar si hay archivos en la solicitud
-    if not request.files:
-        return jsonify({'status': 'error', 'message': 'No files received'}), 400
-    
-    # Obtener todos los archivos (nota el getlist para array)
-    files = request.files.getlist('file[]')  # Cambiado a 'file[]' para coincidir con PHP
-    
-    if not files:
-        return jsonify({'status': 'error', 'message': 'No valid files uploaded'}), 400
-    
+    if 'archivos[]' not in request.files:
+        return jsonify({'error': 'No se enviaron archivos'}), 400
+
+    archivos = request.files.getlist('archivos[]')
+
+    if not archivos:
+        return jsonify({'error': 'Lista vacía de archivos'}), 400
+
+    carpeta_destino = os.path.join(os.getcwd(), 'uploads/unificados')
+    os.makedirs(carpeta_destino, exist_ok=True)
     temp_dir = tempfile.mkdtemp()
-    temp_files = []
-    
     try:
-        # Guardar archivos temporalmente
-        for i, file in enumerate(files):
-            if file.filename == '':
-                continue
-                
-            if not (file.filename.endswith('.xlsx') or file.filename.endswith('.xls')):
-                continue
-                
-            temp_path = os.path.join(temp_dir, f'temp_{i}.xlsx')
-            file.save(temp_path)
-            temp_files.append(temp_path)
-        
-        if not temp_files:
-            return jsonify({'status': 'error', 'message': 'No valid Excel files to process'}), 400
-        
-        # Procesar archivos
         dfs = []
-        for file_path in temp_files:
-            try:
-                df = pd.read_excel(file_path)
-                df['Archivo_Origen'] = os.path.basename(file_path)
-                dfs.append(df)
-            except Exception as e:
-                print(f"Error processing {file_path}: {str(e)}")
-                continue
-        
-        if not dfs:
-            return jsonify({'status': 'error', 'message': 'Could not read any Excel file'}), 400
-        
-        # Unificar DataFrames
-        df_unificado = pd.concat(dfs, ignore_index=True)
-        
-        # Crear respuesta
-        output = io.BytesIO()
-        df_unificado.to_excel(output, index=False)
-        output.seek(0)
-        
-        return send_file(
-            output,
-            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            as_attachment=True,
-            download_name=f'unificado_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
-        )
-        
+        for archivo in archivos:
+            nombre_seguro = secure_filename(archivo.filename)
+            ruta_temporal = os.path.join(temp_dir, nombre_seguro)
+            archivo.save(ruta_temporal)
+
+            df = pd.read_excel(ruta_temporal)
+            df["Archivo_Origen"] = archivo.filename
+            dfs.append(df)
+
+        df_final = pd.concat(dfs, ignore_index=True)
+
+        nombre_salida = f"excel_unificado_{int(datetime.now().timestamp())}.xlsx"
+        ruta_salida = os.path.join(carpeta_destino, nombre_salida)
+
+        df_final.to_excel(ruta_salida, index=False)
+
+        return jsonify({'status': 'ok', 'archivo': nombre_salida})
     except Exception as e:
-        return jsonify({'status': 'error', 'message': f'Error processing files: {str(e)}'}), 500
-    
+        return jsonify({'error': str(e)}), 500
     finally:
-        # Limpiar archivos temporales
-        if os.path.exists(temp_dir):
-            shutil.rmtree(temp_dir)
+        shutil.rmtree(temp_dir, ignore_errors=True)  
+
+@app.route('/descargas/<nombre_archivo>', methods=['GET'])
+def descargar_archivo(nombre_archivo):
+    carpeta_destino = os.path.join(os.getcwd(), 'uploads/unificados')
+    return send_from_directory(carpeta_destino, nombre_archivo, as_attachment=True)
+
 if __name__ == '__main__':
     app.run(port=5000, debug=False)  # Disable debug mode for production
