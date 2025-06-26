@@ -8,7 +8,7 @@
     </select>
     <h1 class="text-xl font-bold text-gray-800 mb-6">VENTAS RESPECTO AL MES ANTERIOR</h1>
     <div class="overflow-x-auto pb-2">
-        <div style="width:100vw; min-width:600px; max-width:900px;">
+        <div style="width:100vw; min-width:600px; max-width:700px;">
             <canvas id="variacionVentasChart" height="220" style="width:100% !important; min-width:600px; max-width:900px;"></canvas>
         </div>
     </div>

@@ -1,5 +1,5 @@
   <!-- Gráfico de Pastel -->
-  <div class="bg-white rounded-xl shadow p-4 sm:p-6 w-full md:w-[500px] flex flex-col items-center">
+  <div class="bg-white rounded-xl shadow p-4 sm:p-6 mt-8">
     <h1 class="text-xl font-bold text-center mb-4">SERIES CON MÁS VENTA</h1>
     <div class="flex flex-col sm:flex-row items-center justify-center mb-2 gap-2 w-full">
       <select id="select-tipo" class="border rounded px-2 py-1 text-sm w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-blue-400">
@@ -21,7 +21,7 @@
         ?>
       </select>
     </div>
-    <div id="piechart" style="width: 100%; max-width: 400px; height: 320px;"></div>
+    <div id="piechart" style="width: 100%; max-width: 400px; height: 220px;"></div>
   </div>
 
 

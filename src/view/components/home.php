@@ -1,3 +1,4 @@
+<div class="w-full px-2 md:px-10 py-10 bg-gray-200 flex-1 flex flex-col">
 <div class="bg-white rounded-xl shadow p-4 sm:p-6 mb-8">
   <div class="flex flex-col items-center">
     <span class="text-center text-base text-slate-700 font-semibold mb-2">Filtrar datos históricos</span>
@@ -69,7 +70,7 @@
     <?php require_once "graficos/promedio.php" ?>
   </div>
 </div>
-
+</div>
 
 <script>
 // --- GRÁFICO DE BARRAS ---
