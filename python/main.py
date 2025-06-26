@@ -5,9 +5,21 @@ import os
 from datetime import datetime
 import tempfile
 import shutil
-
+import time
+import threading
 
 app = Flask(__name__)
+
+def limpiar_carpeta(carpeta, delay=10):
+    """Elimina todos los archivos en la carpeta después de cierto delay."""
+    def limpiar():
+        time.sleep(delay)
+        for archivo in os.listdir(carpeta):
+            archivo_path = os.path.join(carpeta, archivo)
+            if os.path.isfile(archivo_path):
+                os.remove(archivo_path)
+    threading.Thread(target=limpiar).start()
+
 
 @app.route('/procesar', methods=['POST'])
 def procesar():
@@ -252,7 +264,9 @@ def unificar_archivos():
 @app.route('/descargas/<nombre_archivo>', methods=['GET'])
 def descargar_archivo(nombre_archivo):
     carpeta_destino = os.path.join(os.getcwd(), 'uploads/unificados')
+    limpiar_carpeta(carpeta_destino)
     return send_from_directory(carpeta_destino, nombre_archivo, as_attachment=True)
+    
 
 if __name__ == '__main__':
     app.run(port=5000, debug=False)  # Disable debug mode for production
