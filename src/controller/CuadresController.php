@@ -1,5 +1,7 @@
 <?php
 ini_set('memory_limit', '512M');
+ini_set('upload_max_filesize', '20M');
+ini_set('post_max_size', '20M');
 use Box\Spout\Reader\Common\Creator\ReaderEntityFactory;
 require __DIR__ . '/../../vendor/autoload.php'; 
 require_once __DIR__ . '/../model/Cuadre.php';
@@ -101,8 +103,10 @@ class CuadresController {
             } else {
                 $ErrorSIRE = "Los RUC de los archivos no coinciden.";
             }
+        } else {
+            $ErrorSIRE = "No se subieron archivos válidos.";
         }
-        
+
         if (!isset($_FILES['exe_edsuite']) || $_FILES['exe_edsuite']['error'] !== UPLOAD_ERR_OK) {
             $ErrorEDSUITE = "No se selecciono EDSUITE.";
         } else {

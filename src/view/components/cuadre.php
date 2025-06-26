@@ -124,24 +124,17 @@
             <?php if (isset($_GET['modal']) && $_GET['modal'] === 'unificacionExitosa' && isset($_GET['archivo'])): ?>
                 <script>
                     window.addEventListener('DOMContentLoaded', () => {
+                        // Cerrar el modal automáticamente
                         const modal = document.getElementById('modalUnirExcel');
-                        modal.classList.remove('hidden');
+                        modal.classList.add('hidden');
 
-                        const submitBtnContainer = document.getElementById('submitBtnContainer');
-                        if (submitBtnContainer) {
-                            submitBtnContainer.innerHTML = `
-                                <a href="http://localhost:5000/descargas/<?php echo urlencode($_GET['archivo']); ?>" 
-                                target="_blank"
-                                class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg shadow mr-3 inline-block">
-                                    Descargar Excel
-                                </a>
-                                <button onclick="cerrarModal()" 
-                                        class="bg-gray-600 hover:bg-gray-700 text-white font-semibold px-6 py-2 rounded-lg shadow">
-                                    Cargar Excel
-                                </button>
-                            `;
-                            submitBtnContainer.classList.remove('hidden');
-                        }
+                        // Disparar descarga automáticamente
+                        const enlaceDescarga = document.createElement('a');
+                        enlaceDescarga.href = "http://localhost:5000/descargas/<?php echo urlencode($_GET['archivo']); ?>";
+                        enlaceDescarga.download = "<?php echo basename($_GET['archivo']); ?>";
+                        document.body.appendChild(enlaceDescarga);
+                        enlaceDescarga.click();
+                        document.body.removeChild(enlaceDescarga);
                     });
                 </script>
             <?php endif; ?>
