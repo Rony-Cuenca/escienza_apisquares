@@ -22,7 +22,7 @@ class CuadresController {
         $fechaNUBOX = null;
 
 
-        if (isset($_FILES['exe_sire']) && $_FILES['exe_sire']['error'] === 0) {
+        if (isset($_FILES['exe_sire']) && $_FILES['exe_sire']['error'] === UPLOAD_ERR_OK) {
             //Procesar RUC SIRE
             $nombTemp = $_FILES['exe_sire']['tmp_name'];
             if (($handle = fopen($nombTemp, "r")) != false) {
@@ -47,7 +47,7 @@ class CuadresController {
 
         }
 
-        if (isset($_FILES['exe_nubox']) && $_FILES['exe_nubox']['error'] === 0) {
+        if (isset($_FILES['exe_nubox']) && $_FILES['exe_nubox']['error'] === UPLOAD_ERR_OK) {
             //Procesar RUC NUBOX
             $nombTemp = $_FILES['exe_nubox']['tmp_name'];
             $reader = ReaderEntityFactory::createXLSXReader();
@@ -77,30 +77,32 @@ class CuadresController {
             $ErrorNUBOX = "No se subió ningún archivo válido.";
         }
 
-        if ($RUCSIRE == $RUCNUBOX) {
-            if ($fechaSIRE == $fechaNUBOX) {
-                $user = Usuario::obtenerId($_GET['user']);
-                $id_sucursal = $user['id_sucursal'];
-                $existeFecha = Cuadre::existeFecha($fechaSIRE, $id_sucursal);
-                if (!$existeFecha) {
-                    extract($this->sire($_FILES['exe_sire'], $_GET['user']));
-                    $nuboxResponse = $this->cargar_archivo($_FILES['exe_nubox'], 1);
-                    if (isset($nuboxResponse['resultados']) && $nuboxResponse['estado'] == 1 && isset($nuboxResponse['validarNubox'])) {
-                        extract($this->procesarDatosNubox($nuboxResponse['resultados']));
-                        $this->validarNubox = $nuboxResponse['validarNubox'];
+        if ($RUCSIRE && $RUCNUBOX) {
+            if ($RUCSIRE == $RUCNUBOX) {
+                if ($fechaSIRE == $fechaNUBOX) {
+                    $user = Usuario::obtenerId($_GET['user']);
+                    $id_sucursal = $user['id_sucursal'];
+                    $existeFecha = Cuadre::existeFecha($fechaSIRE, $id_sucursal);
+                    if (!$existeFecha) {
+                        extract($this->sire($_FILES['exe_sire'], $_GET['user']));
+                        $nuboxResponse = $this->cargar_archivo($_FILES['exe_nubox'], 1);
+                        if (isset($nuboxResponse['resultados']) && $nuboxResponse['estado'] == 1 && isset($nuboxResponse['validarNubox'])) {
+                            extract($this->procesarDatosNubox($nuboxResponse['resultados']));
+                            $this->validarNubox = $nuboxResponse['validarNubox'];
+                        }
+                        extract($this->Validar_series());
+                        //print_r($this->validarNubox);
+                    } else {
+                        $ErrorSIRE = "Ya existe un cuadre para la fecha seleccionada.";
                     }
-                    extract($this->Validar_series());
-                    //print_r($this->validarNubox);
                 } else {
-                    $ErrorSIRE = "Ya existe un cuadre para la fecha seleccionada.";
+                    $ErrorSIRE = "Las fechas de los archivos no coinciden.";
                 }
             } else {
-                $ErrorSIRE = "Las fechas de los archivos no coinciden.";
+                $ErrorSIRE = "Los RUC de los archivos no coinciden.";
             }
-        } else {
-            $ErrorSIRE = "Los RUC de los archivos no coinciden.";
         }
-
+        
         if (!isset($_FILES['exe_edsuite']) || $_FILES['exe_edsuite']['error'] !== UPLOAD_ERR_OK) {
             $ErrorEDSUITE = "No se selecciono EDSUITE.";
         } else {
