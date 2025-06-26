@@ -1,26 +1,6 @@
 <?php
 setlocale(LC_TIME, 'es_ES.UTF-8', 'es_ES', 'Spanish_Spain', 'Spanish');
 date_default_timezone_set('America/Lima');
-$meses = [
-    'January' => 'Enero',
-    'February' => 'Febrero',
-    'March' => 'Marzo',
-    'April' => 'Abril',
-    'May' => 'Mayo',
-    'June' => 'Junio',
-    'July' => 'Julio',
-    'August' => 'Agosto',
-    'September' => 'Septiembre',
-    'October' => 'Octubre',
-    'November' => 'Noviembre',
-    'December' => 'Diciembre'
-];
-foreach ($meses as $en => $es) {
-    if (strpos($nombreMes, $en) !== false) {
-        $nombreMes = str_replace($en, $es, $nombreMes);
-        break;
-    }
-}
 ?>
 
 <!DOCTYPE html>
@@ -155,7 +135,6 @@ foreach ($meses as $en => $es) {
 </head>
 
 <body>
-    <!-- 1. DATOS GENERALES -->
     <!-- CABECERA PDF -->
     <table style="width:100%; margin-bottom: 24px; border: none;">
         <tr>
@@ -299,7 +278,6 @@ foreach ($meses as $en => $es) {
 
     <div style="page-break-after: always;"></div>
 
-    <!-- RESUMEN DE COMPROBANTES Y DIFERENCIAS EN FILA (PDF FRIENDLY) -->
     <h3>DIFERENCIAS (SIRE - NUBOX)</h3>
     <table style="width:100%; table-layout: fixed;">
         <tr>

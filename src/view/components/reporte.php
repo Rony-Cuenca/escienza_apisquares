@@ -1,29 +1,41 @@
 <div class="w-full px-2 md:px-10 py-10 bg-gray-200 flex-1 flex flex-col">
     <div class="w-full mx-auto bg-white rounded-lg shadow-lg p-8">
         <h2 class="text-3xl font-bold text-gray-900 text-center mb-8 uppercase">Reporte de Cuadres</h2>
-        <form method="GET" action="index.php" class="flex flex-col md:flex-row md:justify-between gap-4 mb-6">
+        <form method="GET" action="index.php" class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-6">
             <input type="hidden" name="controller" value="reporte">
             <input type="hidden" name="action" value="index">
-            <div>
+            <div class="flex-1">
                 <label class="block text-sm font-medium mb-1">Seleccionar Mes de Cuadre</label>
-                <select name="mes" class="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400" onchange="this.form.submit()">
-                    <option value="">Seleccione un mes</option>
-                    <?php foreach ($mesesDisponibles as $mes): ?>
-                        <option value="<?= $mes['mes'] ?>" <?= (isset($_GET['mes']) && $_GET['mes'] == $mes['mes']) ? 'selected' : '' ?>>
-                            <?= $mes['mes_nombre'] ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-
-                <a href="index.php?controller=reporte&action=exportarPDF&mes=<?= urlencode($mesSeleccionado) ?>"
-                    class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mb-4 inline-block">
-                    Exportar PDF
-                </a>
-                <a href="index.php?controller=reporte&action=exportarExcel&mes=<?= urlencode($mesSeleccionado) ?>"
-                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-4 inline-block">
-                    Exportar Excel
-                </a>
+                <input
+                    type="text"
+                    id="mesPicker"
+                    name="mes"
+                    class="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    placeholder="Seleccione un mes"
+                    value="<?= isset($_GET['mes']) ? htmlspecialchars($_GET['mes']) : '' ?>"
+                    readonly
+                    required
+                    onchange="this.form.submit()"
+                    autocomplete="off" />
             </div>
+            <?php if ($_SESSION['rol'] === 'Administrador' || $_SESSION['rol'] === 'Contador'): ?>
+                <div class="flex gap-2 justify-end">
+                    <button
+                        type="button"
+                        onclick="exportarArchivo('PDF')"
+                        class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded flex items-center gap-2">
+                        <img src="../src/images/ic_pdf.png" alt="PDF" class="w-5 h-5 bd-w">
+                        Exportar PDF
+                    </button>
+                    <button
+                        type="button"
+                        onclick="exportarArchivo('Excel')"
+                        class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded flex items-center gap-2">
+                        <img src="../src/images/ic_excel.png" alt="EXCEL" class="w-5 h-5 bd-w">
+                        Exportar Excel
+                    </button>
+                </div>
+            <?php endif; ?>
         </form>
 
         <!-- Tabla SIRE -->
@@ -265,3 +277,7 @@
         </div>
     </div>
 </div>
+<script>
+    window.MESES_HABILITADOS = <?= json_encode(array_column($mesesDisponibles, 'mes')) ?>;
+</script>
+<script src="../assets/js/reporte.js"></script>
