@@ -149,6 +149,86 @@
             </table>
         </div>
 
+        <!-- Tabla SERIES AJENAS -->
+        <h3 class="text-xl font-bold text-gray-800 mt-8 mb-2">Resumen de Series Ajenas</h3>
+        <div class="overflow-x-auto rounded-xl border border-[#2563EB] bg-white mb-8">
+            <table class="w-full min-w-max text-sm">
+                <thead>
+                    <tr class="bg-[#A9C3E8]">
+                        <th class="py-2 px-3 text-left">Serie</th>
+                        <th class="py-2 px-3 text-right">Conteo Total</th>
+                        <th class="py-2 px-3 text-right">Importe Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (!empty($seriesAjenas)): ?>
+                        <?php 
+                        $totalConteo = 0;
+                        $totalImporte = 0;
+                        foreach ($seriesAjenas as $serie): 
+                            $totalConteo += $serie['total_conteo'];
+                            $totalImporte += $serie['total_importe'];
+                        ?>
+                            <tr class="border-b border-[#2563EB] transition hover:bg-blue-50">
+                                <td class="py-2 px-3 text-left font-semibold"><?= htmlspecialchars($serie['serie']) ?></td>
+                                <td class="py-2 px-3 text-right"><?= number_format($serie['total_conteo'], 0) ?></td>
+                                <td class="py-2 px-3 text-right">S/ <?= number_format($serie['total_importe'], 2) ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                        <tr class="bg-gray-100 font-bold">
+                            <td class="py-2 px-3">TOTAL</td>
+                            <td class="py-2 px-3 text-right"><?= number_format($totalConteo, 0) ?></td>
+                            <td class="py-2 px-3 text-right">S/ <?= number_format($totalImporte, 2) ?></td>
+                        </tr>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="3" class="py-4 text-center text-gray-500">No hay series ajenas para este mes.</td>
+                        </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Tabla VENTAS GLOBALES -->
+        <h3 class="text-xl font-bold text-gray-800 mt-8 mb-2">Resumen de Ventas Globales</h3>
+        <div class="overflow-x-auto rounded-xl border border-[#2563EB] bg-white mb-8">
+            <table class="w-full min-w-max text-sm">
+                <thead>
+                    <tr class="bg-[#A9C3E8]">
+                        <th class="py-2 px-3 text-left">Producto</th>
+                        <th class="py-2 px-3 text-right">Cantidad Total</th>
+                        <th class="py-2 px-3 text-right">Importe Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (!empty($ventasGlobales)): ?>
+                        <?php 
+                        $totalCantidad = 0;
+                        $totalImporteVG = 0;
+                        foreach ($ventasGlobales as $venta): 
+                            $totalCantidad += $venta['total_cantidad'];
+                            $totalImporteVG += $venta['total_importe'];
+                        ?>
+                            <tr class="border-b border-[#2563EB] transition hover:bg-blue-50">
+                                <td class="py-2 px-3 text-left font-semibold"><?= htmlspecialchars($venta['producto']) ?></td>
+                                <td class="py-2 px-3 text-right"><?= number_format($venta['total_cantidad'], 2) ?></td>
+                                <td class="py-2 px-3 text-right">S/ <?= number_format($venta['total_importe'], 2) ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                        <tr class="bg-gray-100 font-bold">
+                            <td class="py-2 px-3">TOTAL</td>
+                            <td class="py-2 px-3 text-right"><?= number_format($totalCantidad, 2) ?></td>
+                            <td class="py-2 px-3 text-right">S/ <?= number_format($totalImporteVG, 2) ?></td>
+                        </tr>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="3" class="py-4 text-center text-gray-500">No hay ventas globales para este mes.</td>
+                        </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+
         <!-- RESUMEN FACTURAS, BOLETAS Y NOTAS DE CRÉDITO -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
             <!-- FACTURAS -->

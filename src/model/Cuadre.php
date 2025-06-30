@@ -129,4 +129,109 @@ class Cuadre
         }
         return $series;
     }
+
+    public static function obtenerResumenComprobantes($mes)
+    {
+        $conn = Conexion::conectar();
+        $sql = "
+            SELECT 
+                serie,
+                tipo_comprobante,
+                SUM(cantidad_compr) as cantidad_comprobantes,
+                SUM(suma_gravada) as suma_gravada,
+                SUM(suma_exonerada) as suma_exonerada,
+                SUM(suma_inafecto) as suma_inafecto,
+                SUM(suma_igv) as suma_igv,
+                SUM(monto_total) as monto_total
+            FROM resumen_comprobante 
+            WHERE DATE_FORMAT(fecha_registro, '%Y-%m') = ?
+            AND id_reporte = 3
+            GROUP BY serie, tipo_comprobante
+            ORDER BY serie, tipo_comprobante
+        ";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("s", $mes);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        $resumen = [];
+        while ($row = $result->fetch_assoc()) {
+            $resumen[] = [
+                'serie' => $row['serie'],
+                'tipo_comprobante' => $row['tipo_comprobante'],
+                'cantidad_comprobantes' => $row['cantidad_comprobantes'],
+                'suma_gravada' => $row['suma_gravada'],
+                'suma_exonerada' => $row['suma_exonerada'],
+                'suma_inafecto' => $row['suma_inafecto'],
+                'suma_igv' => $row['suma_igv'],
+                'monto_total' => $row['monto_total'],
+                'diferencia' => 0 // Se puede calcular según requerimientos específicos
+            ];
+        }
+        
+        return $resumen;
+    }
+
+    public static function obtenerTotalesPorTipoComprobanteExcluyendoAjenas($mes)
+    {
+        $conn = Conexion::conectar();
+        $id_sucursal = $_SESSION['id_sucursal'] ?? null;
+        
+        $sql = "
+        SELECT tipo_comprobante, id_reporte, SUM(monto_total) as total
+        FROM resumen_comprobante rc
+        WHERE DATE_FORMAT(rc.fecha_registro, '%Y-%m') = ?
+        AND rc.id_sucursal = ?
+        AND rc.serie NOT IN (
+            SELECT DISTINCT serie 
+            FROM series_ajenas sa 
+            WHERE sa.id_sucursal = rc.id_sucursal 
+            AND sa.estado = 1
+            AND DATE_FORMAT(sa.fecha_registro, '%Y-%m') = ?
+        )
+        GROUP BY tipo_comprobante, id_reporte
+        ";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("sis", $mes, $id_sucursal, $mes);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $totales = [];
+        while ($row = $result->fetch_assoc()) {
+            $totales[$row['tipo_comprobante']][$row['id_reporte']] = $row['total'];
+        }
+        return $totales;
+    }
+
+    public static function obtenerTotalesPorSerieExcluyendoAjenas($mes)
+    {
+        $conn = Conexion::conectar();
+        $id_sucursal = $_SESSION['id_sucursal'] ?? null;
+        
+        $sql = "
+        SELECT 
+            rc.serie,
+            rc.id_reporte,
+            SUM(rc.monto_total) as total
+        FROM resumen_comprobante rc
+        WHERE DATE_FORMAT(rc.fecha_registro, '%Y-%m') = ?
+        AND rc.id_sucursal = ?
+        AND rc.serie NOT IN (
+            SELECT DISTINCT serie 
+            FROM series_ajenas sa 
+            WHERE sa.id_sucursal = rc.id_sucursal 
+            AND sa.estado = 1
+            AND DATE_FORMAT(sa.fecha_registro, '%Y-%m') = ?
+        )
+        GROUP BY rc.serie, rc.id_reporte
+        ";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("sis", $mes, $id_sucursal, $mes);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $series = [];
+        while ($row = $result->fetch_assoc()) {
+            $series[$row['serie']][$row['id_reporte']] = $row['total'];
+        }
+        return $series;
+    }
 }

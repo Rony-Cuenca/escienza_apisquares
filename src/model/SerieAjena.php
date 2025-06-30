@@ -1,4 +1,4 @@
-<?php   
+<?php
 require_once 'config/conexion.php';
 
 class SerieAjena
@@ -30,5 +30,71 @@ class SerieAjena
             $data['estado']
         ]);
         return true;
+    }
+
+    public static function obtenerPorMes($mesSeleccionado)
+    {
+        $conn = Conexion::conectar();
+        $id_sucursal = $_SESSION['id_sucursal'] ?? null;
+        if (empty($mesSeleccionado)) {
+            $sql = "SELECT 
+                        serie,
+                        SUM(conteo) as total_conteo,
+                        SUM(total) as total_importe,
+                        COUNT(*) as cantidad_registros
+                    FROM series_ajenas 
+                    WHERE id_sucursal = ? 
+                    AND estado = 1
+                    GROUP BY serie
+                    ORDER BY serie";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param('i', $id_sucursal);
+        } else {
+            $sql = "SELECT 
+                        serie,
+                        SUM(conteo) as total_conteo,
+                        SUM(total) as total_importe,
+                        COUNT(*) as cantidad_registros
+                    FROM series_ajenas 
+                    WHERE DATE_FORMAT(fecha_registro, '%Y-%m') = ? 
+                    AND id_sucursal = ? 
+                    AND estado = 1
+                    GROUP BY serie
+                    ORDER BY serie";
+
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param('si', $mesSeleccionado, $id_sucursal);
+        }
+
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $datos = [];
+        while ($row = $result->fetch_assoc()) {
+            $datos[] = $row;
+        }
+        return $datos;
+    }
+
+    public static function obtenerTodos()
+    {
+        $conn = Conexion::conectar();
+        $id_sucursal = $_SESSION['id_sucursal'] ?? null;
+
+        $sql = "SELECT * FROM series_ajenas 
+                WHERE id_sucursal = ? 
+                AND estado = 1 
+                ORDER BY date_create DESC";
+
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param('i', $id_sucursal);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $datos = [];
+        while ($row = $result->fetch_assoc()) {
+            $datos[] = $row;
+        }
+        return $datos;
     }
 }

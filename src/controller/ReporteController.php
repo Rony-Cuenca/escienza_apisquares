@@ -2,6 +2,8 @@
 require_once __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/../model/Cuadre.php';
 require_once __DIR__ . '/../model/Establecimiento.php';
+require_once __DIR__ . '/../model/SerieAjena.php';
+require_once __DIR__ . '/../model/VentaGlobal.php';
 
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -10,10 +12,54 @@ use PhpOffice\PhpSpreadsheet\Style\Border;
 
 class ReporteController
 {
+    public function index()
+    {
+        $mesesDisponibles = Cuadre::obtenerMesesDisponibles();
+        $mesSeleccionado = $_GET['mes'] ?? '';
+        $cuadresSIRE = $cuadresNUBOX = $cuadresEDSUITE = [];
+        $totalesTipoDoc = $seriesTotales = $diferenciasSeries = [];
+        $seriesAjenas = $ventasGlobales = [];
+
+        if ($mesSeleccionado) {
+            $cuadres = Cuadre::obtenerCuadresPorMes($mesSeleccionado);
+            list($cuadresSIRE, $cuadresNUBOX, $cuadresEDSUITE) = $this->separarCuadresPorSistemaExcluyendoAjenas($cuadres, $mesSeleccionado);
+
+            $totalesTipoDoc = Cuadre::obtenerTotalesPorTipoComprobanteExcluyendoAjenas($mesSeleccionado);
+            $seriesTotales = Cuadre::obtenerTotalesPorSerieExcluyendoAjenas($mesSeleccionado);
+            $diferenciasSeries = $this->calcularDiferenciasSeries($seriesTotales);
+            $seriesAjenas = SerieAjena::obtenerPorMes($mesSeleccionado);
+            $ventasGlobales = VentaGlobal::obtenerPorMes($mesSeleccionado);
+        }
+
+        $contenido = 'view/components/reporte.php';
+        require 'view/layout.php';
+    }
+
     private function separarCuadresPorSistema($cuadres)
     {
         $cuadresSIRE = $cuadresNUBOX = $cuadresEDSUITE = [];
         foreach ($cuadres as $cuadre) {
+            if ($cuadre['id_reporte'] == 2) {
+                $cuadresSIRE[] = $cuadre;
+            } elseif ($cuadre['id_reporte'] == 1) {
+                $cuadresNUBOX[] = $cuadre;
+            } elseif ($cuadre['id_reporte'] == 3) {
+                $cuadresEDSUITE[] = $cuadre;
+            }
+        }
+    }
+
+    private function separarCuadresPorSistemaExcluyendoAjenas($cuadres, $mesSeleccionado)
+    {
+        $seriesAjenasArray = SerieAjena::obtenerPorMes($mesSeleccionado);
+        $seriesAjenasLista = array_column($seriesAjenasArray, 'serie');
+        
+        $cuadresSIRE = $cuadresNUBOX = $cuadresEDSUITE = [];
+        foreach ($cuadres as $cuadre) {
+            if (in_array($cuadre['serie'], $seriesAjenasLista)) {
+                continue;
+            }
+            
             if ($cuadre['id_reporte'] == 2) {
                 $cuadresSIRE[] = $cuadre;
             } elseif ($cuadre['id_reporte'] == 1) {
@@ -74,77 +120,12 @@ class ReporteController
         return $nombreMes;
     }
 
-    private function escribirTablaSeries($sheet, &$row, $titulo, $cuadres, $headerStyle, $borderStyle, $redStyle, $boldStyle)
-    {
-        $sheet->setCellValue("A$row", $titulo);
-        $sheet->mergeCells("A$row:G$row");
-        $sheet->getStyle("A$row")->applyFromArray($boldStyle);
-        $row++;
-
-        $headers = ['Serie', 'Cantidad', 'Suma Gravada', 'Suma Exonerada', 'Suma Inafecta', 'Suma IGV', 'Suma Total'];
-        $col = 'A';
-        foreach ($headers as $header) {
-            $sheet->setCellValue("$col$row", $header);
-            $col++;
-        }
-        $sheet->getStyle("A$row:G$row")->applyFromArray($headerStyle);
-        $row++;
-
-        if (!empty($cuadres)) {
-            foreach ($cuadres as $cuadre) {
-                $col = 'A';
-                $sheet->setCellValue("$col$row", $cuadre['serie']);
-                $col++;
-                $sheet->setCellValue("$col$row", $cuadre['cantidad_compr']);
-                $col++;
-                $sheet->setCellValue("$col$row", $cuadre['suma_gravada']);
-                $col++;
-                $sheet->setCellValue("$col$row", $cuadre['suma_exonerada']);
-                $col++;
-                $sheet->setCellValue("$col$row", $cuadre['suma_inafecto']);
-                $col++;
-                $sheet->setCellValue("$col$row", $cuadre['suma_igv']);
-                $col++;
-                $sheet->setCellValue("$col$row", $cuadre['monto_total']);
-                $sheet->getStyle("A$row:G$row")->applyFromArray($borderStyle);
-                if ($cuadre['monto_total'] < 0) {
-                    $sheet->getStyle("A$row:G$row")->applyFromArray($redStyle);
-                }
-                $row++;
-            }
-        } else {
-            $sheet->setCellValue("A$row", "No hay cuadres para este mes.");
-            $sheet->mergeCells("A$row:G$row");
-            $row++;
-        }
-        $row++;
-    }
-
-    public function index()
-    {
-        $mesesDisponibles = Cuadre::obtenerMesesDisponibles();
-        $mesSeleccionado = $_GET['mes'] ?? '';
-        $cuadresSIRE = $cuadresNUBOX = $cuadresEDSUITE = [];
-        $totalesTipoDoc = $seriesTotales = $diferenciasSeries = [];
-
-        if ($mesSeleccionado) {
-            $cuadres = Cuadre::obtenerCuadresPorMes($mesSeleccionado);
-            list($cuadresSIRE, $cuadresNUBOX, $cuadresEDSUITE) = $this->separarCuadresPorSistema($cuadres);
-
-            $totalesTipoDoc = Cuadre::obtenerTotalesPorTipoComprobante($mesSeleccionado);
-            $seriesTotales = Cuadre::obtenerTotalesPorSerie($mesSeleccionado);
-            $diferenciasSeries = $this->calcularDiferenciasSeries($seriesTotales);
-        }
-
-        $contenido = 'view/components/reporte.php';
-        require 'view/layout.php';
-    }
-
     public function exportarPDF()
     {
         $mesSeleccionado = $_GET['mes'] ?? '';
         $cuadresSIRE = $cuadresNUBOX = $cuadresEDSUITE = [];
         $totalesTipoDoc = $seriesTotales = $diferenciasSeries = [];
+        $seriesAjenas = $ventasGlobales = [];
         $mesesDisponibles = Cuadre::obtenerMesesDisponibles();
         $usuarioNombre = $_SESSION['usuario'] ?? 'Desconocido';
 
@@ -162,11 +143,13 @@ class ReporteController
 
         if ($mesSeleccionado) {
             $cuadres = Cuadre::obtenerCuadresPorMes($mesSeleccionado);
-            list($cuadresSIRE, $cuadresNUBOX, $cuadresEDSUITE) = $this->separarCuadresPorSistema($cuadres);
+            list($cuadresSIRE, $cuadresNUBOX, $cuadresEDSUITE) = $this->separarCuadresPorSistemaExcluyendoAjenas($cuadres, $mesSeleccionado);
 
-            $totalesTipoDoc = Cuadre::obtenerTotalesPorTipoComprobante($mesSeleccionado);
-            $seriesTotales = Cuadre::obtenerTotalesPorSerie($mesSeleccionado);
+            $totalesTipoDoc = Cuadre::obtenerTotalesPorTipoComprobanteExcluyendoAjenas($mesSeleccionado);
+            $seriesTotales = Cuadre::obtenerTotalesPorSerieExcluyendoAjenas($mesSeleccionado);
             $diferenciasSeries = $this->calcularDiferenciasSeries($seriesTotales);
+            $seriesAjenas = SerieAjena::obtenerPorMes($mesSeleccionado);
+            $ventasGlobales = VentaGlobal::obtenerPorMes($mesSeleccionado);
         }
 
         $nombreMes = $this->obtenerNombreMes($mesSeleccionado, $mesesDisponibles);
@@ -189,15 +172,18 @@ class ReporteController
         $mesSeleccionado = $_GET['mes'] ?? '';
         $cuadresSIRE = $cuadresNUBOX = $cuadresEDSUITE = [];
         $totalesTipoDoc = $seriesTotales = $diferenciasSeries = [];
+        $seriesAjenas = $ventasGlobales = [];
         $mesesDisponibles = Cuadre::obtenerMesesDisponibles();
 
         if ($mesSeleccionado) {
             $cuadres = Cuadre::obtenerCuadresPorMes($mesSeleccionado);
-            list($cuadresSIRE, $cuadresNUBOX, $cuadresEDSUITE) = $this->separarCuadresPorSistema($cuadres);
+            list($cuadresSIRE, $cuadresNUBOX, $cuadresEDSUITE) = $this->separarCuadresPorSistemaExcluyendoAjenas($cuadres, $mesSeleccionado);
 
-            $totalesTipoDoc = Cuadre::obtenerTotalesPorTipoComprobante($mesSeleccionado);
-            $seriesTotales = Cuadre::obtenerTotalesPorSerie($mesSeleccionado);
+            $totalesTipoDoc = Cuadre::obtenerTotalesPorTipoComprobanteExcluyendoAjenas($mesSeleccionado);
+            $seriesTotales = Cuadre::obtenerTotalesPorSerieExcluyendoAjenas($mesSeleccionado);
             $diferenciasSeries = $this->calcularDiferenciasSeries($seriesTotales);
+            $seriesAjenas = SerieAjena::obtenerPorMes($mesSeleccionado);
+            $ventasGlobales = VentaGlobal::obtenerPorMes($mesSeleccionado);
         }
 
         $nombreMes = $this->obtenerNombreMes($mesSeleccionado, $mesesDisponibles);
@@ -206,152 +192,51 @@ class ReporteController
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Reporte Cuadres');
 
-        // --- ESTILOS ---
-        $headerStyle = [
-            'font' => ['bold' => true, 'color' => ['rgb' => '222222']],
-            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'A9C3E8']],
-            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '2563EB']]]
+        $yellowHeaderStyle = [
+            'font' => ['bold' => true, 'color' => ['rgb' => '000000'], 'size' => 11],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'FFD700']], // Amarillo dorado más vibrante
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '000000']]],
+            'alignment' => ['horizontal' => 'center', 'vertical' => 'center']
         ];
-        $borderStyle = [
-            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '2563EB']]]
+
+        $blueHeaderStyle = [
+            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 10],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '4472C4']], // Azul más intenso
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '000000']]],
+            'alignment' => ['horizontal' => 'center', 'vertical' => 'center']
         ];
+
+        $greenTotalStyle = [
+            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 10],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '70AD47']], // Verde más vivo
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '000000']]],
+            'alignment' => ['horizontal' => 'center', 'vertical' => 'center']
+        ];
+
         $redStyle = [
-            'font' => ['color' => ['rgb' => 'FFFFFF'], 'bold' => true],
-            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'DC3545']]
-        ];
-        $boldStyle = [
-            'font' => ['bold' => true]
+            'font' => ['color' => ['rgb' => 'FFFFFF'], 'bold' => true, 'size' => 10],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'E74C3C']], // Rojo más vibrante
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '000000']]],
+            'alignment' => ['horizontal' => 'center', 'vertical' => 'center']
         ];
 
-        $row = 1;
-        $sheet->setCellValue("A$row", "Reporte de Cuadres - $nombreMes");
-        $sheet->mergeCells("A$row:G$row");
-        $sheet->getStyle("A$row")->applyFromArray(['font' => ['bold' => true, 'size' => 16]]);
+        $borderStyle = [
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '000000']]],
+            'alignment' => ['horizontal' => 'center', 'vertical' => 'center']
+        ];
+
+        $row = 3;
+
+        $this->SeccionResumenSoftware($sheet, $row, $cuadresNUBOX, $cuadresEDSUITE, $cuadresSIRE, $yellowHeaderStyle, $blueHeaderStyle, $greenTotalStyle, $borderStyle, $redStyle);
         $row += 2;
-
-        // --- TABLAS DE SERIES ---
-        $this->escribirTablaSeries($sheet, $row, "Resumen de Series - SIRE", $cuadresSIRE, $headerStyle, $borderStyle, $redStyle, $boldStyle);
-        $this->escribirTablaSeries($sheet, $row, "Resumen de Series - NUBOX360", $cuadresNUBOX, $headerStyle, $borderStyle, $redStyle, $boldStyle);
-        $this->escribirTablaSeries($sheet, $row, "Resumen de Series - EDSUITE", $cuadresEDSUITE, $headerStyle, $borderStyle, $redStyle, $boldStyle);
-
-        // --- RESÚMENES EN PARALELO ---
-        $startRow = $row;
-
-        // FACTURAS (A-B)
-        $sheet->setCellValue("A$startRow", "FACTURAS");
-        $sheet->mergeCells("A$startRow:B$startRow");
-        $sheet->getStyle("A$startRow")->applyFromArray($boldStyle);
-        $sheet->setCellValue("A" . ($startRow + 1), "Sistema");
-        $sheet->setCellValue("B" . ($startRow + 1), "Monto");
-        $sheet->getStyle("A" . ($startRow + 1) . ":B" . ($startRow + 1))->applyFromArray($headerStyle);
-        $sheet->setCellValue("A" . ($startRow + 2), "SIRE");
-        $sheet->setCellValue("B" . ($startRow + 2), isset($totalesTipoDoc[2][2]) ? $totalesTipoDoc[2][2] : 0);
-        $sheet->setCellValue("A" . ($startRow + 3), "NUBOX");
-        $sheet->setCellValue("B" . ($startRow + 3), isset($totalesTipoDoc[2][1]) ? $totalesTipoDoc[2][1] : 0);
-        $faltanteFact = (isset($totalesTipoDoc[2][2]) ? $totalesTipoDoc[2][2] : 0) - (isset($totalesTipoDoc[2][1]) ? $totalesTipoDoc[2][1] : 0);
-        $sheet->setCellValue("A" . ($startRow + 4), "FALTANTE");
-        $sheet->setCellValue("B" . ($startRow + 4), $faltanteFact);
-        $sheet->getStyle("A" . ($startRow + 4) . ":B" . ($startRow + 4))->applyFromArray($boldStyle);
-        if ($faltanteFact != 0) {
-            $sheet->getStyle("A" . ($startRow + 4) . ":B" . ($startRow + 4))->applyFromArray($redStyle);
-        }
-
-        // BOLETAS (D-E)
-        $sheet->setCellValue("D$startRow", "BOLETAS");
-        $sheet->mergeCells("D$startRow:E$startRow");
-        $sheet->getStyle("D$startRow")->applyFromArray($boldStyle);
-        $sheet->setCellValue("D" . ($startRow + 1), "Sistema");
-        $sheet->setCellValue("E" . ($startRow + 1), "Monto");
-        $sheet->getStyle("D" . ($startRow + 1) . ":E" . ($startRow + 1))->applyFromArray($headerStyle);
-        $sheet->setCellValue("D" . ($startRow + 2), "SIRE");
-        $sheet->setCellValue("E" . ($startRow + 2), isset($totalesTipoDoc[1][2]) ? $totalesTipoDoc[1][2] : 0);
-        $sheet->setCellValue("D" . ($startRow + 3), "NUBOX");
-        $sheet->setCellValue("E" . ($startRow + 3), isset($totalesTipoDoc[1][1]) ? $totalesTipoDoc[1][1] : 0);
-        $faltanteBoleta = (isset($totalesTipoDoc[1][2]) ? $totalesTipoDoc[1][2] : 0) - (isset($totalesTipoDoc[1][1]) ? $totalesTipoDoc[1][1] : 0);
-        $sheet->setCellValue("D" . ($startRow + 4), "FALTANTE");
-        $sheet->setCellValue("E" . ($startRow + 4), $faltanteBoleta);
-        $sheet->getStyle("D" . ($startRow + 4) . ":E" . ($startRow + 4))->applyFromArray($boldStyle);
-        if ($faltanteBoleta != 0) {
-            $sheet->getStyle("D" . ($startRow + 4) . ":E" . ($startRow + 4))->applyFromArray($redStyle);
-        }
-
-        // NOTAS DE CRÉDITO (G-H)
-        $sheet->setCellValue("G$startRow", "NOTAS DE CRÉDITO");
-        $sheet->mergeCells("G$startRow:H$startRow");
-        $sheet->getStyle("G$startRow")->applyFromArray($boldStyle);
-        $sheet->setCellValue("G" . ($startRow + 1), "Sistema");
-        $sheet->setCellValue("H" . ($startRow + 1), "Monto");
-        $sheet->getStyle("G" . ($startRow + 1) . ":H" . ($startRow + 1))->applyFromArray($headerStyle);
-        $sheet->setCellValue("G" . ($startRow + 2), "SIRE");
-        $sheet->setCellValue("H" . ($startRow + 2), isset($totalesTipoDoc[3][2]) ? $totalesTipoDoc[3][2] : 0);
-        $sheet->setCellValue("G" . ($startRow + 3), "NUBOX");
-        $sheet->setCellValue("H" . ($startRow + 3), isset($totalesTipoDoc[3][1]) ? $totalesTipoDoc[3][1] : 0);
-        $faltanteNota = (isset($totalesTipoDoc[3][2]) ? $totalesTipoDoc[3][2] : 0) - (isset($totalesTipoDoc[3][1]) ? $totalesTipoDoc[3][1] : 0);
-        $sheet->setCellValue("G" . ($startRow + 4), "FALTANTE");
-        $sheet->setCellValue("H" . ($startRow + 4), $faltanteNota);
-        $sheet->getStyle("G" . ($startRow + 4) . ":H" . ($startRow + 4))->applyFromArray($boldStyle);
-        if ($faltanteNota != 0) {
-            $sheet->getStyle("G" . ($startRow + 4) . ":H" . ($startRow + 4))->applyFromArray($redStyle);
-        }
-
-        $row = $startRow + 6;
-
-        // --- TABLA DIFERENCIAS (SIRE - NUBOX) ---
-        $sheet->setCellValue("A$row", "DIFERENCIAS (SIRE - NUBOX)");
-        $sheet->mergeCells("A$row:D$row");
-        $sheet->getStyle("A$row")->applyFromArray($boldStyle);
-        $row++;
-
-        $headers = ['Serie', 'Total SIRE', 'Total NUBOX', 'Diferencia R.G'];
-        $col = 'A';
-        foreach ($headers as $header) {
-            $sheet->setCellValue("$col$row", $header);
-            $col++;
-        }
-        $sheet->getStyle("A$row:D$row")->applyFromArray($headerStyle);
-        $row++;
-
-        $totalSire = 0;
-        $totalNubox = 0;
-        $totalDif = 0;
-
-        if (!empty($diferenciasSeries)) {
-            foreach ($diferenciasSeries as $dif) {
-                $sheet->setCellValue("A$row", $dif['serie']);
-                $sheet->setCellValue("B$row", $dif['total_sire']);
-                $sheet->setCellValue("C$row", $dif['total_nubox']);
-                $sheet->setCellValue("D$row", $dif['diferencia']);
-                $sheet->getStyle("A$row:D$row")->applyFromArray($borderStyle);
-                if ($dif['diferencia'] != 0) {
-                    $sheet->getStyle("A$row:D$row")->applyFromArray($redStyle);
-                }
-                $totalSire += $dif['total_sire'];
-                $totalNubox += $dif['total_nubox'];
-                $totalDif += $dif['diferencia'];
-                $row++;
-            }
-            $sheet->setCellValue("A$row", "TOTAL");
-            $sheet->setCellValue("B$row", $totalSire);
-            $sheet->setCellValue("C$row", $totalNubox);
-            $sheet->setCellValue("D$row", $totalDif);
-            $sheet->getStyle("A$row:D$row")->applyFromArray($boldStyle);
-        } else {
-            $sheet->setCellValue("A$row", "No hay diferencias para este mes.");
-            $sheet->mergeCells("A$row:D$row");
-        }
-        $row++;
-
-        $sheet->getStyle("B1:B{$row}")->getNumberFormat()->setFormatCode('#,##0.00');
-        $sheet->getStyle("C1:C{$row}")->getNumberFormat()->setFormatCode('#,##0.00');
-        $sheet->getStyle("D1:D{$row}")->getNumberFormat()->setFormatCode('#,##0.00');
-        $sheet->getStyle("E1:E{$row}")->getNumberFormat()->setFormatCode('#,##0.00');
-        $sheet->getStyle("F1:F{$row}")->getNumberFormat()->setFormatCode('#,##0.00');
-        $sheet->getStyle("G1:G{$row}")->getNumberFormat()->setFormatCode('#,##0.00');
-        $sheet->getStyle("H1:H{$row}")->getNumberFormat()->setFormatCode('#,##0.00');
-        foreach (range('A', 'H') as $col) {
+        $this->SeccionResumenComprobante($sheet, $row, $totalesTipoDoc, $yellowHeaderStyle, $greenTotalStyle, $redStyle, $borderStyle);
+        $row += 2;
+        $this->SeccionReportesGlobales($sheet, $row, $cuadresNUBOX, $seriesAjenas, $ventasGlobales, $mesSeleccionado, $yellowHeaderStyle, $blueHeaderStyle, $greenTotalStyle, $borderStyle, $redStyle);
+        foreach (range('A', 'R') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
 
+        $sheet->getStyle("C3:R{$row}")->getNumberFormat()->setFormatCode('#,##0.00');
         $fechaActual = date('Y-m-d');
         $nombreArchivo = "Reporte de Cuadres - {$nombreMes} - {$fechaActual}.xlsx";
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
@@ -360,5 +245,641 @@ class ReporteController
         $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
         $writer->save('php://output');
         exit;
+    }
+
+    private function SeccionResumenSoftware(
+        $sheet,
+        &$row,
+        $cuadresNUBOX,
+        $cuadresEDSUITE,
+        $cuadresSIRE,
+        $yellowHeaderStyle,
+        $blueHeaderStyle,
+        $greenTotalStyle,
+        $borderStyle,
+        $redStyle
+    ) {
+        $startRow = $row;
+        $nuboxPorSerie = [];
+        $edsuitePorSerie = [];
+        $sirePorSerie = [];
+
+        foreach ($cuadresNUBOX as $cuadre) {
+            $serie = $cuadre['serie'];
+            if (!isset($nuboxPorSerie[$serie])) {
+                $nuboxPorSerie[$serie] = ['total' => 0, 'notas' => 0];
+            }
+            if ($cuadre['tipo_comprobante'] == 3) {
+                $nuboxPorSerie[$serie]['notas'] += $cuadre['monto_total'];
+            } else {
+                $nuboxPorSerie[$serie]['total'] += $cuadre['monto_total'];
+            }
+        }
+
+        foreach ($cuadresEDSUITE as $cuadre) {
+            $serie = $cuadre['serie'];
+            if (!isset($edsuitePorSerie[$serie])) {
+                $edsuitePorSerie[$serie] = ['total' => 0, 'notas' => 0];
+            }
+            if ($cuadre['tipo_comprobante'] == 3) {
+                $edsuitePorSerie[$serie]['notas'] += $cuadre['monto_total'];
+            } else {
+                $edsuitePorSerie[$serie]['total'] += $cuadre['monto_total'];
+            }
+        }
+
+        foreach ($cuadresSIRE as $cuadre) {
+            $serie = $cuadre['serie'];
+            if (!isset($sirePorSerie[$serie])) {
+                $sirePorSerie[$serie] = ['total' => 0, 'notas' => 0];
+            }
+            if ($cuadre['tipo_comprobante'] == 3) {
+                $sirePorSerie[$serie]['notas'] += $cuadre['monto_total'];
+            } else {
+                $sirePorSerie[$serie]['total'] += $cuadre['monto_total'];
+            }
+        }
+
+        // TABLA NUBOX (C-E)
+        $sheet->setCellValue("C$row", "NUBOX");
+        $sheet->mergeCells("C$row:E$row");
+        $sheet->getStyle("C$row:E$row")->applyFromArray($yellowHeaderStyle);
+        $sheet->getStyle("C$row:E$row")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle("C$row:E$row")->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+
+        $sheet->setCellValue("C" . ($row + 1), "SERIES");
+        $sheet->setCellValue("D" . ($row + 1), "TOTAL");
+        $sheet->setCellValue("E" . ($row + 1), "NOTA DE CREDITO");
+        $sheet->getStyle("C" . ($row + 1) . ":E" . ($row + 1))->applyFromArray($blueHeaderStyle);
+        $sheet->getStyle("C" . ($row + 1) . ":E" . ($row + 1))->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle("C" . ($row + 1) . ":E" . ($row + 1))->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+
+        $currentRow = $row + 2;
+        $totalNubox = 0;
+        $totalNotasNubox = 0;
+
+        if (!empty($cuadresNUBOX)) {
+            foreach ($cuadresNUBOX as $cuadre) {
+                $sheet->setCellValue("C$currentRow", $cuadre['serie']);
+                if ($cuadre['tipo_comprobante'] == 3) {
+                    $sheet->setCellValue("D$currentRow", 0);
+                    $sheet->setCellValue("E$currentRow", $cuadre['monto_total']);
+                    $totalNotasNubox += $cuadre['monto_total'];
+                } else {
+                    $sheet->setCellValue("D$currentRow", $cuadre['monto_total']);
+                    $sheet->setCellValue("E$currentRow", 0);
+                    $totalNubox += $cuadre['monto_total'];
+                }
+                $sheet->getStyle("C$currentRow:E$currentRow")->applyFromArray($borderStyle);
+                $currentRow++;
+            }
+        }
+
+        $totalRow1Nubox = $currentRow;
+        $sheet->setCellValue("C$currentRow", "TOTAL");
+        $sheet->setCellValue("D$currentRow", $totalNubox);
+        $sheet->setCellValue("E$currentRow", $totalNotasNubox);
+        $sheet->getStyle("D$currentRow:E$currentRow")->applyFromArray($greenTotalStyle);
+        $currentRow++;
+        $totalRow2Nubox = $currentRow;
+        $totalNetoNubox = $totalNubox + $totalNotasNubox;
+        $sheet->setCellValue("D$currentRow", $totalNetoNubox);
+        $sheet->mergeCells("D$currentRow:E$currentRow");
+        $sheet->getStyle("D$currentRow:E$currentRow")->applyFromArray(array_merge($greenTotalStyle, [
+            'alignment' => [
+                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER
+            ]
+        ]));
+
+        $sheet->mergeCells("C$totalRow1Nubox:C$totalRow2Nubox");
+        $sheet->getStyle("C$totalRow1Nubox:C$totalRow2Nubox")->applyFromArray(array_merge($greenTotalStyle, [
+            'alignment' => [
+                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER
+            ]
+        ]));
+
+        $maxRowNubox = $currentRow;
+
+        // TABLA EDSUITE (G-J)
+        $currentRow = $startRow;
+        $sheet->setCellValue("G$currentRow", "EDSUITE");
+        $sheet->mergeCells("G$currentRow:J$currentRow");
+        $sheet->getStyle("G$currentRow:J$currentRow")->applyFromArray($yellowHeaderStyle);
+
+        $sheet->setCellValue("G" . ($currentRow + 1), "SERIES");
+        $sheet->setCellValue("H" . ($currentRow + 1), "TOTAL");
+        $sheet->setCellValue("I" . ($currentRow + 1), "NOTA DE CREDITO");
+        $sheet->setCellValue("J" . ($currentRow + 1), "DIFERENCIA");
+        $sheet->getStyle("G" . ($currentRow + 1) . ":J" . ($currentRow + 1))->applyFromArray($blueHeaderStyle);
+
+        $currentRow += 2;
+        $totalEdsuite = 0;
+        $totalNotasEdsuite = 0;
+        $totalDiferenciaEdsuite = 0;
+
+        if (!empty($cuadresEDSUITE)) {
+            foreach ($cuadresEDSUITE as $cuadre) {
+                $serie = $cuadre['serie'];
+                $sheet->setCellValue("G$currentRow", $serie);
+
+                if ($cuadre['tipo_comprobante'] == 3) {
+                    $sheet->setCellValue("H$currentRow", 0);
+                    $sheet->setCellValue("I$currentRow", $cuadre['monto_total']);
+                    $totalNotasEdsuite += $cuadre['monto_total'];
+                    $nuboxNotas = isset($nuboxPorSerie[$serie]) ? abs($nuboxPorSerie[$serie]['notas']) : 0;
+                    $edsuiteNotas = abs($cuadre['monto_total']);
+                    $diferencia = $edsuiteNotas - $nuboxNotas;
+                } else {
+                    $sheet->setCellValue("H$currentRow", $cuadre['monto_total']);
+                    $sheet->setCellValue("I$currentRow", 0);
+                    $totalEdsuite += $cuadre['monto_total'];
+                    $nuboxTotal = isset($nuboxPorSerie[$serie]) ? $nuboxPorSerie[$serie]['total'] : 0;
+                    $diferencia = $cuadre['monto_total'] - $nuboxTotal;
+                }
+
+                $sheet->setCellValue("J$currentRow", $diferencia);
+                $totalDiferenciaEdsuite += $diferencia;
+
+                if ($diferencia != 0) {
+                    $sheet->getStyle("J$currentRow")->applyFromArray($redStyle);
+                    $sheet->getStyle("G$currentRow:I$currentRow")->applyFromArray($borderStyle);
+                } else {
+                    $sheet->getStyle("G$currentRow:J$currentRow")->applyFromArray($borderStyle);
+                }
+                $currentRow++;
+            }
+        }
+
+        $totalRow1Edsuite = $currentRow;
+        $sheet->setCellValue("G$currentRow", "TOTAL");
+        $sheet->setCellValue("H$currentRow", $totalEdsuite);
+        $sheet->setCellValue("I$currentRow", $totalNotasEdsuite);
+        $sheet->setCellValue("J$currentRow", $totalDiferenciaEdsuite);
+        $sheet->getStyle("H$currentRow:I$currentRow")->applyFromArray($greenTotalStyle);
+
+        if ($totalDiferenciaEdsuite != 0) {
+            $sheet->getStyle("J$currentRow")->applyFromArray($redStyle);
+        } else {
+            $sheet->getStyle("J$currentRow")->applyFromArray($greenTotalStyle);
+        }
+        $currentRow++;
+
+        $totalRow2Edsuite = $currentRow;
+        $totalNetoEdsuite = $totalEdsuite + $totalNotasEdsuite;
+        $totalNetoNuboxCompleto = $totalNubox + $totalNotasNubox;
+        $diferenciaTotalNetoEdsuite = $totalNetoEdsuite - $totalNetoNuboxCompleto;
+        $sheet->setCellValue("H$currentRow", $totalNetoEdsuite);
+        $sheet->setCellValue("J$currentRow", $diferenciaTotalNetoEdsuite);
+        $sheet->mergeCells("H$currentRow:I$currentRow");
+        $sheet->getStyle("H$currentRow:I$currentRow")->applyFromArray(array_merge($greenTotalStyle, [
+            'alignment' => [
+                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER
+            ]
+        ]));
+
+        if ($diferenciaTotalNetoEdsuite != 0) {
+            $sheet->getStyle("J$currentRow")->applyFromArray($redStyle);
+        } else {
+            $sheet->getStyle("J$currentRow")->applyFromArray($greenTotalStyle);
+        }
+
+        $sheet->mergeCells("G$totalRow1Edsuite:G$totalRow2Edsuite");
+        $sheet->getStyle("G$totalRow1Edsuite:G$totalRow2Edsuite")->applyFromArray(array_merge($greenTotalStyle, [
+            'alignment' => [
+                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER
+            ]
+        ]));
+
+        $sheet->mergeCells("J$totalRow1Edsuite:J$totalRow2Edsuite");
+        $sheet->setCellValue("J$totalRow1Edsuite", $totalDiferenciaEdsuite);
+        
+        if ($totalDiferenciaEdsuite != 0) {
+            $sheet->getStyle("J$totalRow1Edsuite:J$totalRow2Edsuite")->applyFromArray(array_merge($redStyle, [
+                'alignment' => [
+                    'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                    'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER
+                ]
+            ]));
+        } else {
+            $sheet->getStyle("J$totalRow1Edsuite:J$totalRow2Edsuite")->applyFromArray(array_merge($greenTotalStyle, [
+                'alignment' => [
+                    'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                    'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER
+                ]
+            ]));
+        }
+
+        $maxRowEdsuite = $currentRow;
+
+        // TABLA SIRE (L-O)
+        $currentRow = $startRow;
+        $sheet->setCellValue("L$currentRow", "SIRE");
+        $sheet->mergeCells("L$currentRow:O$currentRow");
+        $sheet->getStyle("L$currentRow:O$currentRow")->applyFromArray($yellowHeaderStyle);
+
+        $sheet->setCellValue("L" . ($currentRow + 1), "SERIES");
+        $sheet->setCellValue("M" . ($currentRow + 1), "TOTAL");
+        $sheet->setCellValue("N" . ($currentRow + 1), "NOTA DE CREDITO");
+        $sheet->setCellValue("O" . ($currentRow + 1), "DIFERENCIA");
+        $sheet->getStyle("L" . ($currentRow + 1) . ":O" . ($currentRow + 1))->applyFromArray($blueHeaderStyle);
+
+        $currentRow += 2;
+        $totalSire = 0;
+        $totalNotasSire = 0;
+        $totalDiferenciaSire = 0;
+
+        if (!empty($cuadresSIRE)) {
+            foreach ($cuadresSIRE as $cuadre) {
+                $serie = $cuadre['serie'];
+                $sheet->setCellValue("L$currentRow", $serie);
+
+                if ($cuadre['tipo_comprobante'] == 3) {
+                    $sheet->setCellValue("M$currentRow", 0);
+                    $sheet->setCellValue("N$currentRow", $cuadre['monto_total']);
+                    $totalNotasSire += $cuadre['monto_total'];
+                    $sireNotas = abs($cuadre['monto_total']);
+                    $nuboxNotas = isset($nuboxPorSerie[$serie]) ? abs($nuboxPorSerie[$serie]['notas']) : 0;
+                    $diferencia = $sireNotas - $nuboxNotas;
+                } else {
+                    $sheet->setCellValue("M$currentRow", $cuadre['monto_total']);
+                    $sheet->setCellValue("N$currentRow", 0);
+                    $totalSire += $cuadre['monto_total'];
+                    $nuboxTotal = isset($nuboxPorSerie[$serie]) ? $nuboxPorSerie[$serie]['total'] : 0;
+                    $diferencia = $cuadre['monto_total'] - $nuboxTotal;
+                }
+
+                $sheet->setCellValue("O$currentRow", $diferencia);
+                $totalDiferenciaSire += $diferencia;
+                if ($diferencia != 0) {
+                    $sheet->getStyle("O$currentRow")->applyFromArray($redStyle);
+                    $sheet->getStyle("L$currentRow:N$currentRow")->applyFromArray($borderStyle);
+                } else {
+                    $sheet->getStyle("L$currentRow:O$currentRow")->applyFromArray($borderStyle);
+                }
+                $currentRow++;
+            }
+        }
+
+        $totalRow1Sire = $currentRow;
+        $sheet->setCellValue("L$currentRow", "TOTAL");
+        $sheet->setCellValue("M$currentRow", $totalSire);
+        $sheet->setCellValue("N$currentRow", $totalNotasSire);
+        $sheet->setCellValue("O$currentRow", $totalDiferenciaSire);
+        $sheet->getStyle("M$currentRow:N$currentRow")->applyFromArray($greenTotalStyle);
+
+        if ($totalDiferenciaSire != 0) {
+            $sheet->getStyle("O$currentRow")->applyFromArray($redStyle);
+        } else {
+            $sheet->getStyle("O$currentRow")->applyFromArray($greenTotalStyle);
+        }
+        $currentRow++;
+
+        $totalRow2Sire = $currentRow;
+        $totalNetoSire = $totalSire + $totalNotasSire;
+        $totalNetoNuboxCompleto = $totalNubox + $totalNotasNubox;
+        $diferenciaTotalNetoSire = $totalNetoSire - $totalNetoNuboxCompleto;
+
+        $sheet->setCellValue("M$currentRow", $totalNetoSire);
+        $sheet->setCellValue("O$currentRow", $diferenciaTotalNetoSire);
+
+        $sheet->mergeCells("M$currentRow:N$currentRow");
+        $sheet->getStyle("M$currentRow:N$currentRow")->applyFromArray(array_merge($greenTotalStyle, [
+            'alignment' => [
+                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER
+            ]
+        ]));
+
+        if ($diferenciaTotalNetoSire != 0) {
+            $sheet->getStyle("O$currentRow")->applyFromArray($redStyle);
+        } else {
+            $sheet->getStyle("O$currentRow")->applyFromArray($greenTotalStyle);
+        }
+
+        $sheet->mergeCells("L$totalRow1Sire:L$totalRow2Sire");
+        $sheet->getStyle("L$totalRow1Sire:L$totalRow2Sire")->applyFromArray(array_merge($greenTotalStyle, [
+            'alignment' => [
+                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER
+            ]
+        ]));
+
+        $sheet->mergeCells("O$totalRow1Sire:O$totalRow2Sire");
+        $sheet->setCellValue("O$totalRow1Sire", $totalDiferenciaSire);
+
+        if ($totalDiferenciaSire != 0) {
+            $sheet->getStyle("O$totalRow1Sire:O$totalRow2Sire")->applyFromArray(array_merge($redStyle, [
+                'alignment' => [
+                    'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                    'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER
+                ]
+            ]));
+        } else {
+            $sheet->getStyle("O$totalRow1Sire:O$totalRow2Sire")->applyFromArray(array_merge($greenTotalStyle, [
+                'alignment' => [
+                    'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                    'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER
+                ]
+            ]));
+        }
+
+        $maxRowSire = $currentRow;
+
+        $row = max($maxRowNubox, $maxRowEdsuite, $maxRowSire) + 1;
+    }
+
+    private function SeccionResumenComprobante($sheet, &$row, $totalesTipoDoc, $yellowHeaderStyle, $greenTotalStyle, $redStyle, $borderStyle)
+    {
+        $startRow = $row;
+
+        // FACTURAS (C-D)
+        $sheet->setCellValue("C$startRow", "FACTURAS");
+        $sheet->mergeCells("C$startRow:D$startRow");
+        $sheet->getStyle("C$startRow:D$startRow")->applyFromArray($yellowHeaderStyle);
+
+        $sheet->setCellValue("C" . ($startRow + 1), "SIRE");
+        $sheet->setCellValue("D" . ($startRow + 1), isset($totalesTipoDoc[2][2]) ? $totalesTipoDoc[2][2] : 0);
+        $sheet->getStyle("C" . ($startRow + 1) . ":D" . ($startRow + 1))->applyFromArray($borderStyle);
+
+        $sheet->setCellValue("C" . ($startRow + 2), "NUBOX");
+        $sheet->setCellValue("D" . ($startRow + 2), isset($totalesTipoDoc[2][1]) ? $totalesTipoDoc[2][1] : 0);
+        $sheet->getStyle("C" . ($startRow + 2) . ":D" . ($startRow + 2))->applyFromArray($borderStyle);
+
+        $faltanteFact = (isset($totalesTipoDoc[2][2]) ? $totalesTipoDoc[2][2] : 0) - (isset($totalesTipoDoc[2][1]) ? $totalesTipoDoc[2][1] : 0);
+        $sheet->setCellValue("C" . ($startRow + 3), "FALTANTE");
+        $sheet->setCellValue("D" . ($startRow + 3), $faltanteFact);
+        if ($faltanteFact == 0) {
+            $sheet->getStyle("C" . ($startRow + 3) . ":D" . ($startRow + 3))->applyFromArray($greenTotalStyle);
+        } else {
+            $sheet->getStyle("C" . ($startRow + 3) . ":D" . ($startRow + 3))->applyFromArray($redStyle);
+        }
+
+        // BOLETAS (G-H)
+        $sheet->setCellValue("G$startRow", "BOLETAS");
+        $sheet->mergeCells("G$startRow:H$startRow");
+        $sheet->getStyle("G$startRow:H$startRow")->applyFromArray($yellowHeaderStyle);
+
+        $sheet->setCellValue("G" . ($startRow + 1), "SIRE");
+        $sheet->setCellValue("H" . ($startRow + 1), isset($totalesTipoDoc[1][2]) ? $totalesTipoDoc[1][2] : 0);
+        $sheet->getStyle("G" . ($startRow + 1) . ":H" . ($startRow + 1))->applyFromArray($borderStyle);
+
+        $sheet->setCellValue("G" . ($startRow + 2), "NUBOX");
+        $sheet->setCellValue("H" . ($startRow + 2), isset($totalesTipoDoc[1][1]) ? $totalesTipoDoc[1][1] : 0);
+        $sheet->getStyle("G" . ($startRow + 2) . ":H" . ($startRow + 2))->applyFromArray($borderStyle);
+
+        $faltanteBoleta = (isset($totalesTipoDoc[1][2]) ? $totalesTipoDoc[1][2] : 0) - (isset($totalesTipoDoc[1][1]) ? $totalesTipoDoc[1][1] : 0);
+        $sheet->setCellValue("G" . ($startRow + 3), "FALTANTE");
+        $sheet->setCellValue("H" . ($startRow + 3), $faltanteBoleta);
+        if ($faltanteBoleta == 0) {
+            $sheet->getStyle("G" . ($startRow + 3) . ":H" . ($startRow + 3))->applyFromArray($greenTotalStyle);
+        } else {
+            $sheet->getStyle("G" . ($startRow + 3) . ":H" . ($startRow + 3))->applyFromArray($redStyle);
+        }
+
+        // NOTAS DE CRÉDITO (K-L)
+        $sheet->setCellValue("K$startRow", "NOTAS DE CRÉDITO");
+        $sheet->mergeCells("K$startRow:L$startRow");
+        $sheet->getStyle("K$startRow:L$startRow")->applyFromArray($yellowHeaderStyle);
+
+        $sheet->setCellValue("K" . ($startRow + 1), "SIRE");
+        $sheet->setCellValue("L" . ($startRow + 1), isset($totalesTipoDoc[3][2]) ? $totalesTipoDoc[3][2] : 0);
+        $sheet->getStyle("K" . ($startRow + 1) . ":L" . ($startRow + 1))->applyFromArray($borderStyle);
+
+        $sheet->setCellValue("K" . ($startRow + 2), "NUBOX");
+        $sheet->setCellValue("L" . ($startRow + 2), isset($totalesTipoDoc[3][1]) ? $totalesTipoDoc[3][1] : 0);
+        $sheet->getStyle("K" . ($startRow + 2) . ":L" . ($startRow + 2))->applyFromArray($borderStyle);
+
+        $faltanteNota = (isset($totalesTipoDoc[3][2]) ? $totalesTipoDoc[3][2] : 0) - (isset($totalesTipoDoc[3][1]) ? $totalesTipoDoc[3][1] : 0);
+        $sheet->setCellValue("K" . ($startRow + 3), "FALTANTE");
+        $sheet->setCellValue("L" . ($startRow + 3), $faltanteNota);
+        if ($faltanteNota == 0) {
+            $sheet->getStyle("K" . ($startRow + 3) . ":L" . ($startRow + 3))->applyFromArray($greenTotalStyle);
+        } else {
+            $sheet->getStyle("K" . ($startRow + 3) . ":L" . ($startRow + 3))->applyFromArray($redStyle);
+        }
+
+        $row = $startRow + 4;
+    }
+
+    private function SeccionReportesGlobales($sheet, &$row, $cuadresNUBOX, $seriesAjenas, $ventasGlobales, $mesSeleccionado, $yellowHeaderStyle, $blueHeaderStyle, $greenTotalStyle, $borderStyle, $redStyle)
+    {
+        $startRow = $row;
+
+        // --- TABLA REPORTES GLOBALES EDSuite (LADO IZQUIERDO C-G) ---
+        $sheet->setCellValue("C$startRow", "REPORTES GLOBALES");
+        $sheet->mergeCells("C$startRow:G$startRow");
+        $sheet->getStyle("C$startRow:G$startRow")->applyFromArray($yellowHeaderStyle);
+
+        $sheet->setCellValue("C" . ($startRow + 1), "SERIES");
+        $sheet->setCellValue("D" . ($startRow + 1), "COMBUSTIBLES");
+        $sheet->setCellValue("E" . ($startRow + 1), "EXTRAS");
+        $sheet->setCellValue("F" . ($startRow + 1), "NOTAS DE CREDITO");
+        $sheet->setCellValue("G" . ($startRow + 1), "DIFERENCIA");
+        $sheet->getStyle("C" . ($startRow + 1) . ":G" . ($startRow + 1))->applyFromArray($blueHeaderStyle);
+
+        $currentRowReportes = $startRow + 2;
+        $totalCombustibles = 0;
+        $totalExtras = 0;
+        $totalNotasCredito = 0;
+        $totalDiferencias = 0;
+        $reportesEDSuite = [];
+        try {
+            $reportesEDSuite = Cuadre::obtenerResumenComprobantes($mesSeleccionado);
+        } catch (Exception $e) {
+            error_log("Error al obtener reportes EDSuite: " . $e->getMessage());
+            $reportesEDSuite = [];
+        }
+
+        $nuboxPorSerie = [];
+        foreach ($cuadresNUBOX as $cuadre) {
+            $serie = $cuadre['serie'];
+            if (!isset($nuboxPorSerie[$serie])) {
+                $nuboxPorSerie[$serie] = 0;
+            }
+            if ($cuadre['tipo_comprobante'] != 3) {
+                $nuboxPorSerie[$serie] += $cuadre['monto_total'];
+            }
+        }
+
+        if (!empty($reportesEDSuite)) {
+            $reportesPorSerie = [];
+            foreach ($reportesEDSuite as $reporte) {
+                $serie = $reporte['serie'];
+                if (!isset($reportesPorSerie[$serie])) {
+                    $reportesPorSerie[$serie] = [
+                        'combustibles' => 0
+                    ];
+                }
+                if ($reporte['tipo_comprobante'] != 3) {
+                    $reportesPorSerie[$serie]['combustibles'] += $reporte['monto_total'];
+                }
+            }
+
+            foreach ($reportesPorSerie as $serie => $datos) {
+                $totalNuboxSerie = isset($nuboxPorSerie[$serie]) ? $nuboxPorSerie[$serie] : 0;
+                $totalEdsuiteSerie = $datos['combustibles'];
+                $diferenciaSerie = $totalNuboxSerie - $totalEdsuiteSerie;
+                $sheet->setCellValue("C$currentRowReportes", $serie);
+                $sheet->setCellValue("D$currentRowReportes", $totalEdsuiteSerie);
+                $sheet->setCellValue("E$currentRowReportes", 0); 
+                $sheet->setCellValue("F$currentRowReportes", 0); 
+                $sheet->setCellValue("G$currentRowReportes", $diferenciaSerie);
+
+                if ($diferenciaSerie != 0) {
+                    $sheet->getStyle("G$currentRowReportes")->applyFromArray($redStyle);
+                } else {
+                    $sheet->getStyle("G$currentRowReportes")->applyFromArray($borderStyle);
+                }
+                $sheet->getStyle("C$currentRowReportes:F$currentRowReportes")->applyFromArray($borderStyle);
+                $totalCombustibles += $totalEdsuiteSerie;
+                $totalExtras += 0;
+                $totalNotasCredito += 0;
+                $totalDiferencias += $diferenciaSerie;
+                $currentRowReportes++;
+            }
+        } else {
+            $sheet->setCellValue("C$currentRowReportes", "Sin datos disponibles");
+            $sheet->mergeCells("C$currentRowReportes:G$currentRowReportes");
+            $sheet->getStyle("C$currentRowReportes:G$currentRowReportes")->applyFromArray($borderStyle);
+            $currentRowReportes++;
+        }
+
+        // Total Reportes EDSuite - Primera fila (D, E, F, G)
+        $sheet->setCellValue("C$currentRowReportes", "TOTAL");
+        $sheet->setCellValue("D$currentRowReportes", $totalCombustibles);
+        $sheet->setCellValue("E$currentRowReportes", $totalExtras);
+        $sheet->setCellValue("F$currentRowReportes", $totalNotasCredito);
+        $sheet->setCellValue("G$currentRowReportes", $totalDiferencias);
+        $sheet->getStyle("D$currentRowReportes:F$currentRowReportes")->applyFromArray($greenTotalStyle);
+
+        if ($totalDiferencias != 0) {
+            $sheet->getStyle("G$currentRowReportes")->applyFromArray($redStyle);
+        } else {
+            $sheet->getStyle("G$currentRowReportes")->applyFromArray($greenTotalStyle);
+        }
+
+        $totalRow1Reportes = $currentRowReportes;
+        $currentRowReportes++;
+
+        // Total Reportes EDSuite - Segunda fila (D+E+F combinadas, G)
+        $totalNetoReportes = $totalCombustibles + $totalExtras + $totalNotasCredito;
+        $sheet->setCellValue("D$currentRowReportes", $totalNetoReportes);
+        $sheet->setCellValue("G$currentRowReportes", $totalDiferencias);
+        $sheet->mergeCells("D$currentRowReportes:F$currentRowReportes");
+        $sheet->getStyle("D$currentRowReportes:F$currentRowReportes")->applyFromArray(array_merge($greenTotalStyle, [
+            'alignment' => [
+                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER
+            ]
+        ]));
+
+        $sheet->mergeCells("C$totalRow1Reportes:C$currentRowReportes");
+        $sheet->getStyle("C$totalRow1Reportes:C$currentRowReportes")->applyFromArray(array_merge($greenTotalStyle, [
+            'alignment' => [
+                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER
+            ]
+        ]));
+
+        $sheet->mergeCells("G$totalRow1Reportes:G$currentRowReportes");
+        if ($totalDiferencias != 0) {
+            $sheet->getStyle("G$totalRow1Reportes:G$currentRowReportes")->applyFromArray(array_merge($redStyle, [
+                'alignment' => [
+                    'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                    'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER
+                ]
+            ]));
+        } else {
+            $sheet->getStyle("G$totalRow1Reportes:G$currentRowReportes")->applyFromArray(array_merge($greenTotalStyle, [
+                'alignment' => [
+                    'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                    'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER
+                ]
+            ]));
+        }
+
+        $maxRowReportes = $currentRowReportes;
+
+        // --- TABLA VENTAS GLOBALES (CENTRO I-K) ---
+        $currentRowVentasGlobales = $startRow;
+        $sheet->setCellValue("I$currentRowVentasGlobales", "PRODUCTOS TOTALES");
+        $sheet->mergeCells("I$currentRowVentasGlobales:K$currentRowVentasGlobales");
+        $sheet->getStyle("I$currentRowVentasGlobales:K$currentRowVentasGlobales")->applyFromArray($yellowHeaderStyle);
+
+        $sheet->setCellValue("I" . ($currentRowVentasGlobales + 1), "PRODUCTO");
+        $sheet->setCellValue("J" . ($currentRowVentasGlobales + 1), "CANTIDAD");
+        $sheet->setCellValue("K" . ($currentRowVentasGlobales + 1), "MONTO");
+        $sheet->getStyle("I" . ($currentRowVentasGlobales + 1) . ":K" . ($currentRowVentasGlobales + 1))->applyFromArray($blueHeaderStyle);
+
+        $currentRowVentas = $currentRowVentasGlobales + 2;
+        $totalCantidadGlobal = 0;
+        $totalMontoGlobal = 0;
+
+        if (!empty($ventasGlobales)) {
+            foreach ($ventasGlobales as $venta) {
+                $sheet->setCellValue("I$currentRowVentas", $venta['producto']);
+                $sheet->setCellValue("J$currentRowVentas", $venta['total_cantidad']);
+                $sheet->setCellValue("K$currentRowVentas", $venta['total_importe']);
+                $sheet->getStyle("I$currentRowVentas:K$currentRowVentas")->applyFromArray($borderStyle);
+                $totalCantidadGlobal += $venta['total_cantidad'];
+                $totalMontoGlobal += $venta['total_importe'];
+                $currentRowVentas++;
+            }
+        } else {
+            $sheet->setCellValue("I$currentRowVentas", "Sin datos disponibles");
+            $sheet->mergeCells("I$currentRowVentas:K$currentRowVentas");
+            $sheet->getStyle("I$currentRowVentas:K$currentRowVentas")->applyFromArray($borderStyle);
+            $currentRowVentas++;
+        }
+
+        // Total Ventas Globales
+        $sheet->setCellValue("I$currentRowVentas", "TOTAL");
+        $sheet->setCellValue("J$currentRowVentas", $totalCantidadGlobal);
+        $sheet->setCellValue("K$currentRowVentas", $totalMontoGlobal);
+        $sheet->getStyle("I$currentRowVentas:K$currentRowVentas")->applyFromArray($greenTotalStyle);
+
+        // --- TABLA SERIES AJENAS (DERECHA M-O) ---
+        $currentRowAjenas = $startRow;
+        $sheet->setCellValue("M$currentRowAjenas", "SERIES NUBOX - Ajenas");
+        $sheet->mergeCells("M$currentRowAjenas:O$currentRowAjenas");
+        $sheet->getStyle("M$currentRowAjenas:O$currentRowAjenas")->applyFromArray($yellowHeaderStyle);
+
+        $sheet->setCellValue("M" . ($currentRowAjenas + 1), "SERIE");
+        $sheet->setCellValue("N" . ($currentRowAjenas + 1), "CANTIDAD");
+        $sheet->setCellValue("O" . ($currentRowAjenas + 1), "MONTO");
+        $sheet->getStyle("M" . ($currentRowAjenas + 1) . ":O" . ($currentRowAjenas + 1))->applyFromArray($blueHeaderStyle);
+
+        $currentRowAjenas += 2;
+        $totalConteoAjenas = 0;
+        $totalImporteAjenas = 0;
+
+        if (!empty($seriesAjenas)) {
+            foreach ($seriesAjenas as $serie) {
+                $sheet->setCellValue("M$currentRowAjenas", $serie['serie']);
+                $sheet->setCellValue("N$currentRowAjenas", $serie['total_conteo']);
+                $sheet->setCellValue("O$currentRowAjenas", $serie['total_importe']);
+                $sheet->getStyle("M$currentRowAjenas:O$currentRowAjenas")->applyFromArray($borderStyle);
+                $totalConteoAjenas += $serie['total_conteo'];
+                $totalImporteAjenas += $serie['total_importe'];
+                $currentRowAjenas++;
+            }
+        } else {
+            $sheet->setCellValue("M$currentRowAjenas", "Sin datos disponibles");
+            $sheet->mergeCells("M$currentRowAjenas:O$currentRowAjenas");
+            $sheet->getStyle("M$currentRowAjenas:O$currentRowAjenas")->applyFromArray($borderStyle);
+            $currentRowAjenas++;
+        }
+
+        // Total Series Ajenas
+        $sheet->setCellValue("M$currentRowAjenas", "TOTAL");
+        $sheet->setCellValue("N$currentRowAjenas", $totalConteoAjenas);
+        $sheet->setCellValue("O$currentRowAjenas", $totalImporteAjenas);
+        $sheet->getStyle("M$currentRowAjenas:O$currentRowAjenas")->applyFromArray($greenTotalStyle);
+
+        $row = max($maxRowReportes, $currentRowVentas, $currentRowAjenas) + 1;
     }
 }
