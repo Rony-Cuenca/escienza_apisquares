@@ -1,3 +1,4 @@
+<div id="tablaPromedioVenta" class="mt-4"></div>
 
 <div class="bg-white rounded-xl shadow p-4 sm:p-6 mt-8">
   <h1 class="text-xl font-bold text-gray-800 mb-4">PROMEDIO DE VENTA POR COMPROBANTE (SERIE)</h1>
