@@ -82,7 +82,6 @@ document.getElementById('select-sucursal').addEventListener('change', function()
 });
 document.getElementById('select-mes').addEventListener('change', drawPieChart);
 document.getElementById('select-tipo').addEventListener('change', drawPieChart);
-document.getElementById('select-anio').addEventListener('change', drawPieChart);
 // --- GRÁFICO DE PASTEL ---
 google.charts.load('current', {'packages':['corechart']});
 google.charts.setOnLoadCallback(drawPieChart);
@@ -130,7 +129,6 @@ document.getElementById('select-sucursal').addEventListener('change', function()
 });
 document.getElementById('select-mes').addEventListener('change', drawPieChart);
 document.getElementById('select-tipo').addEventListener('change', drawPieChart);
-document.getElementById('select-anio').addEventListener('change', drawPieChart);
 
 
 
