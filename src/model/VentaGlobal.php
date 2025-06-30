@@ -14,8 +14,9 @@ class VentaGlobal
             user_create,
             user_update,
             id_sucursal,
+            fecha_registro,
             estado
-        ) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
         $stmt = $conn->prepare($sql);
         $stmt->execute([
@@ -25,6 +26,7 @@ class VentaGlobal
             $data['user_create'],
             $data['user_update'],
             $data['id_sucursal'],
+            $data['fecha_registro'],
             $data['estado']
         ]);
         return true;

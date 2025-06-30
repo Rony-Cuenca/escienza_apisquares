@@ -168,47 +168,6 @@ class CuadresController {
         }
     }
 
-    private function llamarApiPythonMultiple(array $archivoPaths) {
-        $url = 'http://localhost:5000/unificar';
-        
-        $postFields = [];
-        foreach ($archivoPaths as $path) {
-            // Usar el mismo nombre 'file[]' para todos los archivos (nota los corchetes)
-            $postFields['file[]'] = new CURLFile(
-                $path,
-                mime_content_type($path),
-                basename($path)
-            );
-        }
-    
-        $ch = curl_init();
-        curl_setopt_array($ch, [
-            CURLOPT_URL => $url,
-            CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => $postFields,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_HTTPHEADER => ['Content-Type: multipart/form-data'],
-            CURLOPT_TIMEOUT => 60,
-        ]);
-    
-        $response = curl_exec($ch);
-        
-        if (curl_errno($ch)) {
-            $error = curl_error($ch);
-            curl_close($ch);
-            throw new Exception("cURL error: " . $error);
-        }
-    
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-    
-        if ($httpCode !== 200) {
-            throw new Exception("API Python error ($httpCode): " . $response);
-        }
-    
-        return $response;
-    }
-
     public function sire() {
         $ErrorSIRE = null;
         $ResultsSIRE = [];
@@ -260,7 +219,8 @@ class CuadresController {
                     $total_fila = floatval($GravSIRE) + floatval($ExoSIRE) + floatval($InaSIRE) + floatval($IGVSIRE) + floatval($DscBISIRE) + floatval($DscIGVSIRE);
                     $this->validarSire[] = [
                         'serie' => $serieSIRE,
-                        'total' => $total_fila
+                        'total' => $total_fila,
+                        'fecha' => $fechaSIRE
                     ];
     
                     if (!isset($DataSerieGraSIRE[$serieSIRE])) {
@@ -550,35 +510,43 @@ class CuadresController {
         $faltantes_en_sire = array_diff($numeros_nubox, $numeros_sire);
 
         $resultado = [];
+        $totalSerie = 0;
+        $fechas = [];
     
         foreach ($faltantes_en_nubox as $serie) {
-            $dato = null;
             foreach ($sire as $item) {
                 if ($item['serie'] === $serie) {
-                    $dato = $item;
-                    break;
+                    $totalSerie += $item['total'];
+                    if (!empty($item['fecha'])) {
+                        $fechas[] = $item['fecha'];
+                    }
                 }
             }
 
             $resultado[] = [
                 'serie' => $serie,
-                'total' => $dato['total'] ?? 0,
+                'total' => $totalSerie,
+                'fecha' => !empty($fechas) ? min($fechas) : null,
                 'cuadre' => 'NUBOX'
             ];
         }
     
         foreach ($faltantes_en_sire as $serie) {
-            $dato = null;
+            $totalSerie = 0;
+            $fechas = [];
             foreach ($nubox as $item) {
                 if ($item['serie'] === $serie) {
-                    $dato = $item;
-                    break;
+                    $totalSerie += $item['total'];
+                    if (!empty($item['fecha'])) {
+                        $fechas[] = $item['fecha'];
+                    }
                 }
             }
     
             $resultado[] = [
                 'serie' => $serie,
-                'total' => $dato['total'] ?? 0,
+                'total' => $totalSerie,
+                'fecha' => !empty($fechas) ? min($fechas) : null,
                 'cuadre' => 'SIRE'
             ];
         }
@@ -595,34 +563,32 @@ class CuadresController {
                     'serie' => $serie,
                     'conteo' => 0,
                     'total' => 0,
+                    'fecha' => $item['fecha'] ?? null,
                     'cuadre' => $cuadre
                 ];
             }
 
             $agrupados[$serie]['conteo']++;
             $agrupados[$serie]['total'] += $total;
+        }
 
+        foreach ($agrupados as $item) {
             $data = [
-                'serie' => $serie,
-                'conteo' => $agrupados[$serie]['conteo'],
-                'total' => $agrupados[$serie]['total'],
+                'serie' => $item['serie'],
+                'conteo' => $item['conteo'],
+                'total' => $item['total'],
                 'user_create' => $user_create,
                 'user_update' => $user_update,
                 'id_sucursal' => $id_sucursal,
+                'fecha_registro' => $item['fecha'],
                 'estado' => 1
             ];
-    
-            foreach ($data as $key => $value) {
-                if ($value = false) {
-                    throw new Exception("Dato inválido en campo $key");
-                }
-            }
-    
             SerieAjena::Insertar($data);
         }
 
         // Si deseas que sea array con índices numéricos:
         $ResultsValidarSeries = array_values($agrupados);
+        //echo json_encode($ResultsValidarSeries);
     
         return compact('ErrorValidarSeries', 'ResultsValidarSeries');
     }
@@ -635,6 +601,7 @@ class CuadresController {
         $id_sucursal = $user['id_sucursal'];
 
         foreach ($resultados as $resultado) {
+            $fecha = isset($resultado['fecha']) ? date('Y-d-01', strtotime($resultado['fecha'])) : date('Y-d-01');
             $data = [
                 'producto' => $resultado['producto'],
                 'cantidad' => $resultado['cantidad'],
@@ -642,6 +609,7 @@ class CuadresController {
                 'user_create' => $user_create,
                 'user_update' => $user_update,
                 'id_sucursal' => $id_sucursal,
+                'fecha_registro' => $fecha,
                 'estado' => 1
             ];  
 

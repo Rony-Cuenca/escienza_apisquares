@@ -20,7 +20,6 @@ def limpiar_carpeta(carpeta, delay=10):
                 os.remove(archivo_path)
     threading.Thread(target=limpiar).start()
 
-
 @app.route('/procesar', methods=['POST'])
 def procesar():
     estado = request.args.get('estado', type=int)
@@ -84,7 +83,8 @@ def procesar():
                 total_fila = gravado + exonerado + inafecto + igv
                 validarNubox.append({
                     'serie': serie,
-                    'total': total_fila
+                    'total': total_fila,
+                    'fecha': primer_valor_fecha
                 })
 
                 if serie not in data_serie_gra:
@@ -215,7 +215,8 @@ def procesar():
             resultados_productos.append({
                 'producto': producto,
                 'cantidad': cantidad,
-                'total': round(total_total, 2)
+                'total': round(total_total, 2),
+                'fecha': primer_valor_fecha
             })
 
         return jsonify({
@@ -224,6 +225,7 @@ def procesar():
             'resultados': resultados,
             'resultados_productos': resultados_productos
         })
+
 @app.route('/unificar', methods=['POST'])
 def unificar_archivos():
     if 'archivos[]' not in request.files:
