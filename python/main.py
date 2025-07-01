@@ -151,6 +151,7 @@ def procesar():
         conteo_series = {}
 
         data_cantidad = {}
+        data_producto_total = {}
 
         primer_valor_fecha = df.iloc[2, col_fecha]  
 
@@ -188,8 +189,10 @@ def procesar():
 
                 if producto not in data_cantidad:
                     data_cantidad[producto] = 0.0
+                    data_producto_total[producto] = 0.0
 
                 data_cantidad[producto] += cantidad
+                data_producto_total[producto] += total
             except Exception:
                 continue
 
@@ -211,11 +214,12 @@ def procesar():
         resultados_productos = []
         for producto in sorted(data_cantidad.keys()):
             cantidad = data_cantidad[producto]
+            total = data_producto_total[producto]
             
             resultados_productos.append({
                 'producto': producto,
                 'cantidad': cantidad,
-                'total': round(total_total, 2),
+                'total': round(total, 2),
                 'fecha': primer_valor_fecha
             })
 
