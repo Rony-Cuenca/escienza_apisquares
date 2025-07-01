@@ -114,7 +114,7 @@ class CuadresController {
             //print_r($edsuiteResponse['resultados_productos']);
             if (isset($edsuiteResponse['resultados']) && $edsuiteResponse['estado'] == 2) {
                 extract($this->procesarDatosEDSuite($edsuiteResponse['resultados']));
-                print_r($edsuiteResponse['resultados_productos']);
+                //print_r($edsuiteResponse['resultados_productos']);
                 $this->guardarDatosEdSuite($edsuiteResponse['resultados_productos']);
             } elseif (isset($edsuiteResponse['message'])) {
                 $ErrorEDSUITE = $edsuiteResponse['message'];
