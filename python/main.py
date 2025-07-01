@@ -232,17 +232,21 @@ def procesar():
 
 @app.route('/unificar', methods=['POST'])
 def unificar_archivos():
-    if 'archivos[]' not in request.files:
-        return jsonify({'error': 'No se enviaron archivos'}), 400
-
-    archivos = request.files.getlist('archivos[]')
+    archivos = [
+        request.files[key]
+        for key in request.files
+        if key.startswith('archivos[')
+    ]
 
     if not archivos:
-        return jsonify({'error': 'Lista vacía de archivos'}), 400
+        return jsonify({'error': 'No se enviaron archivos'}), 400
 
     carpeta_destino = os.path.join(os.getcwd(), 'uploads/unificados')
     os.makedirs(carpeta_destino, exist_ok=True)
     temp_dir = tempfile.mkdtemp()
+
+    columnas_deseadas = ['Serie','Fecha', 'IGV', 'Total', 'Producto', 'Cantidad']
+
     try:
         dfs = []
         for archivo in archivos:
@@ -250,16 +254,27 @@ def unificar_archivos():
             ruta_temporal = os.path.join(temp_dir, nombre_seguro)
             archivo.save(ruta_temporal)
 
-            df = pd.read_excel(ruta_temporal)
-            df["Archivo_Origen"] = archivo.filename
-            dfs.append(df)
+            # Leer desde la segunda fila (índice 1), porque la primera es basura
+            df = pd.read_excel(ruta_temporal, skiprows=1)
+
+            # Filtrar solo las columnas deseadas (si existen en el archivo)
+            columnas_presentes = [col for col in columnas_deseadas if col in df.columns]
+            df_filtrado = df[columnas_presentes].copy()
+
+            df_filtrado["Archivo_Origen"] = archivo.filename
+
+            dfs.append(df_filtrado)
+
+        if not dfs:
+            return jsonify({'error': 'No se pudieron leer datos válidos'}), 400
 
         df_final = pd.concat(dfs, ignore_index=True)
 
         nombre_salida = f"excel_unificado_{int(datetime.now().timestamp())}.xlsx"
         ruta_salida = os.path.join(carpeta_destino, nombre_salida)
 
-        df_final.to_excel(ruta_salida, index=False)
+        with pd.ExcelWriter(ruta_salida) as writer:
+            df_final.to_excel(writer, index=False, header=True, startrow=1)
 
         return jsonify({'status': 'ok', 'archivo': nombre_salida})
     except Exception as e:

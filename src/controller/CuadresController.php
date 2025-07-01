@@ -135,11 +135,11 @@ class CuadresController {
         // Preparar CURL para enviar archivos
         $curl = curl_init();
         $cfileArray = [];
-    
+
         foreach ($archivos['tmp_name'] as $idx => $tmpPath) {
             $nombre = $archivos['name'][$idx];
             $cfile = new CURLFile($tmpPath, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', $nombre);
-            $cfileArray["archivos[]"] = $cfile; // array de múltiples archivos
+            $cfileArray["archivos[$idx]"] = $cfile;
         }
     
         curl_setopt_array($curl, [
