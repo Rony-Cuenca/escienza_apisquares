@@ -53,13 +53,13 @@ class ReporteController
     {
         $seriesAjenasArray = SerieAjena::obtenerPorMes($mesSeleccionado);
         $seriesAjenasLista = array_column($seriesAjenasArray, 'serie');
-        
+
         $cuadresSIRE = $cuadresNUBOX = $cuadresEDSUITE = [];
         foreach ($cuadres as $cuadre) {
             if (in_array($cuadre['serie'], $seriesAjenasLista)) {
                 continue;
             }
-            
+
             if ($cuadre['id_reporte'] == 2) {
                 $cuadresSIRE[] = $cuadre;
             } elseif ($cuadre['id_reporte'] == 1) {
@@ -174,11 +174,23 @@ class ReporteController
         $totalesTipoDoc = $seriesTotales = $diferenciasSeries = [];
         $seriesAjenas = $ventasGlobales = [];
         $mesesDisponibles = Cuadre::obtenerMesesDisponibles();
+        $id_sucursal = $_SESSION['id_sucursal'] ?? null;
+        $rucSucursal = '';
+        $nombreSucursal = '';
+        $usuarioNombre = $_SESSION['usuario'] ?? 'Desconocido';
+
+        if ($id_sucursal) {
+            $id_cliente = $_SESSION['id_cliente'] ?? null;
+            $sucursal = \Establecimiento::obtenerPorId($id_sucursal, $id_cliente);
+            if ($sucursal) {
+                $rucSucursal = $sucursal['ruc'] ?? '';
+                $nombreSucursal = $sucursal['razon_social'] ?? '';
+            }
+        }
 
         if ($mesSeleccionado) {
             $cuadres = Cuadre::obtenerCuadresPorMes($mesSeleccionado);
             list($cuadresSIRE, $cuadresNUBOX, $cuadresEDSUITE) = $this->separarCuadresPorSistemaExcluyendoAjenas($cuadres, $mesSeleccionado);
-
             $totalesTipoDoc = Cuadre::obtenerTotalesPorTipoComprobanteExcluyendoAjenas($mesSeleccionado);
             $seriesTotales = Cuadre::obtenerTotalesPorSerieExcluyendoAjenas($mesSeleccionado);
             $diferenciasSeries = $this->calcularDiferenciasSeries($seriesTotales);
@@ -187,58 +199,160 @@ class ReporteController
         }
 
         $nombreMes = $this->obtenerNombreMes($mesSeleccionado, $mesesDisponibles);
-
         $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Reporte Cuadres');
 
+        $headerPrincipalStyle = [
+            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 16],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '0f172a']], // Slate-900 premium
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_MEDIUM, 'color' => ['rgb' => '1e293b']]],
+            'alignment' => ['horizontal' => 'center', 'vertical' => 'center']
+        ];
+
+        $headerSecundarioStyle = [
+            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 11],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '1e40af']], // Blue-800 ejecutivo
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_MEDIUM, 'color' => ['rgb' => '1d4ed8']]],
+            'alignment' => ['horizontal' => 'center', 'vertical' => 'center']
+        ];
+
+        $separadorStyle = [
+            'font' => ['bold' => true, 'size' => 12, 'color' => ['rgb' => '0f172a']],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'f8fafc']], // Slate-50 premium
+            'borders' => [
+                'bottom' => ['borderStyle' => Border::BORDER_THICK, 'color' => ['rgb' => '2563eb']],
+                'top' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => 'cbd5e1']]
+            ],
+            'alignment' => ['horizontal' => 'left', 'vertical' => 'center']
+        ];
+
         $yellowHeaderStyle = [
-            'font' => ['bold' => true, 'color' => ['rgb' => '000000'], 'size' => 11],
-            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'FFD700']], // Amarillo dorado más vibrante
-            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '000000']]],
+            'font' => ['bold' => true, 'color' => ['rgb' => '0f172a'], 'size' => 11],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'fcd34d']], // Amber-300 ejecutivo
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => 'f59e0b']]],
             'alignment' => ['horizontal' => 'center', 'vertical' => 'center']
         ];
 
         $blueHeaderStyle = [
             'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 10],
-            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '4472C4']], // Azul más intenso
-            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '000000']]],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '1d4ed8']], // Blue-700 corporativo
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '1e40af']]],
             'alignment' => ['horizontal' => 'center', 'vertical' => 'center']
         ];
 
         $greenTotalStyle = [
             'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 10],
-            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '70AD47']], // Verde más vivo
-            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '000000']]],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '059669']], // Emerald-600 profesional
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '047857']]],
             'alignment' => ['horizontal' => 'center', 'vertical' => 'center']
         ];
 
         $redStyle = [
             'font' => ['color' => ['rgb' => 'FFFFFF'], 'bold' => true, 'size' => 10],
-            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'E74C3C']], // Rojo más vibrante
-            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '000000']]],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'dc2626']], // Red-600 controlado
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => 'b91c1c']]],
             'alignment' => ['horizontal' => 'center', 'vertical' => 'center']
         ];
 
         $borderStyle = [
-            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '000000']]],
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => 'e2e8f0']]],
+            'alignment' => ['horizontal' => 'center', 'vertical' => 'center'],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'ffffff']] // Fondo blanco limpio
+        ];
+
+        $warningStyle = [
+            'font' => ['bold' => true, 'color' => ['rgb' => '0f172a'], 'size' => 10],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'fed7aa']], // Orange-200 suave
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => 'ea580c']]],
             'alignment' => ['horizontal' => 'center', 'vertical' => 'center']
         ];
 
-        $row = 3;
+        $infoStyle = [
+            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 10],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '0369a1']], // Sky-700 profesional
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '0284c7']]],
+            'alignment' => ['horizontal' => 'center', 'vertical' => 'center']
+        ];
 
-        $this->SeccionResumenSoftware($sheet, $row, $cuadresNUBOX, $cuadresEDSUITE, $cuadresSIRE, $yellowHeaderStyle, $blueHeaderStyle, $greenTotalStyle, $borderStyle, $redStyle);
+        $neutralStyle = [
+            'font' => ['bold' => true, 'color' => ['rgb' => '1f2937'], 'size' => 10],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'f3f4f6']], // Gray-100 elegante
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '9ca3af']]],
+            'alignment' => ['horizontal' => 'center', 'vertical' => 'center']
+        ];
+
+        $totalEspecialStyle = [
+            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 11],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '374151']], // Gray-700 ejecutivo
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_MEDIUM, 'color' => ['rgb' => '1f2937']]],
+            'alignment' => ['horizontal' => 'center', 'vertical' => 'center']
+        ];
+
+        $this->SeccionCabecera($sheet, $nombreMes, $nombreSucursal, $rucSucursal, $usuarioNombre, $headerPrincipalStyle, $headerSecundarioStyle);
+
+        $row = 6;
+
+        $this->SeccionSeparador($sheet, $row, "ANÁLISIS COMPARATIVO POR SISTEMA DE FACTURACIÓN", $separadorStyle);
+        $this->SeccionResumenSoftware($sheet, $row, $cuadresNUBOX, $cuadresEDSUITE, $cuadresSIRE, $yellowHeaderStyle, $blueHeaderStyle, $greenTotalStyle, $borderStyle, $redStyle, $warningStyle);
+
         $row += 2;
-        $this->SeccionResumenComprobante($sheet, $row, $totalesTipoDoc, $yellowHeaderStyle, $greenTotalStyle, $redStyle, $borderStyle);
+
+        $this->SeccionSeparador($sheet, $row, "RESUMEN DE COMPROBANTES", $separadorStyle);
+        $this->SeccionResumenComprobante($sheet, $row, $totalesTipoDoc, $yellowHeaderStyle, $greenTotalStyle, $redStyle, $borderStyle, $infoStyle);
+
         $row += 2;
-        $this->SeccionReportesGlobales($sheet, $row, $cuadresNUBOX, $seriesAjenas, $ventasGlobales, $mesSeleccionado, $yellowHeaderStyle, $blueHeaderStyle, $greenTotalStyle, $borderStyle, $redStyle);
-        foreach (range('A', 'R') as $col) {
+
+        $this->SeccionSeparador($sheet, $row, "REPORTES GLOBALES Y SERIES AJENAS", $separadorStyle);
+        $this->SeccionReportesGlobales($sheet, $row, $cuadresNUBOX, $seriesAjenas, $ventasGlobales, $mesSeleccionado, $yellowHeaderStyle, $blueHeaderStyle, $greenTotalStyle, $borderStyle, $redStyle, $warningStyle, $infoStyle);
+
+        $sheet->getColumnDimension('A')->setWidth(20);
+        $sheet->getColumnDimension('B')->setWidth(12);
+
+        foreach (range('C', 'R') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
+            $sheet->getColumnDimension($col)->setWidth(max(10, min(25, $sheet->getColumnDimension($col)->getWidth())));
         }
 
-        $sheet->getStyle("C3:R{$row}")->getNumberFormat()->setFormatCode('#,##0.00');
-        $fechaActual = date('Y-m-d');
-        $nombreArchivo = "Reporte de Cuadres - {$nombreMes} - {$fechaActual}.xlsx";
+        for ($i = 6; $i <= $row; $i++) {
+            $sheet->getRowDimension($i)->setRowHeight(18);
+        }
+
+        $sheet->getStyle("C6:R{$row}")->getNumberFormat()->setFormatCode('_("S/" * #,##0.00_);_("S/" * \(#,##0.00\);_("S/" * 0.00_);_(@_)');
+        $sheet->getStyle("B6:B{$row}")->getNumberFormat()->setFormatCode('#,##0;-#,##0;0;@');
+        $sheet->getStyle("J6:J{$row}")->getNumberFormat()->setFormatCode('#,##0;-#,##0;0;@');
+        $sheet->getStyle("N6:N{$row}")->getNumberFormat()->setFormatCode('#,##0;-#,##0;0;@');
+        $sheet->getStyle("A6:A{$row}")->getAlignment()->setWrapText(true);
+        $columnasMomentarias = ['C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'O', 'P', 'Q', 'R'];
+        foreach ($columnasMomentarias as $col) {
+            $sheet->getStyle("{$col}6:{$col}{$row}")->getNumberFormat()->setFormatCode('_("S/" * #,##0.00_);_("S/" * \(#,##0.00\);_("S/" * 0.00_);_(@_)');
+        }
+
+        $columnasUnidades = ['J', 'N'];
+        foreach ($columnasUnidades as $col) {
+            $sheet->getStyle("{$col}6:{$col}{$row}")->getNumberFormat()->setFormatCode('#,##0;-#,##0;0;@');
+        }
+
+        $sheet->getPageSetup()
+            ->setOrientation(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::ORIENTATION_LANDSCAPE)
+            ->setPaperSize(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::PAPERSIZE_A4)
+            ->setScale(95);
+        $sheet->getPageMargins()
+            ->setTop(1.2)
+            ->setRight(0.8)
+            ->setLeft(0.8)
+            ->setBottom(1.2)
+            ->setHeader(0.5)
+            ->setFooter(0.5);
+        $sheet->getPageSetup()->setRowsToRepeatAtTopByStartAndEnd(1, 5);
+        $sheet->getPageSetup()->setFitToWidth(1)->setFitToHeight(0);
+        $fechaActual = date('d/m/Y H:i');
+        $footer = '&L&"Arial,Bold,9"ESCIENZA - SISTEMA DE GESTIÓN EMPRESARIAL&C&"Arial,8"Reporte de Conciliación de Ventas&R&"Arial,8"Generado: ' . $fechaActual . ' - Página &P de &N';
+        $sheet->getHeaderFooter()->setOddFooter($footer);
+        $header = '&C&"Arial,Bold,10"REPORTE EJECUTIVO DE CONCILIACIÓN DE VENTAS';
+        $sheet->getHeaderFooter()->setOddHeader($header);
+
+        $nombreArchivo = "Reporte de Cuadres - {$nombreMes} - " . date('Y-m-d') . ".xlsx";
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment;filename="' . $nombreArchivo . '"');
         header('Cache-Control: max-age=0');
@@ -257,7 +371,8 @@ class ReporteController
         $blueHeaderStyle,
         $greenTotalStyle,
         $borderStyle,
-        $redStyle
+        $redStyle,
+        $warningStyle
     ) {
         $startRow = $row;
         $nuboxPorSerie = [];
@@ -456,7 +571,7 @@ class ReporteController
 
         $sheet->mergeCells("J$totalRow1Edsuite:J$totalRow2Edsuite");
         $sheet->setCellValue("J$totalRow1Edsuite", $totalDiferenciaEdsuite);
-        
+
         if ($totalDiferenciaEdsuite != 0) {
             $sheet->getStyle("J$totalRow1Edsuite:J$totalRow2Edsuite")->applyFromArray(array_merge($redStyle, [
                 'alignment' => [
@@ -725,8 +840,8 @@ class ReporteController
                 $diferenciaSerie = $totalNuboxSerie - $totalEdsuiteSerie;
                 $sheet->setCellValue("C$currentRowReportes", $serie);
                 $sheet->setCellValue("D$currentRowReportes", $totalEdsuiteSerie);
-                $sheet->setCellValue("E$currentRowReportes", 0); 
-                $sheet->setCellValue("F$currentRowReportes", 0); 
+                $sheet->setCellValue("E$currentRowReportes", 0);
+                $sheet->setCellValue("F$currentRowReportes", 0);
                 $sheet->setCellValue("G$currentRowReportes", $diferenciaSerie);
 
                 if ($diferenciaSerie != 0) {
@@ -844,7 +959,7 @@ class ReporteController
 
         // --- TABLA SERIES AJENAS (DERECHA M-O) ---
         $currentRowAjenas = $startRow;
-        $sheet->setCellValue("M$currentRowAjenas", "SERIES NUBOX - Ajenas");
+        $sheet->setCellValue("M$currentRowAjenas", "SERIES AJENAS");
         $sheet->mergeCells("M$currentRowAjenas:O$currentRowAjenas");
         $sheet->getStyle("M$currentRowAjenas:O$currentRowAjenas")->applyFromArray($yellowHeaderStyle);
 
@@ -881,5 +996,56 @@ class ReporteController
         $sheet->getStyle("M$currentRowAjenas:O$currentRowAjenas")->applyFromArray($greenTotalStyle);
 
         $row = max($maxRowReportes, $currentRowVentas, $currentRowAjenas) + 1;
+    }
+
+    private function SeccionCabecera($sheet, $nombreMes, $nombreSucursal, $rucSucursal, $usuarioNombre, $headerPrincipalStyle, $headerSecundarioStyle)
+    {
+        $sheet->setCellValue('A1', '📊 ESCIENZA - REPORTE MENSUAL DE CUADRES 📊');
+        $sheet->mergeCells('A1:R1');
+        $sheet->getStyle('A1:R1')->applyFromArray($headerPrincipalStyle);
+        $sheet->getRowDimension('1')->setRowHeight(30);
+        $empresaInfo = "🏢 RUC: $rucSucursal | $nombreSucursal";
+        $periodoInfo = "📅 Período: $nombreMes";
+        $sheet->setCellValue('A2', $empresaInfo);
+        $sheet->mergeCells('A2:K2');
+        $sheet->setCellValue('L2', $periodoInfo);
+        $sheet->mergeCells('L2:R2');
+        $sheet->getStyle('A2:R2')->applyFromArray($headerSecundarioStyle);
+        $sheet->getRowDimension('2')->setRowHeight(22);
+        $usuarioInfo = "👤 Generado por: $usuarioNombre";
+        $fechaInfo = "🕒 Fecha de generación: " . date('d/m/Y H:i:s');
+
+        $sheet->setCellValue('A3', $usuarioInfo);
+        $sheet->mergeCells('A3:K3');
+        $sheet->setCellValue('L3', $fechaInfo);
+        $sheet->mergeCells('L3:R3');
+        $sheet->getStyle('A3:R3')->applyFromArray([
+            'font' => ['bold' => true, 'size' => 10, 'color' => ['rgb' => '374151']],
+            'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => 'E3F2FD']],
+            'borders' => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN, 'color' => ['rgb' => '000000']]],
+            'alignment' => ['horizontal' => 'left', 'vertical' => 'center']
+        ]);
+        $sheet->getRowDimension('3')->setRowHeight(20);
+        $sheet->setCellValue('A4', '');
+        $sheet->mergeCells('A4:R4');
+        $sheet->getStyle('A4:R4')->applyFromArray([
+            'borders' => ['bottom' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THICK, 'color' => ['rgb' => '2563EB']]]
+        ]);
+        $sheet->getRowDimension('4')->setRowHeight(8);
+    }
+
+    private function SeccionSeparador($sheet, &$row, $titulo, $separadorStyle)
+    {
+        $row++;
+        $textoSeparador = "▌ $titulo ▌";
+        $sheet->setCellValue("A$row", $textoSeparador);
+        $sheet->mergeCells("A$row:R$row");
+        $sheet->getStyle("A$row:R$row")->applyFromArray($separadorStyle);
+        $sheet->getRowDimension($row)->setRowHeight(28);
+        $sheet->getStyle("A$row")->getAlignment()
+            ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT)
+            ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER)
+            ->setIndent(1);
+        $row++;
     }
 }

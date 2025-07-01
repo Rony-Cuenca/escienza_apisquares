@@ -55,7 +55,21 @@
                 </thead>
                 <tbody>
                     <?php if (!empty($cuadresSIRE)): ?>
-                        <?php foreach ($cuadresSIRE as $i => $cuadre): ?>
+                        <?php
+                        $totalCantidadSIRE = 0;
+                        $totalGravadaSIRE = 0;
+                        $totalExoneradaSIRE = 0;
+                        $totalInafectaSIRE = 0;
+                        $totalIgvSIRE = 0;
+                        $totalMontoSIRE = 0;
+                        foreach ($cuadresSIRE as $i => $cuadre):
+                            $totalCantidadSIRE += $cuadre['cantidad_compr'];
+                            $totalGravadaSIRE += $cuadre['suma_gravada'];
+                            $totalExoneradaSIRE += $cuadre['suma_exonerada'];
+                            $totalInafectaSIRE += $cuadre['suma_inafecto'];
+                            $totalIgvSIRE += $cuadre['suma_igv'];
+                            $totalMontoSIRE += $cuadre['monto_total'];
+                        ?>
                             <tr class="border-b border-[#2563EB] transition <?= $cuadre['tipo_comprobante'] == 3 ? 'bg-[#dc3545] text-white font-bold' : 'hover:bg-blue-50' ?>">
                                 <td class="py-2 px-3 text-left"><?= htmlspecialchars($cuadre['serie']) ?></td>
                                 <td class="py-2 px-3 text-right"><?= $cuadre['cantidad_compr'] ?></td>
@@ -66,9 +80,18 @@
                                 <td class="py-2 px-3 text-right"><?= number_format($cuadre['monto_total'], 2) ?></td>
                             </tr>
                         <?php endforeach; ?>
+                        <tr class="bg-gray-100 font-bold">
+                            <td class="py-2 px-3">TOTAL</td>
+                            <td class="py-2 px-3 text-right"><?= number_format($totalCantidadSIRE, 0) ?></td>
+                            <td class="py-2 px-3 text-right"><?= number_format($totalGravadaSIRE, 2) ?></td>
+                            <td class="py-2 px-3 text-right"><?= number_format($totalExoneradaSIRE, 2) ?></td>
+                            <td class="py-2 px-3 text-right"><?= number_format($totalInafectaSIRE, 2) ?></td>
+                            <td class="py-2 px-3 text-right"><?= number_format($totalIgvSIRE, 2) ?></td>
+                            <td class="py-2 px-3 text-right"><?= number_format($totalMontoSIRE, 2) ?></td>
+                        </tr>
                     <?php else: ?>
                         <tr>
-                            <td colspan="9" class="py-4 text-center text-gray-500">No hay cuadres NUBOX360 para este mes.</td>
+                            <td colspan="9" class="py-4 text-center text-gray-500">No hay cuadres SIRE para este mes.</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
@@ -92,7 +115,21 @@
                 </thead>
                 <tbody>
                     <?php if (!empty($cuadresNUBOX)): ?>
-                        <?php foreach ($cuadresNUBOX as $i => $cuadre): ?>
+                        <?php
+                        $totalCantidadNUBOX = 0;
+                        $totalGravadaNUBOX = 0;
+                        $totalExoneradaNUBOX = 0;
+                        $totalInafectaNUBOX = 0;
+                        $totalIgvNUBOX = 0;
+                        $totalMontoNUBOX = 0;
+                        foreach ($cuadresNUBOX as $i => $cuadre):
+                            $totalCantidadNUBOX += $cuadre['cantidad_compr'];
+                            $totalGravadaNUBOX += $cuadre['suma_gravada'];
+                            $totalExoneradaNUBOX += $cuadre['suma_exonerada'];
+                            $totalInafectaNUBOX += $cuadre['suma_inafecto'];
+                            $totalIgvNUBOX += $cuadre['suma_igv'];
+                            $totalMontoNUBOX += $cuadre['monto_total'];
+                        ?>
                             <tr class="border-b border-[#2563EB] transition <?= $cuadre['tipo_comprobante'] == 3 ? 'bg-[#dc3545] text-white font-bold' : 'hover:bg-blue-50' ?>">
                                 <td class="py-2 px-3 text-left"><?= htmlspecialchars($cuadre['serie']) ?></td>
                                 <td class="py-2 px-3 text-right"><?= $cuadre['cantidad_compr'] ?></td>
@@ -103,6 +140,15 @@
                                 <td class="py-2 px-3 text-right"><?= number_format($cuadre['monto_total'], 2) ?></td>
                             </tr>
                         <?php endforeach; ?>
+                        <tr class="bg-gray-100 font-bold">
+                            <td class="py-2 px-3">TOTAL</td>
+                            <td class="py-2 px-3 text-right"><?= number_format($totalCantidadNUBOX, 0) ?></td>
+                            <td class="py-2 px-3 text-right"><?= number_format($totalGravadaNUBOX, 2) ?></td>
+                            <td class="py-2 px-3 text-right"><?= number_format($totalExoneradaNUBOX, 2) ?></td>
+                            <td class="py-2 px-3 text-right"><?= number_format($totalInafectaNUBOX, 2) ?></td>
+                            <td class="py-2 px-3 text-right"><?= number_format($totalIgvNUBOX, 2) ?></td>
+                            <td class="py-2 px-3 text-right"><?= number_format($totalMontoNUBOX, 2) ?></td>
+                        </tr>
                     <?php else: ?>
                         <tr>
                             <td colspan="9" class="py-4 text-center text-gray-500">No hay cuadres NUBOX360 para este mes.</td>
@@ -129,7 +175,21 @@
                 </thead>
                 <tbody>
                     <?php if (!empty($cuadresEDSUITE)): ?>
-                        <?php foreach ($cuadresEDSUITE as $i => $cuadre): ?>
+                        <?php
+                        $totalCantidadEDSUITE = 0;
+                        $totalGravadaEDSUITE = 0;
+                        $totalExoneradaEDSUITE = 0;
+                        $totalInafectaEDSUITE = 0;
+                        $totalIgvEDSUITE = 0;
+                        $totalMontoEDSUITE = 0;
+                        foreach ($cuadresEDSUITE as $i => $cuadre):
+                            $totalCantidadEDSUITE += $cuadre['cantidad_compr'];
+                            $totalGravadaEDSUITE += $cuadre['suma_gravada'];
+                            $totalExoneradaEDSUITE += $cuadre['suma_exonerada'];
+                            $totalInafectaEDSUITE += $cuadre['suma_inafecto'];
+                            $totalIgvEDSUITE += $cuadre['suma_igv'];
+                            $totalMontoEDSUITE += $cuadre['monto_total'];
+                        ?>
                             <tr class="border-b border-[#2563EB] transition <?= $cuadre['tipo_comprobante'] == 3 ? 'bg-[#dc3545] text-white font-bold' : 'hover:bg-blue-50' ?>">
                                 <td class="py-2 px-3 text-left"><?= htmlspecialchars($cuadre['serie']) ?></td>
                                 <td class="py-2 px-3 text-right"><?= $cuadre['cantidad_compr'] ?></td>
@@ -140,6 +200,15 @@
                                 <td class="py-2 px-3 text-right"><?= number_format($cuadre['monto_total'], 2) ?></td>
                             </tr>
                         <?php endforeach; ?>
+                        <tr class="bg-gray-100 font-bold">
+                            <td class="py-2 px-3">TOTAL</td>
+                            <td class="py-2 px-3 text-right"><?= number_format($totalCantidadEDSUITE, 0) ?></td>
+                            <td class="py-2 px-3 text-right"><?= number_format($totalGravadaEDSUITE, 2) ?></td>
+                            <td class="py-2 px-3 text-right"><?= number_format($totalExoneradaEDSUITE, 2) ?></td>
+                            <td class="py-2 px-3 text-right"><?= number_format($totalInafectaEDSUITE, 2) ?></td>
+                            <td class="py-2 px-3 text-right"><?= number_format($totalIgvEDSUITE, 2) ?></td>
+                            <td class="py-2 px-3 text-right"><?= number_format($totalMontoEDSUITE, 2) ?></td>
+                        </tr>
                     <?php else: ?>
                         <tr>
                             <td colspan="9" class="py-4 text-center text-gray-500">No hay cuadres EDSUITE para este mes.</td>
@@ -162,10 +231,10 @@
                 </thead>
                 <tbody>
                     <?php if (!empty($seriesAjenas)): ?>
-                        <?php 
+                        <?php
                         $totalConteo = 0;
                         $totalImporte = 0;
-                        foreach ($seriesAjenas as $serie): 
+                        foreach ($seriesAjenas as $serie):
                             $totalConteo += $serie['total_conteo'];
                             $totalImporte += $serie['total_importe'];
                         ?>
@@ -202,10 +271,10 @@
                 </thead>
                 <tbody>
                     <?php if (!empty($ventasGlobales)): ?>
-                        <?php 
+                        <?php
                         $totalCantidad = 0;
                         $totalImporteVG = 0;
-                        foreach ($ventasGlobales as $venta): 
+                        foreach ($ventasGlobales as $venta):
                             $totalCantidad += $venta['total_cantidad'];
                             $totalImporteVG += $venta['total_importe'];
                         ?>
@@ -318,6 +387,7 @@
         </div>
 
         <!-- RESUMEN DE SERIES Y DIFERENCIAS -->
+        <h3 class="text-xl font-bold text-gray-800 mt-8 mb-2">Diferencias</h3>
         <div class="overflow-x-auto rounded-xl border border-[#2563EB] bg-white mb-8">
             <table class="w-full min-w-max text-sm">
                 <thead>
