@@ -50,7 +50,7 @@ function drawExoneracionChart() {
           plugins: {
             title: {
               display: true,
-              text: 'Porcentaje de Exoneración de IGV por Serie',
+             // text: 'Porcentaje de Exoneración de IGV por Serie',
               font: { size: 18 }
             },
             tooltip: {

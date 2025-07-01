@@ -48,7 +48,7 @@
         </div>
       </div>
       <div class="overflow-x-auto">
-        <div id="columnchart_material" class="min-w-[700px] h-[350px]"></div>
+        <div id="columnchart_material" class="min-w-[900px] h-[350px]" style="overflow-x: auto; white-space: nowrap;"></div>
       </div>
     </div>
   </div>
@@ -93,7 +93,8 @@ function drawChart() {
       let tipos = ['NUBOX360','EDSUITE','SIRE'];
       let data = [['MES', ...tipos]];
       meses.forEach(mes => {
-        let fila = [new Date(0, mes-1).toLocaleString('es-ES', {month:'long'})];
+        let nombreMes = new Date(0, mes-1).toLocaleString('es-ES', {month:'long'}).toUpperCase();
+        let fila = [nombreMes];
         tipos.forEach(tipo => {
           let found = datos.find(d => d.mes === mes && d.tipo === tipo);
           fila.push(found ? parseFloat(found.total) : 0);

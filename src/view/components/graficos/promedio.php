@@ -44,7 +44,7 @@ function drawPromedioVentaChart() {
                     plugins: {
                         title: {
                             display: true,
-                            text: 'Promedio de Venta por Comprobante (por Serie)',
+                           // text: 'Promedio de Venta por Comprobante (por Serie)',
                             font: { size: 18 }
                         },
                         tooltip: {
