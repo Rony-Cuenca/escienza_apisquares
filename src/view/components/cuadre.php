@@ -1,15 +1,13 @@
-<?php
-if (isset($sms) && $sms == 1) {
-    echo "<script>
+<?php if (isset($sms) && $sms == 1) : ?>
+    <script>
     Swal.fire({
         icon: 'success',
         title: 'Registro de Reportes',
         text: 'Se han guardado los cuadres en la base de datos.',
         confirmButtonColor: '#3085d6'
     });
-    </script>";
-}
-?>
+    </script>
+<?php endif; ?>
 
 <?php if (isset($_GET['error'])): ?>
     <script>
@@ -128,9 +126,7 @@ if (isset($sms) && $sms == 1) {
             if (!edsuite) faltan.push("EDSuite");
 
             if (faltan.length > 0) {
-                e.preventDefault(); // Detiene el envío del formulario
-
-                // ✅ Mostrar alerta de archivos faltantes
+                e.preventDefault(); 
                 Swal.fire({
                     icon: 'warning',
                     title: 'Archivos faltantes',
@@ -139,7 +135,6 @@ if (isset($sms) && $sms == 1) {
                     confirmButtonColor: '#3085d6'
                 });
             } else {
-                // ✅ Mostrar alerta de cargando SIN detener el submit
                 Swal.fire({
                     title: 'Procesando...',
                     text: 'Esto puede tardar unos segundos.',
@@ -158,7 +153,6 @@ if (isset($sms) && $sms == 1) {
 <!-- Modal -->
 <div id="modalUnirExcel" class="fixed inset-0 z-50 bg-black/50 flex items-center justify-center hidden">
     <div class="bg-white rounded-xl shadow-xl w-auto max-w-4xl p-6 relative">
-        <!-- Botón Cerrar -->
         <button onclick="cerrarModal()" class="absolute top-3 right-3 text-gray-500 hover:text-gray-700">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none"
                  viewBox="0 0 24 24" stroke="currentColor">
@@ -180,14 +174,11 @@ if (isset($sms) && $sms == 1) {
                 </div>
             </div>
 
-            <!-- Previsualización de archivos (inicia oculto) -->
             <div id="previewFiles" class="hidden bg-blue-50 p-4 border border-dashed border-blue-400 rounded-lg text-center transition-all duration-300 ease-in-out">
                 <div class="flex flex-wrap justify-center gap-4" id="fileCardsContainer">
-                    <!-- Tarjetas generadas por JS -->
                 </div>
             </div>
 
-            <!-- Botón para enviar (inicia oculto) -->
             <div id="submitBtnContainer" class="text-center mt-6 hidden">
                 <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2 rounded-lg shadow">
                     Unificar
@@ -196,11 +187,9 @@ if (isset($sms) && $sms == 1) {
             <?php if (isset($_GET['modal']) && $_GET['modal'] === 'unificacionExitosa' && isset($_GET['archivo'])): ?>
                 <script>
                     window.addEventListener('DOMContentLoaded', () => {
-                        // Cerrar el modal automáticamente
                         const modal = document.getElementById('modalUnirExcel');
                         modal.classList.add('hidden');
 
-                        // Disparar descarga automáticamente
                         const enlaceDescarga = document.createElement('a');
                         enlaceDescarga.href = "http://localhost:5000/descargas/<?php echo urlencode($_GET['archivo']); ?>";
                         enlaceDescarga.download = "<?php echo basename($_GET['archivo']); ?>";
@@ -214,7 +203,6 @@ if (isset($sms) && $sms == 1) {
     </div>
 </div>
 
-<!-- Icono Excel de fondo con JS -->
 <script>
 document.getElementById('files_unir').addEventListener('change', function (e) {
     const count = this.files.length;

@@ -11,7 +11,6 @@ import threading
 app = Flask(__name__)
 
 def limpiar_carpeta(carpeta, delay=10):
-    """Elimina todos los archivos en la carpeta después de cierto delay."""
     def limpiar():
         time.sleep(delay)
         for archivo in os.listdir(carpeta):
@@ -305,4 +304,4 @@ def descargar_archivo(nombre_archivo):
     
 
 if __name__ == '__main__':
-    app.run(port=5000, debug=False)  # Disable debug mode for production
+    app.run(port=5000, debug=False)
