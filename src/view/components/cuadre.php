@@ -1,3 +1,16 @@
+<?php
+if (isset($sms) && $sms == 1) {
+    echo "<script>
+    Swal.fire({
+        icon: 'success',
+        title: 'Registro de Reportes',
+        text: 'Se han guardado los cuadres en la base de datos.',
+        confirmButtonColor: '#3085d6'
+    });
+    </script>";
+}
+?>
+
 <div class="w-full items-center px-2 md:px-5 py-10 bg-gray-200 flex-1 flex flex-col">
     <div class="flex flex-col items-center w-full">
         <div class="w-full">
@@ -53,8 +66,8 @@
                             </div>
                         </div>
 
-                        <div class="text-center">
-                            <button type="submit"
+                        <div class="text-center" id="botonesContainer">
+                            <button type="submit" id="btnSubirArchivos"
                                 class="py-2 px-6 border text-white rounded-lg bg-blue-600 hover:bg-blue-700 
                                 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                                 Subir Archivos
@@ -70,8 +83,7 @@
 
 <script>
     function update(input, displayId) {
-        const displayElement = document.getElementById(displayId);
-        displayElement.value = input.files[0] ? input.files[0].name : 'Ningún archivo seleccionado';
+        document.getElementById(displayId).value = input.files[0] ? input.files[0].name : 'Ningún archivo seleccionado';
     }
     function abrirModal() {
         document.getElementById('modalUnirExcel').classList.remove('hidden');
@@ -80,8 +92,46 @@
     function cerrarModal() {
         document.getElementById('modalUnirExcel').classList.add('hidden');
     }
-</script>
 
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function (e) {
+            const sire = document.getElementById('sire').files.length;
+            const nubox = document.getElementById('nubox').files.length;
+            const edsuite = document.getElementById('edsuite').files.length;
+
+            let faltan = [];
+            if (!sire) faltan.push("SIRE");
+            if (!nubox) faltan.push("Nubox360");
+            if (!edsuite) faltan.push("EDSuite");
+
+            if (faltan.length > 0) {
+                e.preventDefault(); // Detiene el envío del formulario
+
+                // ✅ Mostrar alerta de archivos faltantes
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Archivos faltantes',
+                    html: 'Debes subir los siguientes archivos:<br><strong>' + faltan.join(', ') + '</strong>',
+                    confirmButtonText: 'Entendido',
+                    confirmButtonColor: '#3085d6'
+                });
+            } else {
+                // ✅ Mostrar alerta de cargando SIN detener el submit
+                Swal.fire({
+                    title: 'Procesando...',
+                    text: 'Esto puede tardar unos segundos.',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+            }
+        });
+    });
+
+</script>
 
 <!-- Modal -->
 <div id="modalUnirExcel" class="fixed inset-0 z-50 bg-black/50 flex items-center justify-center hidden">
@@ -185,5 +235,3 @@ document.getElementById('files_unir').addEventListener('change', function (e) {
     });
 });
 </script>
-
-

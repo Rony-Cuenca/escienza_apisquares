@@ -14,7 +14,14 @@ class CuadresController {
     public $validarNubox = [];
     public $validarSire = [];
 
+    public $ResultsSIRE = [];
+    public $ResultsEDSUITE = [];
+    public $ResultsNUBOX = [];
+    public $ResultsValidarSeries = [];
+    public $resultsVentaGlobal = [];
+
     public function index() {
+        $sms = isset($_GET['sms']) ? $_GET['sms'] : null;
         $contenido = 'view/components/cuadre.php';
         require 'view/layout.php';
     }
@@ -82,18 +89,26 @@ class CuadresController {
         if ($RUCSIRE && $RUCNUBOX) {
             if ($RUCSIRE == $RUCNUBOX) {
                 if ($fechaSIRE == $fechaNUBOX) {
+
                     $user = Usuario::obtenerId($_GET['user']);
                     $id_sucursal = $user['id_sucursal'];
                     $existeFecha = Cuadre::existeFecha($fechaSIRE, $id_sucursal);
+
                     if (!$existeFecha) {
-                        extract($this->sire($_FILES['exe_sire'], $_GET['user']));
+                        $SIRE = $this->sire($_FILES['exe_sire'], $_GET['user']);
+                        extract($SIRE);
+                        $this->ResultsSIRE = $SIRE['ResultsSIRE'];
+
                         $nuboxResponse = $this->cargar_archivo($_FILES['exe_nubox'], 1);
                         if (isset($nuboxResponse['resultados']) && $nuboxResponse['estado'] == 1 && isset($nuboxResponse['validarNubox'])) {
-                            extract($this->procesarDatosNubox($nuboxResponse['resultados']));
+                            $NUBOX = $this->procesarDatosNubox($nuboxResponse['resultados']);
+                            extract($NUBOX);
+                            $this->ResultsNUBOX = $NUBOX['ResultsNUBOX'];
                             $this->validarNubox = $nuboxResponse['validarNubox'];
                         }
-                        extract($this->Validar_series());
-                        //print_r($this->validarNubox);
+                        $validarSeries = $this->Validar_series();
+                        extract($validarSeries);
+                        $this->ResultsValidarSeries = $validarSeries['ResultsValidarSeries'];
                     } else {
                         $ErrorSIRE = "Ya existe un cuadre para la fecha seleccionada.";
                     }
@@ -111,18 +126,39 @@ class CuadresController {
             $ErrorEDSUITE = "No se selecciono EDSUITE.";
         } else {
             $edsuiteResponse = $this->cargar_archivo($_FILES['exe_edsuite'], 2);
-            //print_r($edsuiteResponse['resultados_productos']);
             if (isset($edsuiteResponse['resultados']) && $edsuiteResponse['estado'] == 2) {
-                extract($this->procesarDatosEDSuite($edsuiteResponse['resultados']));
-                //print_r($edsuiteResponse['resultados_productos']);
-                $this->guardarDatosEdSuite($edsuiteResponse['resultados_productos']);
+                $EDSUITE = $this->procesarDatosEDSuite($edsuiteResponse['resultados']);
+                extract($EDSUITE);
+                $this->ResultsEDSUITE = $EDSUITE['ResultsEDSUITE'];
+
+                $this->resultsVentaGlobal = $edsuiteResponse['resultados_productos'];
             } elseif (isset($edsuiteResponse['message'])) {
                 $ErrorEDSUITE = $edsuiteResponse['message'];
             }
         }
 
+        $_SESSION['ResultsSIRE'] = $this->ResultsSIRE;
+        $_SESSION['ResultsNUBOX'] = $this->ResultsNUBOX;
+        $_SESSION['ResultsEDSUITE'] = $this->ResultsEDSUITE;
+        $_SESSION['ResultsValidarSeries'] = $this->ResultsValidarSeries;
+        $_SESSION['resultsVentaGlobal'] = $this->resultsVentaGlobal;
+
         $contenido = 'view/components/cuadre.php';
         require 'view/layout.php';
+    }
+
+    public function cargarBD() {
+        $this->guardarBD(
+            $_SESSION['ResultsSIRE'],
+            $_SESSION['ResultsEDSUITE'],
+            $_SESSION['ResultsNUBOX'],
+            $_SESSION['ResultsValidarSeries'],
+            $_SESSION['resultsVentaGlobal']
+        );
+
+        $sms = 1;
+        header("Location: index.php?controller=cuadres&action=index&sms=1");
+        exit();
     }
 
     public function unirExcel() {
@@ -272,9 +308,7 @@ class CuadresController {
                             $tipo_comprobante = 2;
                         }
                     }
-
-                    $this->guardarCuadre($serie,$conteoSeriesSIRE[$serie],$BI_Gravada,$TExoSIRE,$TInaSIRE,$IGV,$TTotalSIRE,$tipo_comprobante,$reporte,$fechaSIRE);
-                        
+  
                     $ResultsSIRE[] = [
                         'serie' => $serie,
                         'conteo' => $conteoSeriesSIRE[$serie],
@@ -282,7 +316,10 @@ class CuadresController {
                         'exonerado' => $TExoSIRE,
                         'inafecto' => $TInaSIRE,
                         'igv' => $IGV,
-                        'total' => $TTotalSIRE
+                        'total' => $TTotalSIRE,
+                        'tipo_comprobante' => $tipo_comprobante,
+                        'reporte' => $reporte,
+                        'fecha_registro' => $fechaSIRE
                     ];
                 }
             } else {
@@ -405,27 +442,18 @@ class CuadresController {
                         $tipo_comprobante = 2;
                     }
                 }
-                $this->guardarCuadre(
-                    $resultado['serie'],
-                    $resultado['conteo'],
-                    $resultado['gravado'],
-                    $resultado['exonerado'],
-                    $resultado['inafecto'],
-                    $resultado['igv'],
-                    $resultado['total'],
-                    $tipo_comprobante,
-                    $reporte,
-                    $fecha
-                );
-    
+
                 $ResultsNUBOX[] = [
                     'serie' => $resultado['serie'],
                     'conteo' => $resultado['conteo'],
-                    'gravado' => $resultado['gravado'],
+                    'bi' => $resultado['gravado'],
                     'exonerado' => $resultado['exonerado'],
                     'inafecto' => $resultado['inafecto'],
                     'igv' => $resultado['igv'],
-                    'total' => $resultado['total']
+                    'total' => $resultado['total'],
+                    'tipo_comprobante' => $tipo_comprobante,
+                    'reporte' => $reporte,
+                    'fecha_registro' => $fecha
                 ];
             }
         } catch (Exception $e) {
@@ -465,26 +493,17 @@ class CuadresController {
                 }
             }
 
-            // Guardar en base de datos y capturar resultado
-            $guardado = $this->guardarCuadre(
-                $resultado['serie'],
-                $resultado['conteo'],
-                0,
-                0,
-                0,
-                $resultado['igv'],
-                $resultado['total'],
-                $tipo_comprobante,
-                $reporte,
-                $fecha
-            );
-            
-            
             $ResultsEDSUITE[] = [
                 'serie' => $resultado['serie'],
                 'conteo' => $resultado['conteo'],
+                'bi' => 0,
+                'exonerado' => 0,
+                'inafecto' => 0,
                 'igv' => $resultado['igv'],
-                'total' => $resultado['total']
+                'total' => $resultado['total'],
+                'tipo_comprobante' => $tipo_comprobante,
+                'reporte' => $reporte,
+                'fecha_registro' => $fecha
             ];
         }
         return compact('ErrorEDSUITE', 'ResultsEDSUITE');
@@ -573,35 +592,83 @@ class CuadresController {
             $agrupados[$serie]['total'] += $total;
         }
 
-        foreach ($agrupados as $item) {
-            $data = [
-                'serie' => $item['serie'],
-                'conteo' => $item['conteo'],
-                'total' => $item['total'],
-                'user_create' => $user_create,
-                'user_update' => $user_update,
-                'id_sucursal' => $id_sucursal,
-                'fecha_registro' => $item['fecha'],
-                'estado' => 1
-            ];
-            SerieAjena::Insertar($data);
-        }
-
         // Si deseas que sea array con índices numéricos:
         $ResultsValidarSeries = array_values($agrupados);
-        //echo json_encode($ResultsValidarSeries);
     
         return compact('ErrorValidarSeries', 'ResultsValidarSeries');
     }
 
-    public function guardarDatosEdSuite($resultados) {
+    public function guardarBD($ResultsSIRE, $ResultsEDSUITE, $ResultsNUBOX, $ResultsValidarSeries, $resultsVentaGlobal) {
+        if (empty($ResultsSIRE) && empty($ResultsEDSUITE) && empty($ResultsNUBOX) && empty($ResultsValidarSeries) && empty($resultsVentaGlobal)) {
+            throw new Exception("No se recibieron datos para guardar");
+        }
+
         $user = Usuario::obtenerId($_GET['user']);
         
         $user_create = $user['usuario'];
         $user_update = $user['usuario'];
         $id_sucursal = $user['id_sucursal'];
 
-        foreach ($resultados as $resultado) {
+        foreach ($ResultsSIRE as $resultado) {
+            $this->guardarCuadre(
+                $resultado['serie'],
+                $resultado['conteo'],
+                $resultado['bi'],
+                $resultado['exonerado'],
+                $resultado['inafecto'],
+                $resultado['igv'],
+                $resultado['total'],
+                $resultado['tipo_comprobante'],
+                $resultado['reporte'],
+                $resultado['fecha_registro']
+            );
+        }
+
+        foreach ($ResultsEDSUITE as $resultado) {
+            $this->guardarCuadre(
+                $resultado['serie'],
+                $resultado['conteo'],
+                $resultado['bi'],
+                $resultado['exonerado'],
+                $resultado['inafecto'],
+                $resultado['igv'],
+                $resultado['total'],
+                $resultado['tipo_comprobante'],
+                $resultado['reporte'],
+                $resultado['fecha_registro']
+            );
+        }
+
+        foreach ($ResultsNUBOX as $resultado) {
+            $this->guardarCuadre(
+                $resultado['serie'],
+                $resultado['conteo'],
+                $resultado['bi'],
+                $resultado['exonerado'],
+                $resultado['inafecto'],
+                $resultado['igv'],
+                $resultado['total'],
+                $resultado['tipo_comprobante'],
+                $resultado['reporte'],
+                $resultado['fecha_registro']
+            );
+        }
+
+        foreach ($ResultsValidarSeries as $resultado) {
+            $data = [
+                'serie' => $resultado['serie'],
+                'conteo' => $resultado['conteo'],
+                'total' => $resultado['total'],
+                'fecha_registro' => $resultado['fecha'],
+                'user_create' => $user_create,
+                'user_update' => $user_update,
+                'id_sucursal' => $id_sucursal,
+                'estado' => 1
+            ];
+            SerieAjena::Insertar($data);
+        }
+
+        foreach ($resultsVentaGlobal as $resultado) {
             $fecha = isset($resultado['fecha']) ? date('Y-d-01', strtotime($resultado['fecha'])) : date('Y-d-01');
             $data = [
                 'producto' => $resultado['producto'],

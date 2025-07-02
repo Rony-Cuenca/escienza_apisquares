@@ -1,61 +1,28 @@
 <?php if (!empty($ErrorSIRE) || !empty($ErrorNUBOX) || !empty($ErrorEDSUITE)) : ?>
-    <div id="errorModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-lg p-8 max-w-sm w-full mx-4 text-center shadow-lg">
-            <div class="flex flex-col items-center">
-                <div class="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-4">
-                    <svg class="w-12 h-12 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                </div>
-                <div class="ml-4">
-                    <h3 class="text-lg font-semibold mb-4 text-gray-900">
-                        <?php 
-                        if (!empty($ErrorSIRE)) {
-                            echo htmlspecialchars($ErrorSIRE);
-                        } elseif (!empty($ErrorNUBOX)) {
-                            echo htmlspecialchars($ErrorNUBOX);
-                        } elseif (!empty($ErrorEDSUITE)) {
-                            echo htmlspecialchars($ErrorEDSUITE);
-                        }
-                        ?>
-                    </h3>
-                </div>
-            </div>
-            <div class="mt-4">
-                <button onclick="closeModal()" class="w-full bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
-                    Cerrar
-                </button>
-            </div>
-        </div>
-    </div>
-    <style>
-        #errorModal {
-            display: none;
-        }
-        #errorModal.show {
-            display: flex;
-        }
-    </style>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const modal = document.getElementById('errorModal');
-            modal.classList.add('show');
-            modal.addEventListener('click', function(e) {
-                if (e.target === modal) {
-                    closeModal();
-                }
+        document.addEventListener('DOMContentLoaded', function () {
+            Swal.fire({
+                icon: 'error',
+                title: '¡Error!',
+                html: `
+                    <?php 
+                        if (!empty($ErrorSIRE)) {
+                            echo addslashes($ErrorSIRE);
+                        } elseif (!empty($ErrorNUBOX)) {
+                            echo addslashes($ErrorNUBOX);
+                        } elseif (!empty($ErrorEDSUITE)) {
+                            echo addslashes($ErrorEDSUITE);
+                        }
+                    ?>
+                `,
+                confirmButtonText: 'Cerrar',
+                confirmButtonColor: '#e3342f'
             });
         });
-
-        function closeModal() {
-            const modal = document.getElementById('errorModal');
-            modal.classList.remove('show');
-            setTimeout(() => {
-                modal.remove();
-            }, 300);
-        }
     </script>
 <?php endif; ?>
+
+<?php if (isset($ResultsSIRE) || isset($ResultsNUBOX) || isset($ResultsEDSUITE)) : ?>
     <div class="flex flex-col xl:flex-row gap-8 mx-auto w-full mt-8">
         <?php if (!empty($ResultsSIRE)): ?>
             <div class="w-full xl:w-1/2 bg-white rounded-lg shadow-md overflow-hidden">
@@ -115,7 +82,7 @@
                                     <tr class="hover:bg-gray-50">
                                         <td class="px-4 py-2 text-sm text-gray-900"><?php echo $resultado['serie']; ?></td>
                                         <td class="px-4 py-2 text-sm text-gray-900"><?php echo $resultado['conteo']; ?></td>
-                                        <td class="px-4 py-2 text-sm text-gray-900"><?php echo number_format($resultado['gravado'], 2); ?></td>
+                                        <td class="px-4 py-2 text-sm text-gray-900"><?php echo number_format($resultado['bi'], 2); ?></td>
                                         <td class="px-4 py-2 text-sm text-gray-900"><?php echo number_format($resultado['exonerado'], 2); ?></td>
                                         <td class="px-4 py-2 text-sm text-gray-900"><?php echo number_format($resultado['inafecto'], 2); ?></td>
                                         <td class="px-4 py-2 text-sm text-gray-900"><?php echo number_format($resultado['igv'], 2); ?></td>
@@ -191,4 +158,27 @@
             </div>
         </div>
     <?php endif; ?>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const container = document.getElementById('botonesContainer');
+
+            // Verificar si ya existe el nuevo botón para no duplicarlo
+            if (!document.getElementById('btnNuevo')) {
+                const nuevoBtn = document.createElement('button');
+                nuevoBtn.id = 'btnNuevo';
+                nuevoBtn.type = 'button';
+                nuevoBtn.className = 'ml-4 py-2 px-6 border text-white rounded-lg bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500';
+                nuevoBtn.textContent = 'Guardar Cuadres';
+
+                // Acción personalizada
+                nuevoBtn.addEventListener('click', function () {
+                    window.location.href = 'index.php?controller=cuadres&action=cargarBD&user=<?php echo $_SESSION['id_usuario'] ?>';
+                });
+
+                container.appendChild(nuevoBtn);
+            }
+        });
+    </script>
+
+<?php endif; ?>
 
