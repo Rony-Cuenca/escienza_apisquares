@@ -11,6 +11,28 @@ if (isset($sms) && $sms == 1) {
 }
 ?>
 
+<?php if (isset($_GET['error'])): ?>
+    <script>
+    Swal.fire({
+        icon: 'error',
+        title: 'Error al procesar',
+        text: <?php echo json_encode($_GET['error']); ?>,
+        confirmButtonColor: '#d33'
+    });
+    </script>
+<?php endif; ?>
+
+<?php if (isset($_GET['modal']) && $_GET['modal'] === 'unificacionExitosa'): ?>
+    <script>
+    Swal.fire({
+        icon: 'success',
+        title: 'Archivos Unificados',
+        text: 'El Excel se ha generado correctamente.',
+        confirmButtonColor: '#3085d6'
+    });
+    </script>
+<?php endif; ?>
+
 <div class="w-full items-center px-2 md:px-5 py-10 bg-gray-200 flex-1 flex flex-col">
     <div class="flex flex-col items-center w-full">
         <div class="w-full">

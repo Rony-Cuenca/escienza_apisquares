@@ -98,8 +98,13 @@ class CuadresController {
                         $SIRE = $this->sire($_FILES['exe_sire'], $_GET['user']);
                         extract($SIRE);
                         $this->ResultsSIRE = $SIRE['ResultsSIRE'];
-
-                        $nuboxResponse = $this->cargar_archivo($_FILES['exe_nubox'], 1);
+                        try {
+                            $nuboxResponse = $this->cargar_archivo($_FILES['exe_nubox'], 1);
+                        } catch (Exception $e) {
+                            $errorMsg = urlencode($e->getMessage());
+                            header("Location: index.php?controller=cuadres&action=index&error={$errorMsg}");
+                            exit;
+                        }
                         if (isset($nuboxResponse['resultados']) && $nuboxResponse['estado'] == 1 && isset($nuboxResponse['validarNubox'])) {
                             $NUBOX = $this->procesarDatosNubox($nuboxResponse['resultados']);
                             extract($NUBOX);
@@ -125,10 +130,17 @@ class CuadresController {
         if (!isset($_FILES['exe_edsuite']) || $_FILES['exe_edsuite']['error'] !== UPLOAD_ERR_OK) {
             $ErrorEDSUITE = "No se selecciono EDSUITE.";
         } else {
-            $edsuiteResponse = $this->cargar_archivo($_FILES['exe_edsuite'], 2);
+            try {
+                $edsuiteResponse = $this->cargar_archivo($_FILES['exe_edsuite'], 2);
+            } catch (Exception $e) {
+                $errorMsg = urlencode($e->getMessage());
+                header("Location: index.php?controller=cuadres&action=index&error={$errorMsg}");
+                exit;
+            }
             if (isset($edsuiteResponse['resultados']) && $edsuiteResponse['estado'] == 2) {
                 $EDSUITE = $this->procesarDatosEDSuite($edsuiteResponse['resultados']);
                 extract($EDSUITE);
+                
                 $this->ResultsEDSUITE = $EDSUITE['ResultsEDSUITE'];
 
                 $this->resultsVentaGlobal = $edsuiteResponse['resultados_productos'];
@@ -162,46 +174,68 @@ class CuadresController {
     }
 
     public function unirExcel() {
-        if (!isset($_FILES['archivos_excel'])) {
-            die("No se recibieron archivos");
-        }
-    
-        $archivos = $_FILES['archivos_excel'];
-    
-        // Preparar CURL para enviar archivos
-        $curl = curl_init();
-        $cfileArray = [];
+        try {
+            if (!isset($_FILES['archivos_excel'])) {
+                throw new Exception("No se recibieron archivos");
+            }
+        
+            $archivos = $_FILES['archivos_excel'];
+        
+            // Preparar CURL para enviar archivos
+            $curl = curl_init();
+            $cfileArray = [];
 
-        foreach ($archivos['tmp_name'] as $idx => $tmpPath) {
-            $nombre = $archivos['name'][$idx];
-            $cfile = new CURLFile($tmpPath, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', $nombre);
-            $cfileArray["archivos[$idx]"] = $cfile;
-        }
-    
-        curl_setopt_array($curl, [
-            CURLOPT_URL => "http://localhost:5000/unificar",
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => $cfileArray,
-        ]);
-    
+            foreach ($archivos['tmp_name'] as $idx => $tmpPath) {
+                $nombre = $archivos['name'][$idx];
+                $cfile = new CURLFile(
+                    $tmpPath,
+                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                    $nombre
+                );
+                $cfileArray["archivos[$idx]"] = $cfile;
+            }
+        
+            curl_setopt_array($curl, [
+                CURLOPT_URL => "http://localhost:5000/unificar",
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_POST => true,
+                CURLOPT_POSTFIELDS => $cfileArray,
+                CURLOPT_TIMEOUT => 30
+            ]);
+        
 
-        $response = curl_exec($curl);
-        $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-        curl_close($curl);
+            $response = curl_exec($curl);
+            
+            if ($response === false) {
+                $curlError = curl_error($curl);
+                curl_close($curl);
+                throw new Exception("Error de conexión con la API: $curlError");
+            }
+            $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+            curl_close($curl);
+        
+            $respuesta = json_decode($response, true);
+        
+            if ($respuesta === null) {
+                throw new Exception("La API devolvió una respuesta no válida: $response");
+            }
     
-        $respuesta = json_decode($response, true);
+            if (isset($respuesta['error'])) {
+                throw new Exception("API: " . $respuesta['error']);
+            }
     
-        if ($httpCode === 200 && isset($respuesta['status']) && $respuesta['status'] === 'ok') {
+            if ($httpCode !== 200 || !isset($respuesta['status']) || $respuesta['status'] !== 'success') {
+                throw new Exception("Error inesperado de la API");
+            }
+    
+            // Si todo está bien
             $archivo = $respuesta['archivo'];
-            $url_descarga = "http://localhost:5000/descargas/" . urlencode($archivo);
-
-            // Redirige con el archivo como parámetro (opcional: base64 o rawurlencode si es muy largo)
             header("Location: index.php?controller=cuadres&modal=unificacionExitosa&archivo=" . urlencode($archivo));
             exit;
-        } else {
-            $error = $respuesta['error'] ?? 'Error al unir los archivos.';
-            echo "<script>alert('Error: {$error}'); window.history.back();</script>";
+        } catch (Exception $e) {
+            $errorMsg = urlencode($e->getMessage());
+            header("Location: index.php?controller=cuadres&action=index&error={$errorMsg}");
+            exit;
         }
     }
 
@@ -345,13 +379,18 @@ class CuadresController {
             throw new Exception('No se pudo guardar el archivo en el servidor');
         }
 
-        // Llamar al servicio Python con la ruta del archivo
-        $respuesta = $this->llamarApiPython($archivoPath, $estado);
-
-        // Opcional: Eliminar el archivo después de procesarlo
-        unlink($archivoPath);
-
-        return $respuesta;
+        try {
+            $respuesta = $this->llamarApiPython($archivoPath, $estado);
+    
+            return $respuesta;
+    
+        } finally {
+            if (file_exists($archivoPath)) {
+                unlink($archivoPath);
+            }
+    
+            $this->limpiarCarpeta($uploadDir);
+        }
     }
 
     private function llamarApiPython($archivoPath, $estado) {
@@ -371,24 +410,30 @@ class CuadresController {
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HTTPHEADER => ['Content-Type: multipart/form-data'],
             CURLOPT_TIMEOUT => 30,
-            CURLOPT_VERBOSE => true  // Para debugging
         ]);
 
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        
-        if (curl_errno($ch)) {
-            throw new Exception("cURL error: " . curl_error($ch));
-        }
-
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
         curl_close($ch);
+        
+        if ($response === false) {
+            throw new Exception("Error al conectar con la API: $curlError");
+        }
+        $json = json_decode($response, true);
 
-        if ($httpCode !== 200) {
-            throw new Exception("API Python error ($httpCode)");
+        if ($json === null) {
+            throw new Exception("Respuesta de la API no es un JSON válido. Código HTTP: $httpCode. Respuesta: $response");
         }
 
-        return json_decode($response, true);
+        if (isset($json['status']) && $json['status'] === 'error') {
+            throw new Exception("Error de la API: " . ($json['message'] ?? 'Error desconocido'));
+        }
+        if ($httpCode !== 200) {
+            throw new Exception("Error HTTP $httpCode de la API con mensaje: " . ($json['message'] ?? 'Error desconocido'));
+        }
+
+        return $json;
     }
     
     public function guardarCuadre($serie,$conteo,$Gravada,$Exonerada,$Inafecto,$IGV,$Total,$tipo_comprobante,$reporte,$fecha_registro) {
@@ -688,6 +733,18 @@ class CuadresController {
             }
     
             VentaGlobal::Insertar($data);
+        }
+    }
+
+    private function limpiarCarpeta($ruta) {
+        if (!is_dir($ruta)) {
+            return;
+        }
+        $archivos = glob($ruta . '/*');
+        foreach ($archivos as $archivo) {
+            if (is_file($archivo)) {
+                unlink($archivo);
+            }
         }
     }
 }

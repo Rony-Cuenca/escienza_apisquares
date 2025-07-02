@@ -33,203 +33,209 @@ def procesar():
         df = pd.read_excel(file, header=None, engine='openpyxl')
     except Exception as e:
         return jsonify({'status': 'error', 'message': f'Error reading Excel: {str(e)}'}), 400
+    try:
+        if estado == 1:
+            if len(df) <= 7:
+                return jsonify({'status': 'error', 'message': 'Not enough rows'}), 400
 
-    if estado == 1:
-        if len(df) <= 7:
-            return jsonify({'status': 'error', 'message': 'Not enough rows'}), 400
-
-        header = df.iloc[7].tolist()
-        
-        try:
-            col_serie = header.index('Número')
-            col_gravado = header.index('Total Gravado')
-            col_exonerado = header.index('Total Exonerado')
-            col_inafecto = header.index('Total Inafecto')
-            col_igv = header.index('Total IGV')
-            col_fecha = header.index('Fecha emisión')
-        except ValueError as e:
-            return jsonify({'status': 'error', 'message': f'Missing columns: {str(e)}'}), 400
-
-        data_serie_gra = {}
-        data_serie_exo = {}
-        data_serie_ina = {}
-        data_serie_igv = {}
-        conteo_series = {}
-        validarNubox = []
-
-        primer_valor_fecha = df.iloc[8, col_fecha]
-
-        for _, row in df.iloc[8:].iterrows():
-            if pd.isna(row[col_serie]) or pd.isna(row[col_gravado]) or pd.isna(row[col_exonerado]) or pd.isna(row[col_inafecto]) or pd.isna(row[col_igv]):
-                continue
-
+            header = df.iloc[7].tolist()
+            
             try:
-                serie = str(row[col_serie]).split('-')[0].strip()
-                if not serie:
-                    continue
-                
-                def clean_number(num):
-                    if pd.isna(num):
-                        return 0.0
-                    if isinstance(num, (int, float)):
-                        return float(num)
-                    return float(str(num).replace(',', ''))
-                
-                gravado = clean_number(row[col_gravado])
-                exonerado = clean_number(row[col_exonerado])
-                inafecto = clean_number(row[col_inafecto])
-                igv = clean_number(row[col_igv])
+                col_serie = header.index('Número')
+                col_gravado = header.index('Total Gravado')
+                col_exonerado = header.index('Total Exonerado')
+                col_inafecto = header.index('Total Inafecto')
+                col_igv = header.index('Total IGV')
+                col_fecha = header.index('Fecha emisión')
+            except ValueError as e:
+                return jsonify({'status': 'error', 'message': f'Missing columns: {str(e)}'}), 400
 
-                total_fila = gravado + exonerado + inafecto + igv
-                validarNubox.append({
+            data_serie_gra = {}
+            data_serie_exo = {}
+            data_serie_ina = {}
+            data_serie_igv = {}
+            conteo_series = {}
+            validarNubox = []
+
+            primer_valor_fecha = df.iloc[8, col_fecha]
+
+            for _, row in df.iloc[8:].iterrows():
+                if pd.isna(row[col_serie]) or pd.isna(row[col_gravado]) or pd.isna(row[col_exonerado]) or pd.isna(row[col_inafecto]) or pd.isna(row[col_igv]):
+                    continue
+
+                try:
+                    serie = str(row[col_serie]).split('-')[0].strip()
+                    if not serie:
+                        continue
+                    
+                    def clean_number(num):
+                        if pd.isna(num):
+                            return 0.0
+                        if isinstance(num, (int, float)):
+                            return float(num)
+                        return float(str(num).replace(',', ''))
+                    
+                    gravado = clean_number(row[col_gravado])
+                    exonerado = clean_number(row[col_exonerado])
+                    inafecto = clean_number(row[col_inafecto])
+                    igv = clean_number(row[col_igv])
+
+                    total_fila = gravado + exonerado + inafecto + igv
+                    validarNubox.append({
+                        'serie': serie,
+                        'total': total_fila,
+                        'fecha': primer_valor_fecha
+                    })
+
+                    if serie not in data_serie_gra:
+                        data_serie_gra[serie] = 0.0
+                        data_serie_exo[serie] = 0.0
+                        data_serie_ina[serie] = 0.0
+                        data_serie_igv[serie] = 0.0
+                        conteo_series[serie] = 0
+
+                    data_serie_gra[serie] += gravado
+                    data_serie_exo[serie] += exonerado
+                    data_serie_ina[serie] += inafecto
+                    data_serie_igv[serie] += igv
+                    conteo_series[serie] += 1
+
+                except Exception:
+                    continue
+
+            resultados = []
+            for serie in sorted(data_serie_gra.keys()):
+                total_gra = data_serie_gra[serie]
+                total_exo = data_serie_exo[serie]
+                total_ina = data_serie_ina[serie]
+                total_igv = data_serie_igv[serie]
+                total_total = total_gra + total_exo + total_ina + total_igv
+
+                resultados.append({
                     'serie': serie,
-                    'total': total_fila,
+                    'conteo': conteo_series[serie],
+                    'gravado': round(total_gra, 2),
+                    'exonerado': round(total_exo, 2),
+                    'inafecto': round(total_ina, 2),
+                    'igv': round(total_igv, 2),
+                    'total': round(total_total, 2),
                     'fecha': primer_valor_fecha
                 })
 
-                if serie not in data_serie_gra:
-                    data_serie_gra[serie] = 0.0
-                    data_serie_exo[serie] = 0.0
-                    data_serie_ina[serie] = 0.0
-                    data_serie_igv[serie] = 0.0
-                    conteo_series[serie] = 0
-
-                data_serie_gra[serie] += gravado
-                data_serie_exo[serie] += exonerado
-                data_serie_ina[serie] += inafecto
-                data_serie_igv[serie] += igv
-                conteo_series[serie] += 1
-
-            except Exception:
-                continue
-
-        resultados = []
-        for serie in sorted(data_serie_gra.keys()):
-            total_gra = data_serie_gra[serie]
-            total_exo = data_serie_exo[serie]
-            total_ina = data_serie_ina[serie]
-            total_igv = data_serie_igv[serie]
-            total_total = total_gra + total_exo + total_ina + total_igv
-
-            resultados.append({
-                'serie': serie,
-                'conteo': conteo_series[serie],
-                'gravado': round(total_gra, 2),
-                'exonerado': round(total_exo, 2),
-                'inafecto': round(total_ina, 2),
-                'igv': round(total_igv, 2),
-                'total': round(total_total, 2),
-                'fecha': primer_valor_fecha
+            return jsonify({
+                'status': 'success',
+                'estado': estado,
+                'resultados': resultados,
+                'validarNubox': validarNubox
             })
 
-        return jsonify({
-            'status': 'success',
-            'estado': estado,
-            'resultados': resultados,
-            'validarNubox': validarNubox
-        })
+        elif estado == 2:  # EDSuite
+            if len(df) <= 1:
+                return jsonify({'status': 'error', 'message': 'Not enough rows'}), 400
 
-    elif estado == 2:  # EDSuite
-        if len(df) <= 1:
-            return jsonify({'status': 'error', 'message': 'Not enough rows'}), 400
-
-        header = df.iloc[1].tolist()
-        
-        try:
-            col_serie = header.index('Serie')
-            col_igv = header.index('IGV')
-            col_total = header.index('Total')
-            col_fecha = header.index('Fecha')
-
-            col_producto = header.index('Producto')
-            col_cantidad = header.index('Cantidad')
-        except ValueError as e:
-            return jsonify({'status': 'error', 'message': f'Missing columns: {str(e)}'}), 400
-
-        data_serie_total = {}
-        data_serie_igv = {}
-        conteo_series = {}
-
-        data_cantidad = {}
-        data_producto_total = {}
-
-        primer_valor_fecha = df.iloc[2, col_fecha]  
-
-        for _, row in df.iloc[2:].iterrows():
-            if pd.isna(row[col_serie]) or pd.isna(row[col_igv]) or pd.isna(row[col_total]) or pd.isna(row[col_producto]) or pd.isna(row[col_cantidad]):
-                continue
-
+            header = df.iloc[1].tolist()
+            
             try:
-                serie = str(row[col_serie]).strip()
-                producto = str(row[col_producto]).strip()
-                
-                if not serie:
+                col_serie = header.index('Serie')
+                col_igv = header.index('IGV')
+                col_total = header.index('Total')
+                col_fecha = header.index('Fecha')
+
+                col_producto = header.index('Producto')
+                col_cantidad = header.index('Cantidad')
+            except ValueError as e:
+                return jsonify({'status': 'error', 'message': f'Missing columns: {str(e)}'}), 400
+
+            data_serie_total = {}
+            data_serie_igv = {}
+            conteo_series = {}
+
+            data_cantidad = {}
+            data_producto_total = {}
+
+            primer_valor_fecha = df.iloc[2, col_fecha]  
+
+            for _, row in df.iloc[2:].iterrows():
+                if pd.isna(row[col_serie]) or pd.isna(row[col_igv]) or pd.isna(row[col_total]) or pd.isna(row[col_producto]) or pd.isna(row[col_cantidad]):
                     continue
 
-                def clean_number(num):
-                    if pd.isna(num):
-                        return 0.0
-                    if isinstance(num, (int, float)):
-                        return float(num)
-                    return float(str(num).replace(',', ''))
+                try:
+                    serie = str(row[col_serie]).strip()
+                    producto = str(row[col_producto]).strip()
                     
-                total = clean_number(row[col_total])
-                igv = clean_number(row[col_igv])
+                    if not serie:
+                        continue
 
-                cantidad = clean_number(row[col_cantidad])
+                    def clean_number(num):
+                        if pd.isna(num):
+                            return 0.0
+                        if isinstance(num, (int, float)):
+                            return float(num)
+                        return float(str(num).replace(',', ''))
+                        
+                    total = clean_number(row[col_total])
+                    igv = clean_number(row[col_igv])
 
-                if serie not in data_serie_total:
-                    data_serie_total[serie] = 0.0
-                    data_serie_igv[serie] = 0.0
-                    conteo_series[serie] = 0
+                    cantidad = clean_number(row[col_cantidad])
 
-                data_serie_total[serie] += total
-                data_serie_igv[serie] += igv
-                conteo_series[serie] += 1
+                    if serie not in data_serie_total:
+                        data_serie_total[serie] = 0.0
+                        data_serie_igv[serie] = 0.0
+                        conteo_series[serie] = 0
 
-                if producto not in data_cantidad:
-                    data_cantidad[producto] = 0.0
-                    data_producto_total[producto] = 0.0
+                    data_serie_total[serie] += total
+                    data_serie_igv[serie] += igv
+                    conteo_series[serie] += 1
 
-                data_cantidad[producto] += cantidad
-                data_producto_total[producto] += total
-            except Exception:
-                continue
+                    if producto not in data_cantidad:
+                        data_cantidad[producto] = 0.0
+                        data_producto_total[producto] = 0.0
 
-        resultados = []
-        total_total = 0.0
-        for serie in sorted(data_serie_total.keys()):
-            total_total = data_serie_total[serie]
-            total_igv = data_serie_igv[serie]
-            conteo = conteo_series[serie]
-            
-            resultados.append({
-                'serie': serie,
-                'conteo': conteo,
-                'igv': round(total_igv, 2),
-                'total': round(total_total, 2),
-                'fecha': primer_valor_fecha
+                    data_cantidad[producto] += cantidad
+                    data_producto_total[producto] += total
+                except Exception:
+                    continue
+
+            resultados = []
+            total_total = 0.0
+            for serie in sorted(data_serie_total.keys()):
+                total_total = data_serie_total[serie]
+                total_igv = data_serie_igv[serie]
+                conteo = conteo_series[serie]
+                
+                resultados.append({
+                    'serie': serie,
+                    'conteo': conteo,
+                    'igv': round(total_igv, 2),
+                    'total': round(total_total, 2),
+                    'fecha': primer_valor_fecha
+                })
+
+            resultados_productos = []
+            for producto in sorted(data_cantidad.keys()):
+                cantidad = data_cantidad[producto]
+                total = data_producto_total[producto]
+                
+                resultados_productos.append({
+                    'producto': producto,
+                    'cantidad': cantidad,
+                    'total': round(total, 2),
+                    'fecha': primer_valor_fecha
+                })
+
+            return jsonify({
+                'status': 'success',
+                'estado': estado,
+                'resultados': resultados,
+                'resultados_productos': resultados_productos
             })
-
-        resultados_productos = []
-        for producto in sorted(data_cantidad.keys()):
-            cantidad = data_cantidad[producto]
-            total = data_producto_total[producto]
-            
-            resultados_productos.append({
-                'producto': producto,
-                'cantidad': cantidad,
-                'total': round(total, 2),
-                'fecha': primer_valor_fecha
-            })
-
-        return jsonify({
-            'status': 'success',
-            'estado': estado,
-            'resultados': resultados,
-            'resultados_productos': resultados_productos
-        })
-
+        
+        else:
+            return jsonify({'status': 'error', 'message': 'Invalid estado value'}), 400
+   
+    except Exception as e:
+        # Si algo falla, que lo capture acá también
+        return jsonify({'status': 'error', 'message': f'Unexpected error: {str(e)}'}), 500
 @app.route('/unificar', methods=['POST'])
 def unificar_archivos():
     archivos = [
@@ -244,7 +250,6 @@ def unificar_archivos():
     carpeta_destino = os.path.join(os.getcwd(), 'uploads/unificados')
     os.makedirs(carpeta_destino, exist_ok=True)
     temp_dir = tempfile.mkdtemp()
-
     columnas_deseadas = ['Serie','Fecha', 'IGV', 'Total', 'Producto', 'Cantidad']
 
     try:
@@ -254,12 +259,20 @@ def unificar_archivos():
             ruta_temporal = os.path.join(temp_dir, nombre_seguro)
             archivo.save(ruta_temporal)
 
-            # Leer desde la segunda fila (índice 1), porque la primera es basura
-            df = pd.read_excel(ruta_temporal, skiprows=1)
+            try:
+                df = pd.read_excel(ruta_temporal, skiprows=1)
+            except Exception as e:
+                return jsonify({'error': f'No se pudo leer el archivo {archivo.filename}: {str(e)}'}), 400
 
             # Filtrar solo las columnas deseadas (si existen en el archivo)
             columnas_presentes = [col for col in columnas_deseadas if col in df.columns]
+            if not columnas_presentes:
+                return jsonify({'error': f'El archivo {archivo.filename} no tiene columnas válidas.'}), 400
+
             df_filtrado = df[columnas_presentes].copy()
+            if df_filtrado.empty:
+                return jsonify({'error': f'El archivo {archivo.filename} no tiene datos válidos en las columnas seleccionadas.'}), 400
+
 
             df_filtrado["Archivo_Origen"] = archivo.filename
 
@@ -269,6 +282,8 @@ def unificar_archivos():
             return jsonify({'error': 'No se pudieron leer datos válidos'}), 400
 
         df_final = pd.concat(dfs, ignore_index=True)
+        if df_final.empty:
+            return jsonify({'error': 'No se pudieron unificar datos válidos. Verifique el contenido de los archivos.'}), 400
 
         nombre_salida = f"excel_unificado_{int(datetime.now().timestamp())}.xlsx"
         ruta_salida = os.path.join(carpeta_destino, nombre_salida)
@@ -276,7 +291,7 @@ def unificar_archivos():
         with pd.ExcelWriter(ruta_salida) as writer:
             df_final.to_excel(writer, index=False, header=True, startrow=1)
 
-        return jsonify({'status': 'ok', 'archivo': nombre_salida})
+        return jsonify({'status': 'success', 'archivo': nombre_salida})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     finally:
