@@ -19,14 +19,14 @@ class Usuario
         return false;
     }
 
-    public static function insertar($usuario, $correo, $rol, $id_sucursal, $estado, $id_cliente, $hashed_password, $user_create)
+    public static function insertar($usuario, $correo, $rol, $id_establecimiento, $estado, $id_cliente, $hashed_password, $user_create)
     {
         $conn = Conexion::conectar();
         $date_create = date('Y-m-d H:i:s');
-        $sql = "INSERT INTO usuario (usuario, correo, contraseña, rol, user_create, user_update, id_cliente, id_sucursal, estado, date_create, date_update)
+        $sql = "INSERT INTO usuario (usuario, correo, contraseña, rol, user_create, user_update, id_cliente, id_establecimiento, estado, date_create, date_update)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("ssssssiisss", $usuario, $correo, $hashed_password, $rol, $user_create, $user_create, $id_cliente, $id_sucursal, $estado, $date_create, $date_create);
+        $stmt->bind_param("ssssssiisss", $usuario, $correo, $hashed_password, $rol, $user_create, $user_create, $id_cliente, $id_establecimiento, $estado, $date_create, $date_create);
         try {
             return $stmt->execute();
         } catch (mysqli_sql_exception $e) {
@@ -37,19 +37,19 @@ class Usuario
         }
     }
 
-    public static function actualizar($id, $usuario, $correo, $rol, $id_sucursal, $estado, $id_cliente, $hashed_password = null, $user_update)
+    public static function actualizar($id, $usuario, $correo, $rol, $id_establecimiento, $estado, $id_cliente, $hashed_password = null, $user_update)
     {
         $conn = Conexion::conectar();
         $date_update = date('Y-m-d H:i:s');
 
         if ($hashed_password) {
-            $sql = "UPDATE usuario SET usuario=?, correo=?, contraseña=?, rol=?, id_sucursal=?, estado=?, id_cliente=?, user_update=?, date_update=? WHERE id=?";
+            $sql = "UPDATE usuario SET usuario=?, correo=?, contraseña=?, rol=?, id_establecimiento=?, estado=?, id_cliente=?, user_update=?, date_update=? WHERE id=?";
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param("sssssiissi", $usuario, $correo, $hashed_password, $rol, $id_sucursal, $estado, $id_cliente, $user_update, $date_update, $id);
+            $stmt->bind_param("sssssiissi", $usuario, $correo, $hashed_password, $rol, $id_establecimiento, $estado, $id_cliente, $user_update, $date_update, $id);
         } else {
-            $sql = "UPDATE usuario SET usuario=?, correo=?, rol=?, id_sucursal=?, estado=?, id_cliente=?, user_update=?, date_update=? WHERE id=?";
+            $sql = "UPDATE usuario SET usuario=?, correo=?, rol=?, id_establecimiento=?, estado=?, id_cliente=?, user_update=?, date_update=? WHERE id=?";
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param("sssiiissi", $usuario, $correo, $rol, $id_sucursal, $estado, $id_cliente, $user_update, $date_update, $id);
+            $stmt->bind_param("sssiiissi", $usuario, $correo, $rol, $id_establecimiento, $estado, $id_cliente, $user_update, $date_update, $id);
         }
         return $stmt->execute();
     }
@@ -90,10 +90,15 @@ class Usuario
         return $row['correo'] ?? null;
     }
 
-    public static function obtenerSucursalesPorCliente($id_cliente)
+    public static function obtenerEstablecimientosPorCliente($id_cliente)
     {
         $conn = Conexion::conectar();
-        $sql = "SELECT id, razon_social FROM sucursal WHERE id_cliente = ?";
+        $sql = "SELECT e.id, e.codigo_establecimiento, e.tipo_establecimiento, e.direccion, 
+                       c.razon_social, c.ruc 
+                FROM establecimiento e 
+                INNER JOIN cliente c ON e.id_cliente = c.id 
+                WHERE e.id_cliente = ? AND e.estado = 1 
+                ORDER BY e.codigo_establecimiento ASC";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("i", $id_cliente);
         $stmt->execute();
@@ -101,34 +106,37 @@ class Usuario
         return $res->fetch_all(MYSQLI_ASSOC);
     }
 
-    public static function obtenerPaginadoPorSucursal($id_sucursal, $limit, $offset, $sort, $dir)
+    public static function obtenerPaginadoPorEstablecimiento($id_establecimiento, $limit, $offset, $sort, $dir)
     {
         $conn = Conexion::conectar();
-        $allowed = ['usuario', 'correo', 'estado', 'rol', 'sucursal', 'id'];
-        $sort = in_array($sort, $allowed) ? $sort : 'sucursal';
+        $allowed = ['usuario', 'correo', 'estado', 'rol', 'establecimiento', 'id'];
+        $sort = in_array($sort, $allowed) ? $sort : 'establecimiento';
         $dir = $dir === 'DESC' ? 'DESC' : 'ASC';
         $sql = "
-        SELECT u.id, u.usuario, u.correo, u.estado, u.rol, s.razon_social AS sucursal, u.id_sucursal
+        SELECT u.id, u.usuario, u.correo, u.estado, u.rol, 
+               CONCAT(c.razon_social, ' - ', e.tipo_establecimiento, ' (', e.codigo_establecimiento, ')') AS establecimiento, 
+               u.id_establecimiento
         FROM usuario u
-        INNER JOIN sucursal s ON u.id_sucursal = s.id
-        WHERE u.id_sucursal = ?
+        INNER JOIN establecimiento e ON u.id_establecimiento = e.id
+        INNER JOIN cliente c ON e.id_cliente = c.id
+        WHERE u.id_establecimiento = ?
         ORDER BY $sort $dir
         LIMIT ? OFFSET ?
         ";
 
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("iii", $id_sucursal, $limit, $offset);
+        $stmt->bind_param("iii", $id_establecimiento, $limit, $offset);
         $stmt->execute();
         $res = $stmt->get_result();
         return $res->fetch_all(MYSQLI_ASSOC);
     }
 
-    public static function contarPorSucursal($id_sucursal)
+    public static function contarPorEstablecimiento($id_establecimiento)
     {
         $conn = Conexion::conectar();
-        $sql = "SELECT COUNT(*) as total FROM usuario WHERE id_sucursal = ?";
+        $sql = "SELECT COUNT(*) as total FROM usuario WHERE id_establecimiento = ?";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("i", $id_sucursal);
+        $stmt->bind_param("i", $id_establecimiento);
         $stmt->execute();
         $res = $stmt->get_result();
         $row = $res->fetch_assoc();

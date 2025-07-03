@@ -129,15 +129,15 @@ class ReporteController
         $mesesDisponibles = Cuadre::obtenerMesesDisponibles();
         $usuarioNombre = $_SESSION['usuario'] ?? 'Desconocido';
 
-        $id_sucursal = $_SESSION['id_sucursal'] ?? null;
-        $rucSucursal = '';
-        $nombreSucursal = '';
-        if ($id_sucursal) {
+        $id_establecimiento = $_SESSION['id_establecimiento'] ?? null;
+        $rucEstablecimiento = '';
+        $nombreEstablecimiento = '';
+        if ($id_establecimiento) {
             $id_cliente = $_SESSION['id_cliente'] ?? null;
-            $sucursal = \Establecimiento::obtenerPorId($id_sucursal, $id_cliente);
-            if ($sucursal) {
-                $rucSucursal = $sucursal['ruc'] ?? '';
-                $nombreSucursal = $sucursal['razon_social'] ?? '';
+            $Establecimiento = \Establecimiento::obtenerPorId($id_establecimiento, $id_cliente);
+            if ($Establecimiento) {
+                $rucEstablecimiento = $Establecimiento['ruc_cliente'] ?? '';
+                $nombreEstablecimiento = $Establecimiento['razon_social_cliente'] ?? '';
             }
         }
 
@@ -174,17 +174,17 @@ class ReporteController
         $totalesTipoDoc = $seriesTotales = $diferenciasSeries = [];
         $seriesAjenas = $ventasGlobales = [];
         $mesesDisponibles = Cuadre::obtenerMesesDisponibles();
-        $id_sucursal = $_SESSION['id_sucursal'] ?? null;
-        $rucSucursal = '';
-        $nombreSucursal = '';
+        $id_establecimiento = $_SESSION['id_establecimiento'] ?? null;
+        $rucEstablecimiento = '';
+        $nombreEstablecimiento = '';
         $usuarioNombre = $_SESSION['usuario'] ?? 'Desconocido';
 
-        if ($id_sucursal) {
+        if ($id_establecimiento) {
             $id_cliente = $_SESSION['id_cliente'] ?? null;
-            $sucursal = \Establecimiento::obtenerPorId($id_sucursal, $id_cliente);
-            if ($sucursal) {
-                $rucSucursal = $sucursal['ruc'] ?? '';
-                $nombreSucursal = $sucursal['razon_social'] ?? '';
+            $Establecimiento = \Establecimiento::obtenerPorId($id_establecimiento, $id_cliente);
+            if ($Establecimiento) {
+                $rucEstablecimiento = $Establecimiento['ruc_cliente'] ?? '';
+                $nombreEstablecimiento = $Establecimiento['razon_social_cliente'] ?? '';
             }
         }
 
@@ -289,7 +289,7 @@ class ReporteController
             'alignment' => ['horizontal' => 'center', 'vertical' => 'center']
         ];
 
-        $this->SeccionCabecera($sheet, $nombreMes, $nombreSucursal, $rucSucursal, $usuarioNombre, $headerPrincipalStyle, $headerSecundarioStyle);
+        $this->SeccionCabecera($sheet, $nombreMes, $nombreEstablecimiento, $rucEstablecimiento, $usuarioNombre, $headerPrincipalStyle, $headerSecundarioStyle);
 
         $row = 6;
 
@@ -998,13 +998,13 @@ class ReporteController
         $row = max($maxRowReportes, $currentRowVentas, $currentRowAjenas) + 1;
     }
 
-    private function SeccionCabecera($sheet, $nombreMes, $nombreSucursal, $rucSucursal, $usuarioNombre, $headerPrincipalStyle, $headerSecundarioStyle)
+    private function SeccionCabecera($sheet, $nombreMes, $nombreEstablecimiento, $rucEstablecimiento, $usuarioNombre, $headerPrincipalStyle, $headerSecundarioStyle)
     {
         $sheet->setCellValue('A1', '📊 ESCIENZA - REPORTE MENSUAL DE CUADRES 📊');
         $sheet->mergeCells('A1:R1');
         $sheet->getStyle('A1:R1')->applyFromArray($headerPrincipalStyle);
         $sheet->getRowDimension('1')->setRowHeight(30);
-        $empresaInfo = "🏢 RUC: $rucSucursal | $nombreSucursal";
+        $empresaInfo = "🏢 RUC: $rucEstablecimiento | $nombreEstablecimiento";
         $periodoInfo = "📅 Período: $nombreMes";
         $sheet->setCellValue('A2', $empresaInfo);
         $sheet->mergeCells('A2:K2');

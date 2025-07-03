@@ -13,7 +13,7 @@ class SerieAjena
             total,
             user_create,
             user_update,
-            id_sucursal,
+            id_establecimiento,
             fecha_registro,
             estado
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
@@ -25,7 +25,7 @@ class SerieAjena
             $data['total'],
             $data['user_create'],
             $data['user_update'],
-            $data['id_sucursal'],
+            $data['id_establecimiento'],
             $data['fecha_registro'],
             $data['estado']
         ]);
@@ -35,7 +35,7 @@ class SerieAjena
     public static function obtenerPorMes($mesSeleccionado)
     {
         $conn = Conexion::conectar();
-        $id_sucursal = $_SESSION['id_sucursal'] ?? null;
+        $id_establecimiento = $_SESSION['id_establecimiento'] ?? null;
         if (empty($mesSeleccionado)) {
             $sql = "SELECT 
                         serie,
@@ -43,12 +43,12 @@ class SerieAjena
                         SUM(total) as total_importe,
                         COUNT(*) as cantidad_registros
                     FROM series_ajenas 
-                    WHERE id_sucursal = ? 
+                    WHERE id_establecimiento = ? 
                     AND estado = 1
                     GROUP BY serie
                     ORDER BY serie";
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param('i', $id_sucursal);
+            $stmt->bind_param('i', $id_establecimiento);
         } else {
             $sql = "SELECT 
                         serie,
@@ -57,13 +57,13 @@ class SerieAjena
                         COUNT(*) as cantidad_registros
                     FROM series_ajenas 
                     WHERE DATE_FORMAT(fecha_registro, '%Y-%m') = ? 
-                    AND id_sucursal = ? 
+                    AND id_establecimiento = ? 
                     AND estado = 1
                     GROUP BY serie
                     ORDER BY serie";
 
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param('si', $mesSeleccionado, $id_sucursal);
+            $stmt->bind_param('si', $mesSeleccionado, $id_establecimiento);
         }
 
         $stmt->execute();
@@ -79,15 +79,15 @@ class SerieAjena
     public static function obtenerTodos()
     {
         $conn = Conexion::conectar();
-        $id_sucursal = $_SESSION['id_sucursal'] ?? null;
+        $id_establecimiento = $_SESSION['id_establecimiento'] ?? null;
 
         $sql = "SELECT * FROM series_ajenas 
-                WHERE id_sucursal = ? 
+                WHERE id_establecimiento = ? 
                 AND estado = 1 
                 ORDER BY date_create DESC";
 
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param('i', $id_sucursal);
+        $stmt->bind_param('i', $id_establecimiento);
         $stmt->execute();
         $result = $stmt->get_result();
 

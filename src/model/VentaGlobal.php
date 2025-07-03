@@ -13,7 +13,7 @@ class VentaGlobal
             total,
             user_create,
             user_update,
-            id_sucursal,
+            id_establecimiento,
             fecha_registro,
             estado
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
@@ -25,7 +25,7 @@ class VentaGlobal
             $data['total'],
             $data['user_create'],
             $data['user_update'],
-            $data['id_sucursal'],
+            $data['id_establecimiento'],
             $data['fecha_registro'],
             $data['estado']
         ]);
@@ -35,7 +35,7 @@ class VentaGlobal
     public static function obtenerPorMes($mesSeleccionado)
     {
         $conn = Conexion::conectar();
-        $id_sucursal = $_SESSION['id_sucursal'] ?? null;
+        $id_establecimiento = $_SESSION['id_establecimiento'] ?? null;
         if (empty($mesSeleccionado)) {
             $sql = "SELECT 
                         producto,
@@ -43,13 +43,13 @@ class VentaGlobal
                         SUM(total) as total_importe,
                         COUNT(*) as cantidad_registros
                     FROM ventas_globales 
-                    WHERE id_sucursal = ? 
+                    WHERE id_establecimiento = ? 
                     AND estado = 1
                     GROUP BY producto
                     ORDER BY producto";
 
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param('i', $id_sucursal);
+            $stmt->bind_param('i', $id_establecimiento);
         } else {
             $sql = "SELECT 
                         producto,
@@ -58,13 +58,13 @@ class VentaGlobal
                         COUNT(*) as cantidad_registros
                     FROM ventas_globales 
                     WHERE DATE_FORMAT(fecha_registro, '%Y-%m') = ? 
-                    AND id_sucursal = ? 
+                    AND id_establecimiento = ? 
                     AND estado = 1
                     GROUP BY producto
                     ORDER BY producto";
 
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param('si', $mesSeleccionado, $id_sucursal);
+            $stmt->bind_param('si', $mesSeleccionado, $id_establecimiento);
         }
 
         $stmt->execute();
@@ -80,15 +80,15 @@ class VentaGlobal
     public static function obtenerTodos()
     {
         $conn = Conexion::conectar();
-        $id_sucursal = $_SESSION['id_sucursal'] ?? null;
+        $id_establecimiento = $_SESSION['id_establecimiento'] ?? null;
 
         $sql = "SELECT * FROM ventas_globales 
-                WHERE id_sucursal = ? 
+                WHERE id_establecimiento = ? 
                 AND estado = 1 
                 ORDER BY date_create DESC";
 
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param('i', $id_sucursal);
+        $stmt->bind_param('i', $id_establecimiento);
         $stmt->execute();
         $result = $stmt->get_result();
 
@@ -102,7 +102,7 @@ class VentaGlobal
     public static function obtenerTotalesGenerales($mesSeleccionado)
     {
         $conn = Conexion::conectar();
-        $id_sucursal = $_SESSION['id_sucursal'] ?? null;
+        $id_establecimiento = $_SESSION['id_establecimiento'] ?? null;
 
         $sql = "SELECT 
                     COUNT(*) as total_registros,
@@ -110,11 +110,11 @@ class VentaGlobal
                     SUM(total) as suma_total
                 FROM ventas_globales 
                 WHERE DATE_FORMAT(fecha_registro, '%Y-%m') = ? 
-                AND id_sucursal = ? 
+                AND id_establecimiento = ? 
                 AND estado = 1";
 
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param('si', $mesSeleccionado, $id_sucursal);
+        $stmt->bind_param('si', $mesSeleccionado, $id_establecimiento);
         $stmt->execute();
         $result = $stmt->get_result();
         return $result->fetch_assoc();

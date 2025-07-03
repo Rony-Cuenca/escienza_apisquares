@@ -30,7 +30,7 @@ class AuthController
                 $_SESSION['id_usuario'] = $user['id'];
                 $_SESSION['correo'] = $user['correo'];
                 $_SESSION['rol'] = $user['rol'];
-                $_SESSION['id_sucursal'] = $user['id_sucursal'];
+                $_SESSION['id_establecimiento'] = $user['id_establecimiento'];
                 $_SESSION['ultima_actividad'] = time();
                 header('Location: index.php?controller=home');
                 exit;
@@ -46,7 +46,7 @@ class AuthController
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $access_token = trim($_POST['access_token'] ?? '');
-            $id_sucursal = intval($_POST['id_sucursal'] ?? 0);
+            $id_establecimiento = intval($_POST['id_establecimiento'] ?? 0);
             $rol = trim($_POST['rol'] ?? '');
             $usuario = trim($_POST['usuario'] ?? '');
             $correo = trim($_POST['correo'] ?? '');
@@ -79,7 +79,7 @@ class AuthController
                 $usuario,
                 $correo,
                 $rol,
-                $id_sucursal,
+                $id_establecimiento,
                 1,
                 $token['id_cliente'],
                 $hashed_password,

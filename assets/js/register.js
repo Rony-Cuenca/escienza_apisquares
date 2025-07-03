@@ -106,10 +106,10 @@ class RegisterController {
                 .then(data => {
                     if (data.success) {
                         this.feedback.innerHTML = '<span style="color:green;">✔ Código válido</span>';
-                        this.inputs.id_sucursal.value = data.token.id_sucursal;
+                        this.inputs.id_establecimiento.value = data.token.id_establecimiento;
                         this.inputs.rol.value = data.token.rol;
                         this.inputs.access_token.value = token;
-                        this.inputs.sucursal_nombre.value = data.nombre_sucursal || data.token.id_sucursal;
+                        this.inputs.establecimiento_nombre.value = data.nombre_establecimiento || data.token.id_establecimiento;
                         this.inputs.rol_nombre.value = data.token.rol;
                         this.form.classList.remove('hidden');
                         this.stepAccessToken.classList.add('hidden');
@@ -213,10 +213,10 @@ document.addEventListener('DOMContentLoaded', () => {
         inputTokenId: 'inputAccessToken',
         feedbackId: 'accessTokenFeedback',
         inputIds: {
-            id_sucursal: 'reg_id_sucursal',
+            id_establecimiento: 'reg_id_establecimiento',
             rol: 'reg_rol',
             access_token: 'reg_access_token',
-            sucursal_nombre: 'reg_sucursal_nombre',
+            establecimiento_nombre: 'reg_establecimiento_nombre',
             rol_nombre: 'reg_rol_nombre',
             usuario: 'reg_usuario',
             correo: 'reg_correo',

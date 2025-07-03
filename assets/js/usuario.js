@@ -16,7 +16,7 @@ class ModalCrudController {
         this.cambiarContrasenaWrapper = document.getElementById(config.cambiarContrasenaWrapperId);
         this.checkCambiarContrasena = document.getElementById(config.checkCambiarContrasenaId);
         this.camposContrasena = document.getElementById(config.camposContrasenaId);
-        this.sucursalOriginal = null;
+        this.establecimientoOriginal = null;
         this._bindEvents(config);
         this.verificarAdmin();
     }
@@ -58,7 +58,7 @@ class ModalCrudController {
         this.inputs.usuario.value = values.nombre || '';
         this.inputs.correo.value = values.correo || '';
         this.inputs.rol.value = values.rol || '';
-        this.inputs.sucursal.value = values.sucursal || '';
+        this.inputs.establecimiento.value = values.establecimiento || '';
         this.inputs.estado.value = values.estado || '1';
         this.inputs.contraseña.value = '';
         this.inputs.confirmar_contraseña.value = '';
@@ -68,53 +68,53 @@ class ModalCrudController {
         this.ocultarError(this.errorContrasena, this.inputs.contraseña);
 
         const isEdicion = !!values.id;
-        const sucursalSelect = this.inputs.sucursal;
+        const establecimientoSelect = this.inputs.establecimiento;
         const esPropioUsuario = values.id && window.ID_USUARIO_LOGUEADO && String(values.id) === String(window.ID_USUARIO_LOGUEADO);
-        const inputSucursalReadonly = document.getElementById('modalUsuarioSucursalReadonly');
-        const inputSucursalHidden = document.getElementById('modalUsuarioSucursalHidden');
+        const inputestablecimientoReadonly = document.getElementById('modalUsuarioestablecimientoReadonly');
+        const inputestablecimientoHidden = document.getElementById('modalUsuarioestablecimientoHidden');
 
         if (esPropioUsuario) {
-            if (sucursalSelect) sucursalSelect.style.display = 'none';
-            if (inputSucursalReadonly) {
-                inputSucursalReadonly.style.display = '';
-                inputSucursalReadonly.value = values.sucursal_nombre || '';
+            if (establecimientoSelect) establecimientoSelect.style.display = 'none';
+            if (inputestablecimientoReadonly) {
+                inputestablecimientoReadonly.style.display = '';
+                inputestablecimientoReadonly.value = values.establecimiento_nombre || '';
             }
-            if (inputSucursalHidden) {
-                inputSucursalHidden.value = values.sucursal || '';
-                inputSucursalHidden.disabled = false;
+            if (inputestablecimientoHidden) {
+                inputestablecimientoHidden.value = values.establecimiento || '';
+                inputestablecimientoHidden.disabled = false;
             }
         } else {
-            if (sucursalSelect) sucursalSelect.style.display = '';
-            if (inputSucursalReadonly) inputSucursalReadonly.style.display = 'none';
-            if (inputSucursalHidden) inputSucursalHidden.disabled = true;
+            if (establecimientoSelect) establecimientoSelect.style.display = '';
+            if (inputestablecimientoReadonly) inputestablecimientoReadonly.style.display = 'none';
+            if (inputestablecimientoHidden) inputestablecimientoHidden.disabled = true;
         }
 
         if (!isEdicion) {
-            Array.from(sucursalSelect.options).forEach(opt => {
-                if (opt.value && opt.value !== String(window.ID_SUCURSAL_LOGUEADO)) {
+            Array.from(establecimientoSelect.options).forEach(opt => {
+                if (opt.value && opt.value !== String(window.ID_establecimiento_LOGUEADO)) {
                     opt.style.display = 'none';
                 } else {
                     opt.style.display = '';
                 }
             });
-            sucursalSelect.value = window.ID_SUCURSAL_LOGUEADO || '';
-            sucursalSelect.disabled = true;
-            sucursalSelect.classList.add('bg-gray-100', 'cursor-not-allowed');
+            establecimientoSelect.value = window.ID_establecimiento_LOGUEADO || '';
+            establecimientoSelect.disabled = true;
+            establecimientoSelect.classList.add('bg-gray-100', 'cursor-not-allowed');
         } else {
-            Array.from(sucursalSelect.options).forEach(opt => {
+            Array.from(establecimientoSelect.options).forEach(opt => {
                 opt.style.display = '';
             });
-            sucursalSelect.disabled = false;
-            sucursalSelect.classList.remove('bg-gray-100', 'cursor-not-allowed');
-            this.sucursalOriginal = values.sucursal || '';
+            establecimientoSelect.disabled = false;
+            establecimientoSelect.classList.remove('bg-gray-100', 'cursor-not-allowed');
+            this.establecimientoOriginal = values.establecimiento || '';
         }
 
         if (values.id && window.ID_USUARIO_LOGUEADO && String(values.id) === String(window.ID_USUARIO_LOGUEADO)) {
             this.inputs.rol.disabled = true;
-            this.inputs.sucursal.disabled = true;
+            this.inputs.establecimiento.disabled = true;
         } else {
             this.inputs.rol.disabled = false;
-            if (isEdicion) this.inputs.sucursal.disabled = false;
+            if (isEdicion) this.inputs.establecimiento.disabled = false;
         }
 
         if (values.id) {
@@ -130,7 +130,7 @@ class ModalCrudController {
             this.inputs.confirmar_contraseña.required = true;
         }
 
-        if (this.inputs.sucursal.disabled) this.inputs.sucursal.disabled = false;
+        if (this.inputs.establecimiento.disabled) this.inputs.establecimiento.disabled = false;
         if (this.inputs.rol.disabled) this.inputs.rol.disabled = false;
 
         this.modal.classList.remove('hidden');
@@ -162,7 +162,7 @@ class ModalCrudController {
         const usuario = this.inputs.usuario.value.trim();
         const correo = this.inputs.correo.value.trim();
         const rol = this.inputs.rol.value;
-        const sucursal = this.inputs.sucursal.value;
+        const establecimiento = this.inputs.establecimiento.value;
         const pass = this.inputs.contraseña.value;
         const confirm = this.inputs.confirmar_contraseña.value;
 
@@ -191,9 +191,9 @@ class ModalCrudController {
             if (mostrarFocus) this.inputs.rol.focus();
             return false;
         }
-        if (!sucursal) {
-            this.mostrarError(this.errorUsuario, 'La sucursal es obligatoria', this.inputs.sucursal);
-            if (mostrarFocus) this.inputs.sucursal.focus();
+        if (!establecimiento) {
+            this.mostrarError(this.errorUsuario, 'La establecimiento es obligatoria', this.inputs.establecimiento);
+            if (mostrarFocus) this.inputs.establecimiento.focus();
             return false;
         }
 
@@ -273,8 +273,8 @@ class ModalCrudController {
                         nombre: btn.dataset.usuario,
                         correo: btn.dataset.correo,
                         rol: btn.dataset.rol,
-                        sucursal: btn.dataset.sucursal,
-                        sucursal_nombre: btn.closest('tr').querySelector('td:nth-child(5)').textContent.trim(),
+                        establecimiento: btn.dataset.establecimiento,
+                        establecimiento_nombre: btn.closest('tr').querySelector('td:nth-child(5)').textContent.trim(),
                         estado: btn.dataset.estado
                     }
                 });
@@ -376,18 +376,18 @@ class ModalCrudController {
         });
 
         this.form.addEventListener('submit', (e) => {
-            if (this.sucursalOriginal && this.inputs.sucursal.value !== this.sucursalOriginal) {
+            if (this.establecimientoOriginal && this.inputs.establecimiento.value !== this.establecimientoOriginal) {
                 e.preventDefault();
                 Swal.fire({
                     title: '¿Estás seguro?',
-                    text: 'Estás cambiando la sucursal de este usuario. ¿Deseas continuar?',
+                    text: 'Estás cambiando la establecimiento de este usuario. ¿Deseas continuar?',
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonText: 'Sí, cambiar',
                     cancelButtonText: 'Cancelar'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        this.sucursalOriginal = null;
+                        this.establecimientoOriginal = null;
                         this.form.submit();
                     }
                 });
@@ -449,7 +449,7 @@ document.addEventListener('DOMContentLoaded', () => {
             usuario: 'modalUsuarioNombre',
             correo: 'modalUsuarioCorreo',
             rol: 'modalUsuarioRol',
-            sucursal: 'modalUsuarioSucursal',
+            establecimiento: 'modalUsuarioestablecimiento',
             contraseña: 'modalUsuarioContraseña',
             confirmar_contraseña: 'modalUsuarioConfirmarContraseña',
             estado: 'modalUsuarioEstado'

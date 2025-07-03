@@ -11,8 +11,8 @@ class AccessTokenController
     public function index()
     {
         $this->verificarSesion();
-        $id_sucursal = $_SESSION['id_sucursal'];
-        $tokens = AccessToken::listar(['id_sucursal' => $id_sucursal]);
+        $id_establecimiento = $_SESSION['id_establecimiento'];
+        $tokens = AccessToken::listar(['id_establecimiento' => $id_establecimiento]);
         $contenido = 'view/components/access_token.php';
         require 'view/layout.php';
     }
@@ -30,7 +30,7 @@ class AccessTokenController
         }
 
         $payload = [
-            'id_sucursal' => $_SESSION['id_sucursal'],
+            'id_establecimiento' => $_SESSION['id_establecimiento'],
             'rol' => $input['rol'],
             'rand' => rand(1000, 9999)
         ];
@@ -41,7 +41,7 @@ class AccessTokenController
 
         $data = [
             'id_cliente'      => $_SESSION['id_cliente'],
-            'id_sucursal'     => $_SESSION['id_sucursal'],
+            'id_establecimiento'     => $_SESSION['id_establecimiento'],
             'rol'             => $input['rol'],
             'estado'          => 1,
             'hashcode'        => $jwt,
@@ -113,15 +113,15 @@ class AccessTokenController
         try {
             $secret = 'ESCIENZA2025';
             $decoded = \Firebase\JWT\JWT::decode($hashcode, new \Firebase\JWT\Key($secret, 'HS256'));
-            $id_sucursal = $decoded->id_sucursal ?? $token['id_sucursal'];
+            $id_establecimiento = $decoded->id_establecimiento ?? $token['id_establecimiento'];
             $id_cliente = $token['id_cliente'] ?? null;
-            $sucursal = \Establecimiento::obtenerPorId($id_sucursal, $id_cliente);
-            $nombre_sucursal = $sucursal ? $sucursal['razon_social'] : $id_sucursal;
+            $establecimiento = \Establecimiento::obtenerPorId($id_establecimiento, $id_cliente);
+            $nombre_establecimiento = $establecimiento ? $establecimiento['razon_social'] : $id_establecimiento;
             echo json_encode([
                 'success' => true,
                 'token' => $token,
                 'decoded' => $decoded,
-                'nombre_sucursal' => $nombre_sucursal
+                'nombre_establecimiento' => $nombre_establecimiento
             ]);
         } catch (\Exception $e) {
             echo json_encode(['success' => false, 'error' => 'Código inválido o alterado']);
@@ -151,7 +151,7 @@ class AccessTokenController
 
     private function verificarSesion()
     {
-        if (!isset($_SESSION['id_cliente']) || !isset($_SESSION['id_sucursal']) || ($_SESSION['rol'] ?? '') !== 'Administrador') {
+        if (!isset($_SESSION['id_cliente']) || !isset($_SESSION['id_establecimiento']) || ($_SESSION['rol'] ?? '') !== 'Administrador') {
             header('Location: index.php?controller=auth&action=login&error=No autorizado');
             exit;
         }

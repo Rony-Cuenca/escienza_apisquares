@@ -13,8 +13,8 @@ class HomeController
     $id_cliente = $_SESSION['id_cliente'] ?? 1;
    // echo "ID CLIENTE: $id_cliente";
 
-    // Obtener sucursales usando el modelo Usuario
-    $sucursales = Usuario::obtenerSucursalesPorCliente($id_cliente);
+    // Obtener establecimientos usando el modelo Usuario
+    $establecimientos = Usuario::obtenerEstablecimientosPorCliente($id_cliente);
 
         // Obtener años disponibles
         $anios = [];
@@ -32,18 +32,18 @@ class HomeController
     public function resumenVentas()
     {
         $conn = Conexion::conectar();
-        $sucursal = $_GET['sucursal'] ?? '';
+        $establecimiento = $_GET['establecimiento'] ?? '';
         $anio = $_GET['anio'] ?? date('Y');
 
         $sql = "SELECT DATE_FORMAT(rc.fecha_registro, '%m') AS mes, tr.descripcion AS tipo, SUM(rc.monto_total) AS total
                 FROM resumen_comprobante rc
-                JOIN sucursal s ON rc.id_sucursal = s.id
+                JOIN establecimiento e ON rc.id_establecimiento = s.id
                 JOIN tipo_reportedoc tr ON rc.id_reporte = tr.id
                 WHERE s.id = ? AND YEAR(rc.fecha_registro) = ?
                 GROUP BY mes, tipo
                 ORDER BY mes, tipo";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("ii", $sucursal, $anio);
+        $stmt->bind_param("ii", $establecimiento, $anio);
         $stmt->execute();
         $result = $stmt->get_result();
 
@@ -61,7 +61,7 @@ class HomeController
     public function seriesMasVendidas()
     {
         $conn = Conexion::conectar();
-        $sucursal = $_GET['sucursal'] ?? '';
+        $establecimiento = $_GET['establecimiento'] ?? '';
         $anio = $_GET['anio'] ?? date('Y');
         $mes = $_GET['mes'] ?? date('m');
         $tipo = $_GET['tipo'] ?? 'NUBOX360';
@@ -69,12 +69,12 @@ class HomeController
         $sql = "SELECT rc.serie, SUM(rc.monto_total) AS total
                 FROM resumen_comprobante rc
                 JOIN tipo_reportedoc tr ON rc.id_reporte = tr.id
-                WHERE rc.id_sucursal = ? AND YEAR(rc.fecha_registro) = ? AND MONTH(rc.fecha_registro) = ? AND tr.descripcion = ?
+                WHERE rc.id_establecimiento = ? AND YEAR(rc.fecha_registro) = ? AND MONTH(rc.fecha_registro) = ? AND tr.descripcion = ?
                 GROUP BY rc.serie
                 HAVING total > 0
                 ORDER BY total DESC";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("iiis", $sucursal, $anio, $mes, $tipo);
+        $stmt->bind_param("iiis", $establecimiento, $anio, $mes, $tipo);
         $stmt->execute();
         $result = $stmt->get_result();
 
@@ -98,18 +98,18 @@ class HomeController
 
     try {
         $conn = Conexion::conectar();
-        $sucursal = $_GET['sucursal'] ?? '';
+        $establecimiento = $_GET['establecimiento'] ?? '';
         $anio = $_GET['anio'] ?? date('Y');
 
         $sql = "SELECT serie, 
                        SUM(suma_exonerada) AS exonerado, 
                        SUM(monto_total) AS total
                 FROM resumen_comprobante
-                WHERE id_sucursal = ? AND YEAR(fecha_registro) = ?
+                WHERE id_establecimiento = ? AND YEAR(fecha_registro) = ?
                 GROUP BY serie
                 HAVING total > 0";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("ii", $sucursal, $anio);
+        $stmt->bind_param("ii", $establecimiento, $anio);
         $stmt->execute();
         $result = $stmt->get_result();
 
@@ -133,7 +133,7 @@ class HomeController
 public function variacionVentasMensual()
 {
     $conn = Conexion::conectar();
-    $sucursal = $_GET['sucursal'] ?? '';
+    $establecimiento = $_GET['establecimiento'] ?? '';
     $anio = $_GET['anio'] ?? date('Y');
     $tipovar = $_GET['tipo'] ?? 'NUBOX360';
 
@@ -142,11 +142,11 @@ public function variacionVentasMensual()
     $sql = "SELECT DATE_FORMAT(rc.fecha_registro, '%m') AS mes, SUM(rc.monto_total) AS total
         FROM resumen_comprobante rc
         JOIN tipo_reportedoc tr ON rc.id_reporte = tr.id
-        WHERE rc.id_sucursal = ? AND YEAR(rc.fecha_registro) = ? AND tr.descripcion = ?
+        WHERE rc.id_establecimiento = ? AND YEAR(rc.fecha_registro) = ? AND tr.descripcion = ?
         GROUP BY mes
         ORDER BY mes";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("iis", $sucursal, $anio , $tipovar);
+    $stmt->bind_param("iis", $establecimiento, $anio , $tipovar);
     $stmt->execute();
     $result = $stmt->get_result();
 
@@ -183,7 +183,7 @@ public function variacionVentasMensual()
 public function promedioVentaPorSerie()
 {
     $conn = Conexion::conectar();
-    $sucursal = $_GET['sucursal'] ?? '';
+    $establecimiento = $_GET['establecimiento'] ?? '';
     $anio = $_GET['anio'] ?? date('Y');
     $mes = $_GET['mes'] ?? date('m');
     $tipo = $_GET['tipo'] ?? 'NUBOX360';
@@ -194,7 +194,7 @@ public function promedioVentaPorSerie()
                    CASE WHEN SUM(rc.cantidad_compr) > 0 THEN ROUND(SUM(rc.monto_total)/SUM(rc.cantidad_compr),2) ELSE 0 END AS promedio
             FROM resumen_comprobante rc
             JOIN tipo_reportedoc tr ON rc.id_reporte = tr.id
-            WHERE rc.id_sucursal = ? 
+            WHERE rc.id_establecimiento = ? 
               AND YEAR(rc.fecha_registro) = ? 
               AND MONTH(rc.fecha_registro) = ? 
               AND tr.descripcion = ?
@@ -202,7 +202,7 @@ public function promedioVentaPorSerie()
             HAVING total_comprobantes > 0
             ORDER BY promedio DESC";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("iiis", $sucursal, $anio, $mes, $tipo);
+    $stmt->bind_param("iiis", $establecimiento, $anio, $mes, $tipo);
     $stmt->execute();
     $result = $stmt->get_result();
 

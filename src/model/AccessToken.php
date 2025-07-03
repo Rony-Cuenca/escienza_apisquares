@@ -7,13 +7,13 @@ class AccessToken
     {
         $conn = Conexion::conectar();
         $sql = "INSERT INTO access_token 
-        (id_cliente, id_sucursal, rol, estado, hashcode, id_user_create, user_create, user_update, date_create, date_expired, comentario)
+        (id_cliente, id_establecimiento, rol, estado, hashcode, id_user_create, user_create, user_update, date_create, date_expired, comentario)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?)";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param(
             "iisisissss",
             $data['id_cliente'],
-            $data['id_sucursal'],
+            $data['id_establecimiento'],
             $data['rol'],
             $data['estado'],
             $data['hashcode'],
@@ -60,9 +60,9 @@ class AccessToken
             $params[] = $filtros['id_cliente'];
             $types .= 'i';
         }
-        if (isset($filtros['id_sucursal'])) {
-            $sql .= " AND id_sucursal = ?";
-            $params[] = $filtros['id_sucursal'];
+        if (isset($filtros['id_establecimiento'])) {
+            $sql .= " AND id_establecimiento = ?";
+            $params[] = $filtros['id_establecimiento'];
             $types .= 'i';
         }
         if (isset($filtros['estado'])) {

@@ -62,7 +62,7 @@ $error = $error ?? ($_GET['error'] ?? '');
                     <!-- Este mensaje se mostrará solo cuando se muestre el formulario -->
                     Completa los datos para registrarte
                 </p>
-                <input type="hidden" name="id_sucursal" id="reg_id_sucursal">
+                <input type="hidden" name="id_establecimiento" id="reg_id_establecimiento">
                 <input type="hidden" name="rol" id="reg_rol">
                 <input type="hidden" name="access_token" id="reg_access_token">
 
@@ -113,8 +113,8 @@ $error = $error ?? ($_GET['error'] ?? '');
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-1 gap-4">
                     <div class="flex-1">
-                        <label class="block mb-1 font-semibold text-sm text-gray-700">Sucursal</label>
-                        <input type="text" id="reg_sucursal_nombre" class="w-full border rounded px-3 py-2 bg-gray-100" disabled>
+                        <label class="block mb-1 font-semibold text-sm text-gray-700">Establecimiento</label>
+                        <input type="text" id="reg_establecimiento_nombre" class="w-full border rounded px-3 py-2 bg-gray-100" disabled>
                     </div>
                     <div class="flex-1">
                         <label class="block mb-1 font-semibold text-sm text-gray-700">Rol</label>

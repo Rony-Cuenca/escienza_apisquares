@@ -6,15 +6,15 @@ class UsuarioController
     public function index()
     {
         $this->verificarSesion();
-        $id_sucursal = $_SESSION['id_sucursal'];
+        $id_establecimiento = $_SESSION['id_establecimiento'];
         $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
         $limit = isset($_GET['limit']) ? max(1, intval($_GET['limit'])) : 10;
         $offset = ($page - 1) * $limit;
-        $sort = $_GET['sort'] ?? 'sucursal';
+        $sort = $_GET['sort'] ?? 'establecimiento';
         $dir = ($_GET['dir'] ?? 'ASC') === 'DESC' ? 'DESC' : 'ASC';
-        $usuarios = Usuario::obtenerPaginadoPorSucursal($id_sucursal, $limit, $offset, $sort, $dir);
-        $total = Usuario::contarPorSucursal($id_sucursal);
-        $sucursales = Usuario::obtenerSucursalesPorCliente($_SESSION['id_cliente']);
+        $usuarios = Usuario::obtenerPaginadoPorEstablecimiento($id_establecimiento, $limit, $offset, $sort, $dir);
+        $total = Usuario::contarPorEstablecimiento($id_establecimiento);
+        $establecimientos = Usuario::obtenerEstablecimientosPorCliente($_SESSION['id_cliente']);
         $correo_cliente = Usuario::obtenerCorreoCliente($_SESSION['id_cliente']);
         $contenido = 'view/components/usuario.php';
         require 'view/layout.php';
@@ -45,13 +45,11 @@ class UsuarioController
                 exit;
             }
 
-            $hashed_password = password_hash($datos['contraseña'], PASSWORD_BCRYPT);
-            Usuario::insertar(
-
+            $hashed_password = password_hash($datos['contraseña'], PASSWORD_BCRYPT);            Usuario::insertar(
                 $datos['usuario'],
                 $datos['correo'],
                 $datos['rol'],
-                $datos['id_sucursal'],
+                $datos['id_establecimiento'],
                 1,
                 $_SESSION['id_cliente'],
                 $hashed_password,
@@ -102,7 +100,7 @@ class UsuarioController
                 $datos['usuario'],
                 $datos['correo'],
                 $datos['rol'],
-                $datos['id_sucursal'],
+                $datos['id_establecimiento'],
                 intval($datos['estado']),
                 $_SESSION['id_cliente'],
                 $hashed_password,
@@ -113,7 +111,7 @@ class UsuarioController
                 $_SESSION['usuario'] = $datos['usuario'];
                 $_SESSION['correo'] = $datos['correo'];
                 $_SESSION['rol'] = $datos['rol'];
-                $_SESSION['id_sucursal'] = $datos['id_sucursal'];
+                $_SESSION['id_establecimiento'] = $datos['id_establecimiento'];
             }
             header('Location: index.php?controller=usuario');
             exit;
@@ -170,7 +168,7 @@ class UsuarioController
             'usuario' => trim(strip_tags($data['usuario'] ?? '')),
             'correo' => trim(strip_tags($data['correo'] ?? '')),
             'rol' => trim(strip_tags($data['rol'] ?? '')),
-            'id_sucursal' => intval($data['id_sucursal'] ?? 0),
+            'id_establecimiento' => intval($data['id_establecimiento'] ?? 0),
             'estado' => isset($data['estado']) ? intval($data['estado']) : 1,
             'contraseña' => $data['contraseña'] ?? '',
             'confirmar_contraseña' => $data['confirmar_contraseña'] ?? ''
@@ -182,7 +180,7 @@ class UsuarioController
         if ($esEdicion && $datos['id_usuario'] <= 0) {
             return 'ID de usuario inválido';
         }
-        if (empty($datos['usuario']) || empty($datos['rol']) || $datos['id_sucursal'] <= 0) {
+        if (empty($datos['usuario']) || empty($datos['rol']) || $datos['id_establecimiento'] <= 0) {
             return 'Todos los campos son obligatorios';
         }
 

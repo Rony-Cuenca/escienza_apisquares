@@ -8,7 +8,7 @@ class AccessTokenModalController {
         this.form = document.getElementById(config.formId);
         this.inputRol = document.getElementById(config.inputRolId);
         this.inputCodigo = document.getElementById(config.inputCodigoId);
-        this.inputSucursal = document.getElementById(config.inputSucursalId);
+        this.inputEstablecimiento = document.getElementById(config.inputEstablecimientoId);
 
         this._bindEvents();
     }
@@ -22,8 +22,8 @@ class AccessTokenModalController {
         this.form.addEventListener('submit', (e) => {
             e.preventDefault();
             const rol = this.inputRol.value;
-            const idSucursal = window.ID_SUCURSAL_LOGUEADO;
-            if (!rol || !idSucursal) {
+            const idEstablecimiento = window.ID_ESTABLECIMIENTO_LOGUEADO;
+            if (!rol || !idEstablecimiento) {
                 Swal.fire('Error', 'Selecciona un rol válido.', 'error');
                 return;
             }
@@ -68,9 +68,9 @@ class AccessTokenModalController {
         }
     }
 
-    generarCodigo(idSucursal, rol) {
+    generarCodigo(idEstablecimiento, rol) {
         const random = Math.floor(1000 + Math.random() * 9000);
-        return `${idSucursal}-${rol}-${random}`;
+        return `${idEstablecimiento}-${rol}-${random}`;
     }
 }
 
@@ -84,6 +84,6 @@ document.addEventListener('DOMContentLoaded', () => {
         formId: 'formAccessToken',
         inputRolId: 'accessTokenRol',
         inputCodigoId: 'accessTokenCodigo',
-        inputSucursalId: 'accessTokenSucursal'
+        inputEstablecimientoId: 'accessTokenEstablecimiento'
     });
 });

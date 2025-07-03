@@ -40,7 +40,7 @@
                             <a href="index.php?controller=usuario&sort=rol&dir=<?= $sort === 'rol' && $dir === 'ASC' ? 'DESC' : 'ASC' ?>" class="hover:underline"><strong>ROL</strong></a>
                         </th>
                         <th class="py-2 px-1 text-left font-semibold border-b border-[#2563EB] w-[220px]">
-                            <a href="index.php?controller=usuario&sort=sucursal&dir=<?= $sort === 'sucursal' && $dir === 'ASC' ? 'DESC' : 'ASC' ?>" class="hover:underline"><strong>SUCURSAL</strong></a>
+                            <a href="index.php?controller=usuario&sort=establecimiento&dir=<?= $sort === 'establecimiento' && $dir === 'ASC' ? 'DESC' : 'ASC' ?>" class="hover:underline"><strong>establecimiento</strong></a>
                         </th>
                         <th class="py-2 px-1 text-left font-semibold border-b border-[#2563EB] w-[120px]">
                             <a href="index.php?controller=usuario&sort=estado&dir=<?= $sort === 'estado' && $dir === 'ASC' ? 'DESC' : 'ASC' ?>" class="hover:underline"><strong>ESTADO</strong></a>
@@ -57,7 +57,7 @@
                                 <td class="py-2 px-1"><?= htmlspecialchars($row['usuario']) ?></td>
                                 <td class="py-2 px-1"><?= !empty($row['correo']) ? htmlspecialchars($row['correo']) : 'Sin establecer' ?></td>
                                 <td class="py-2 px-1"><?= htmlspecialchars($row['rol']) ?></td>
-                                <td class="py-2 px-1"><?= htmlspecialchars($row['sucursal']) ?></td>
+                                <td class="py-2 px-1"><?= htmlspecialchars($row['establecimiento']) ?></td>
                                 <td class="py-2 px-1">
                                     <?php if ($_SESSION['rol'] === 'Administrador'): ?>
                                         <?php if ($row['estado'] == 1): ?>
@@ -122,7 +122,7 @@
                                                     data-usuario="<?= htmlspecialchars($row['usuario']) ?>"
                                                     data-correo="<?= htmlspecialchars($row['correo']) ?>"
                                                     data-rol="<?= htmlspecialchars($row['rol']) ?>"
-                                                    data-sucursal="<?= $row['id_sucursal'] ?>"
+                                                    data-establecimiento="<?= $row['id_establecimiento'] ?>"
                                                     data-estado="<?= $row['estado'] ?>"
                                                     class="block w-full text-left px-4 py-2 hover:bg-gray-100 text-black">
                                                     Editar
@@ -207,21 +207,21 @@
                 </div>
                 <?php if (isset($_SESSION['id_usuario']) && isset($editingUserId) && $_SESSION['id_usuario'] == $editingUserId): ?>
                     <div>
-                        <label class="block mb-1 font-semibold text-sm text-gray-700">Sucursal</label>
-                        <input type="text" value="<?= htmlspecialchars($sucursalNombre) ?>" class="w-full border rounded px-3 py-2 bg-gray-100" readonly>
-                        <input type="hidden" name="id_sucursal" value="<?= htmlspecialchars($idSucursal) ?>">
+                        <label class="block mb-1 font-semibold text-sm text-gray-700">establecimiento</label>
+                        <input type="text" value="<?= htmlspecialchars($establecimientoNombre) ?>" class="w-full border rounded px-3 py-2 bg-gray-100" readonly>
+                        <input type="hidden" name="id_establecimiento" value="<?= htmlspecialchars($idestablecimiento) ?>">
                     </div>
                 <?php else: ?>
                     <div>
-                        <label class="block mb-1 font-semibold text-sm text-gray-700">Sucursal</label>
-                        <select name="id_sucursal" id="modalUsuarioSucursal" required class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400">
-                            <option value="">Selecciona una sucursal</option>
-                            <?php foreach ($sucursales as $suc): ?>
+                        <label class="block mb-1 font-semibold text-sm text-gray-700">establecimiento</label>
+                        <select name="id_establecimiento" id="modalUsuarioestablecimiento" required class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                            <option value="">Selecciona una establecimiento</option>
+                            <?php foreach ($establecimientoes as $suc): ?>
                                 <option value="<?= $suc['id'] ?>"><?= htmlspecialchars($suc['razon_social']) ?></option>
                             <?php endforeach; ?>
                         </select>
-                        <input type="text" id="modalUsuarioSucursalReadonly" class="w-full border rounded px-3 py-2 bg-gray-100 mt-2" readonly style="display:none;">
-                        <input type="hidden" name="id_sucursal" id="modalUsuarioSucursalHidden" />
+                        <input type="text" id="modalUsuarioestablecimientoReadonly" class="w-full border rounded px-3 py-2 bg-gray-100 mt-2" readonly style="display:none;">
+                        <input type="hidden" name="id_establecimiento" id="modalUsuarioestablecimientoHidden" />
                     </div>
                 <?php endif; ?>
             </div>
@@ -300,7 +300,7 @@
 <script>
     window.ID_USUARIO_LOGUEADO = <?= json_encode($_SESSION['id_usuario']) ?>;
     window.ROL_USUARIO_LOGUEADO = <?= json_encode($_SESSION['rol']) ?>;
-    window.ID_SUCURSAL_LOGUEADO = <?= json_encode($_SESSION['id_sucursal']) ?>;
+    window.ID_establecimiento_LOGUEADO = <?= json_encode($_SESSION['id_establecimiento']) ?>;
 </script>
 
 <script src="../assets/js/usuario.js"></script>

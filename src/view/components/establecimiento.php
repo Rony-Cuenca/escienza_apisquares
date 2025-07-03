@@ -2,15 +2,15 @@
     <div class="flex items-center justify-between w-full pt-6 pb-10 px-8 rounded-t-lg"
         style="background: linear-gradient(to bottom, #60A5FA 80%, #fff 100%);">
         <span class="text-xl text-white" style="font-family: 'Montserrat', sans-serif;">LISTA DE ESTABLECIMIENTOS</span>
-        <button id="btnNuevoEstablecimiento"
-            class="flex items-center gap-2 bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-normal py-2 px-4 rounded-lg shadow">
-            <span class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-white">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="rgba(0,0,0,0.3)" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m6-6H6" />
+        <div class="flex flex-col items-end gap-2">
+            <button id="btnSincronizar"
+                class="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-normal py-2 px-4 rounded-lg shadow">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-            </span>
-            Nuevo
-        </button>
+                Sincronizar con SUNAT
+            </button>
+        </div>
     </div>
     <div class="w-full bg-white rounded-b-lg shadow-2xl shadow-blue-300 p-2 md:p-8">
         <!-- Tabla de Establecimientos -->
@@ -19,9 +19,10 @@
                 <thead>
                     <tr class="bg-[#A9C3E8]">
                         <th class="py-2 px-1 text-center font-semibold border-b border-[#2563EB] w-[40px]"><strong>#</strong></th>
-                        <th class="py-2 px-1 text-left font-semibold border-b border-[#2563EB] w-[100px]">RUC</th>
-                        <th class="py-2 px-1 text-left font-semibold border-b border-[#2563EB] w-[220px]">Razón Social</th>
-                        <th class="py-2 px-1 text-left font-semibold border-b border-[#2563EB] w-[240px]">Dirección</th>
+                        <th class="py-2 px-1 text-left font-semibold border-b border-[#2563EB] w-[80px]">Código</th>
+                        <th class="py-2 px-1 text-left font-semibold border-b border-[#2563EB] w-[100px]">Tipo</th>
+                        <th class="py-2 px-1 text-left font-semibold border-b border-[#2563EB] w-[200px]">Razón Social</th>
+                        <th class="py-2 px-1 text-left font-semibold border-b border-[#2563EB] w-[220px]">Dirección</th>
                         <th class="py-2 px-1 text-left font-semibold border-b border-[#2563EB] w-[50px]">Estado</th>
                         <th class="py-2 px-1 border-b border-[#2563EB] w-[10px]"><strong></strong></th>
                     </tr>
@@ -32,7 +33,16 @@
                         foreach ($establecimientos as $row): ?>
                             <tr class="border-b border-[#2563EB] hover:bg-blue-50 transition" style="font-size: small;">
                                 <td class="py-2 px-1 text-center"><?= $i++ ?></td>
-                                <td class="py-2 px-1"><?= htmlspecialchars($row['ruc']) ?></td>
+                                <td class="py-2 px-1">
+                                    <span class="font-mono text-xs bg-gray-100 px-2 py-1 rounded">
+                                        <?= htmlspecialchars($row['codigo_establecimiento'] ?? '0000') ?>
+                                    </span>
+                                </td>
+                                <td class="py-2 px-1">
+                                    <span class="text-xs <?= $row['tipo_establecimiento'] === 'MATRIZ' ? 'text-blue-600 font-semibold' : 'text-gray-600' ?>">
+                                        <?= htmlspecialchars($row['tipo_establecimiento'] ?? 'MATRIZ') ?>
+                                    </span>
+                                </td>
                                 <td class="py-2 px-1"><?= htmlspecialchars($row['razon_social']) ?></td>
                                 <td class="py-2 px-1"><?= !empty($row['direccion']) ? htmlspecialchars($row['direccion']) : 'Sin establecer' ?></td>
                                 <td class="py-2 px-1">
@@ -75,16 +85,6 @@
                                         </svg>
                                     </button>
                                     <div id="menuEstablecimiento" class="hidden fixed z-50 w-32 bg-white rounded-lg shadow-lg border min-w-[120px]">
-                                        <a href="javascript:void(0);"
-                                            data-action="editar"
-                                            data-id="<?= $row['id'] ?>"
-                                            data-ruc="<?= htmlspecialchars($row['ruc']) ?>"
-                                            data-razon_social="<?= htmlspecialchars($row['razon_social']) ?>"
-                                            data-direccion="<?= htmlspecialchars($row['direccion']) ?>"
-                                            data-estado="<?= $row['estado'] ?>"
-                                            class="block w-full text-left px-4 py-2 hover:bg-gray-100 text-black">
-                                            Editar
-                                        </a>
                                         <?php if ($row['estado'] != 3): ?>
                                             <a href="javascript:void(0);" data-action="cambiarEstado" data-id="<?= $row['id'] ?>" data-estado="3"
                                                 class="block w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100">Deshabilitar</a>
@@ -98,7 +98,7 @@
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="6" class="text-center py-4 text-gray-500">No hay establecimientos registrados.</td>
+                            <td colspan="7" class="text-center py-4 text-gray-500">No hay establecimientos registrados.</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
@@ -121,48 +121,4 @@
     </div>
 </div>
 
-<!-- Modal Establecimiento -->
-<div id="modalEstablecimiento" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
-    <div class="bg-white rounded-lg shadow-lg w-full max-w-xl p-6">
-        <div class="flex justify-between items-center border-b pb-3">
-            <h2 id="modalEstTitulo" class="text-xl font-semibold">Nuevo Establecimiento</h2>
-            <button id="btnCerrarModalEst" class="text-gray-500 hover:text-gray-700">
-                &times;
-            </button>
-        </div>
-        <form id="formEstablecimiento" method="post" action="index.php?controller=establecimiento&action=crear" autocomplete="off">
-            <input type="hidden" name="id" id="modalEstId">
-            <input type="hidden" name="estado" id="modalEstEstado">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                <div>
-                    <label for="modalEstRuc" class="block text-sm font-medium mb-1">RUC</label>
-                    <input type="text" name="ruc" id="modalEstRuc" maxlength="11" required
-                        class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400">
-                    <div id="errorRuc" class="text-red-600 text-sm mb-1 hidden flex items-center gap-1 pt-1">
-                        <!-- El icono y mensaje se insertan por JS -->
-                    </div>
-                </div>
-                <div>
-                    <label for="modalEstRazon" class="block text-sm font-medium mb-1">Razón Social</label>
-                    <input type="text" name="razon_social" id="modalEstRazon" required
-                        class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400">
-                </div>
-                <div class="md:col-span-2">
-                    <label for="modalEstDireccion" class="block text-sm font-medium mb-1">Dirección</label>
-                    <input type="text" name="direccion" id="modalEstDireccion" required
-                        class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400">
-                </div>
-            </div>
-            <div class="flex justify-end mt-6 gap-2">
-                <button type="button" id="btnCancelarModalEst" class="hover:bg-red-400 bg-red-600 text-white font-semibold px-4 py-2 rounded shadow transition-colors duration-200">
-                    Cancelar
-                </button>
-                <button type="submit" class="bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-semibold px-6 py-2 rounded-lg shadow transition-colors duration-200">
-                    Guardar
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<script src="../assets/js/establecimiento.js"></script>
+<script src="../assets/js/establecimiento_nuevo.js"></script>

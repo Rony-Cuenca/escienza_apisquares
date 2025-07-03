@@ -12,8 +12,8 @@
     // --- GRÁFICO DE EXONERACIÓN ---
 function drawExoneracionChart() {
   let anio = document.getElementById('select-anio').value;
-  let sucursal = document.getElementById('select-sucursal').value;
-  fetch(`index.php?controller=home&action=exoneracionIGV&sucursal=${sucursal}&anio=${anio}`)
+  let establecimiento = document.getElementById('select-establecimiento').value;
+  fetch(`index.php?controller=home&action=exoneracionIGV&establecimiento=${establecimiento}&anio=${anio}`)
     .then(r => r.json())
     .then(datos => {
       if (!datos.length) {
@@ -79,6 +79,6 @@ function drawExoneracionChart() {
 
 // Llama al cargar y al cambiar filtros
 document.getElementById('select-anio').addEventListener('change', drawExoneracionChart);
-document.getElementById('select-sucursal').addEventListener('change', drawExoneracionChart);
+document.getElementById('select-establecimiento').addEventListener('change', drawExoneracionChart);
 window.addEventListener('DOMContentLoaded', drawExoneracionChart);
 </script>

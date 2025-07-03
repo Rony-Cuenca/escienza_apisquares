@@ -41,10 +41,10 @@ google.charts.setOnLoadCallback(drawPieChart);
 
 function drawPieChart() {
   let anio = document.getElementById('select-anio').value;
-  let sucursal = document.getElementById('select-sucursal').value;
+  let establecimiento = document.getElementById('select-establecimiento').value;
   let mes = document.getElementById('select-mes').value;
   let tipo = document.getElementById('select-tipo').value;
-  fetch(`index.php?controller=home&action=seriesMasVendidas&sucursal=${sucursal}&anio=${anio}&mes=${mes}&tipo=${tipo}`)
+  fetch(`index.php?controller=home&action=seriesMasVendidas&establecimiento=${establecimiento}&anio=${anio}&mes=${mes}&tipo=${tipo}`)
     .then(r => r.json())
     .then(datos => {
       let dataArray = [['Serie', 'Total']];
@@ -62,7 +62,7 @@ function drawPieChart() {
     });
 }
 
-document.getElementById('select-sucursal').addEventListener('change', function() {
+document.getElementById('select-establecimiento').addEventListener('change', function() {
   document.getElementById('select-tipo').selectedIndex = 0;
 
   // Seleccionar el mes anterior al actual
@@ -88,10 +88,10 @@ google.charts.setOnLoadCallback(drawPieChart);
 
 function drawPieChart() {
   let anio = document.getElementById('select-anio').value;
-  let sucursal = document.getElementById('select-sucursal').value;
+  let establecimiento = document.getElementById('select-establecimiento').value;
   let mes = document.getElementById('select-mes').value;
   let tipo = document.getElementById('select-tipo').value;
-  fetch(`index.php?controller=home&action=seriesMasVendidas&sucursal=${sucursal}&anio=${anio}&mes=${mes}&tipo=${tipo}`)
+  fetch(`index.php?controller=home&action=seriesMasVendidas&establecimiento=${establecimiento}&anio=${anio}&mes=${mes}&tipo=${tipo}`)
     .then(r => r.json())
     .then(datos => {
       let dataArray = [['Serie', 'Total']];
@@ -109,7 +109,7 @@ function drawPieChart() {
     });
 }
 
-document.getElementById('select-sucursal').addEventListener('change', function() {
+document.getElementById('select-establecimiento').addEventListener('change', function() {
   document.getElementById('select-tipo').selectedIndex = 0;
 
   // Seleccionar el mes anterior al actual
