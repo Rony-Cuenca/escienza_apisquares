@@ -20,6 +20,17 @@
     </script>
 <?php endif; ?>
 
+<?php if (isset($_GET['sms']) && $_GET['sms'] == 2): ?>
+    <script>
+    Swal.fire({
+        icon: 'error',
+        title: 'Error al procesar',
+        text: 'Ya existe un cuadre para la fecha seleccionada.',
+        confirmButtonColor: '#d33'
+    });
+    </script>
+<?php endif; ?>
+
 <?php if (isset($_GET['modal']) && $_GET['modal'] === 'unificacionExitosa'): ?>
     <script>
     Swal.fire({
