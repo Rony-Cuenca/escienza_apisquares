@@ -7,10 +7,10 @@
     <script>
 function drawPromedioVentaChart() {
     let anio = document.getElementById('select-anio').value;
-    let sucursal = document.getElementById('select-sucursal').value;
+    let establecimiento = document.getElementById('select-establecimiento').value;
     let mes = document.getElementById('select-mes').value;
   let tipo = document.getElementById('select-tipo').value;
-    fetch(`index.php?controller=home&action=promedioVentaPorSerie&sucursal=${sucursal}&anio=${anio}&mes=${mes}&tipo=${tipo}`)
+    fetch(`index.php?controller=home&action=promedioVentaPorSerie&establecimiento=${establecimiento}&anio=${anio}&mes=${mes}&tipo=${tipo}`)
         .then(r => r.json())
         .then(datos => {
             if (!datos.length) {
@@ -75,7 +75,7 @@ function drawPromedioVentaChart() {
         });
 }
 document.getElementById('select-anio').addEventListener('change', drawPromedioVentaChart);
-document.getElementById('select-sucursal').addEventListener('change', drawPromedioVentaChart);
+document.getElementById('select-establecimiento').addEventListener('change', drawPromedioVentaChart);
 document.getElementById('select-mes').addEventListener('change', drawPromedioVentaChart);
 document.getElementById('select-tipo').addEventListener('change', drawPromedioVentaChart);
 window.addEventListener('DOMContentLoaded', drawPromedioVentaChart);
@@ -84,8 +84,8 @@ window.addEventListener('DOMContentLoaded', drawPromedioVentaChart);
 <script>
 function drawTablaPromedioVenta() {
     let anio = document.getElementById('select-anio').value;
-    let sucursal = document.getElementById('select-sucursal').value;
-    fetch(`index.php?controller=home&action=promedioVentaPorSerie&sucursal=${sucursal}&anio=${anio}&mes=${mes}&tipo=${tipo}`)
+    let establecimiento = document.getElementById('select-establecimiento').value;
+    fetch(`index.php?controller=home&action=promedioVentaPorSerie&establecimiento=${establecimiento}&anio=${anio}&mes=${mes}&tipo=${tipo}`)
         .then(r => r.json())
         .then(datos => {
             let html = '<table class="min-w-full text-sm text-left border mt-2"><thead><tr><th class="border px-2">Serie</th><th class="border px-2">Total vendido</th><th class="border px-2">Comprobantes</th><th class="border px-2">Promedio</th></tr></thead><tbody>';
@@ -102,7 +102,7 @@ function drawTablaPromedioVenta() {
         });
 }
 document.getElementById('select-anio').addEventListener('change', drawTablaPromedioVenta);
-document.getElementById('select-sucursal').addEventListener('change', drawTablaPromedioVenta);
+document.getElementById('select-establecimiento').addEventListener('change', drawTablaPromedioVenta);
 document.getElementById('select-mes').addEventListener('change', drawTablaPromedioVenta);
 document.getElementById('select-tipo').addEventListener('change', drawTablaPromedioVenta);
 window.addEventListener('DOMContentLoaded', drawTablaPromedioVenta);

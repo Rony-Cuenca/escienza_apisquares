@@ -57,7 +57,7 @@ class HomeController
         exit;
     }
 
-    // Endpoint para AJAX - Series más vendidas por mes y sucursal
+    // Endpoint para AJAX - Series más vendidas por mes y establecimiento
     public function seriesMasVendidas()
     {
         $conn = Conexion::conectar();

@@ -413,16 +413,16 @@ date_default_timezone_set('America/Lima');
             </div>
             <div class="info-row">
                 <span class="info-label">RUC:</span>
-                <span class="info-value"><?= htmlspecialchars($rucSucursal) ?></span>
+                <span class="info-value"><?= htmlspecialchars($rucEstablecimiento) ?></span>
             </div>
             <div class="info-row">
                 <span class="info-label">Razón Social:</span>
-                <span class="info-value"><?= htmlspecialchars($nombreSucursal) ?></span>
+                <span class="info-value"><?= htmlspecialchars($nombreEstablecimiento) ?></span>
             </div>
-            <?php if (!empty($direccionSucursal)): ?>
+            <?php if (!empty($direccionEstablecimiento)): ?>
                 <div class="info-row">
                     <span class="info-label">Dirección:</span>
-                    <span class="info-value"><?= htmlspecialchars($direccionSucursal) ?></span>
+                    <span class="info-value"><?= htmlspecialchars($direccionEstablecimiento) ?></span>
                 </div>
             <?php endif; ?>
             <?php if (!empty($correoEmpresa)): ?>
@@ -906,7 +906,7 @@ date_default_timezone_set('America/Lima');
     </div>
 
     <footer>
-        Reporte Mensual | <?= htmlspecialchars($nombreSucursal) ?> | © <?= date('Y') ?> Escienza - Todos los derechos reservados
+        Reporte Mensual | <?= htmlspecialchars($nombreEstablecimiento) ?> | © <?= date('Y') ?> Escienza - Todos los derechos reservados
     </footer>
 </body>
 

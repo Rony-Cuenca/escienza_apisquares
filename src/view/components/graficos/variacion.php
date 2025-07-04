@@ -16,8 +16,8 @@ function drawVariacionVentasChart() {
     let anio = document.getElementById('select-anio').value;
   let tipovar = document.getElementById('select-tipo-vari').value;
 
-    let sucursal = document.getElementById('select-sucursal').value;
-    fetch(`index.php?controller=home&action=variacionVentasMensual&sucursal=${sucursal}&anio=${anio}&tipo=${tipovar}`)
+    let establecimiento = document.getElementById('select-establecimiento').value;
+    fetch(`index.php?controller=home&action=variacionVentasMensual&establecimiento=${establecimiento}&anio=${anio}&tipo=${tipovar}`)
         .then(r => r.json())
         .then(datos => {
             // Solo meses con datos
@@ -132,7 +132,7 @@ function drawVariacionVentasChart() {
 document.getElementById('select-anio').addEventListener('change', drawVariacionVentasChart);
 document.getElementById('select-tipo-vari').addEventListener('change', drawVariacionVentasChart);
 
-document.getElementById('select-sucursal').addEventListener('change', drawVariacionVentasChart);
+document.getElementById('select-establecimiento').addEventListener('change', drawVariacionVentasChart);
 window.addEventListener('DOMContentLoaded', drawVariacionVentasChart);
     </script>
 </div>

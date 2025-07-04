@@ -20,7 +20,7 @@ class Cuadre
             id_reporte,
             user_create,
             user_update,
-            id_sucursal,
+            id_establecimiento,
             fecha_registro,
             estado
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -38,19 +38,19 @@ class Cuadre
             $data['id_reporte'],
             $data['user_create'],
             $data['user_update'],
-            $data['id_sucursal'],
+            $data['id_establecimiento'],
             $data['fecha_registro'],
             $data['estado']
         ]);
         return true;
     }
 
-    public static function existeFecha($fecha, $id_sucursal)
+    public static function existeFecha($fecha, $id_establecimiento)
     {
         try {
             $conn = Conexion::conectar();
-            $stmt = $conn->prepare("SELECT COUNT(*) FROM resumen_comprobante WHERE fecha_registro = ? AND id_sucursal = ?");
-            $stmt->bind_param("si", $fecha, $id_sucursal);
+            $stmt = $conn->prepare("SELECT COUNT(*) FROM resumen_comprobante WHERE fecha_registro = ? AND id_establecimiento = ?");
+            $stmt->bind_param("si", $fecha, $id_establecimiento);
             $stmt->execute();
             $stmt->bind_result($count);
             $stmt->fetch();
@@ -175,24 +175,24 @@ class Cuadre
     public static function obtenerTotalesPorTipoComprobanteExcluyendoAjenas($mes)
     {
         $conn = Conexion::conectar();
-        $id_sucursal = $_SESSION['id_sucursal'] ?? null;
+        $id_establecimiento = $_SESSION['id_establecimiento'] ?? null;
         
         $sql = "
         SELECT tipo_comprobante, id_reporte, SUM(monto_total) as total
         FROM resumen_comprobante rc
         WHERE DATE_FORMAT(rc.fecha_registro, '%Y-%m') = ?
-        AND rc.id_sucursal = ?
+        AND rc.id_establecimiento = ?
         AND rc.serie NOT IN (
             SELECT DISTINCT serie 
             FROM series_ajenas sa 
-            WHERE sa.id_sucursal = rc.id_sucursal 
+            WHERE sa.id_establecimiento = rc.id_establecimiento 
             AND sa.estado = 1
             AND DATE_FORMAT(sa.fecha_registro, '%Y-%m') = ?
         )
         GROUP BY tipo_comprobante, id_reporte
         ";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("sis", $mes, $id_sucursal, $mes);
+        $stmt->bind_param("sis", $mes, $id_establecimiento, $mes);
         $stmt->execute();
         $result = $stmt->get_result();
         $totales = [];
@@ -205,7 +205,7 @@ class Cuadre
     public static function obtenerTotalesPorSerieExcluyendoAjenas($mes)
     {
         $conn = Conexion::conectar();
-        $id_sucursal = $_SESSION['id_sucursal'] ?? null;
+        $id_establecimiento = $_SESSION['id_establecimiento'] ?? null;
         
         $sql = "
         SELECT 
@@ -214,18 +214,18 @@ class Cuadre
             SUM(rc.monto_total) as total
         FROM resumen_comprobante rc
         WHERE DATE_FORMAT(rc.fecha_registro, '%Y-%m') = ?
-        AND rc.id_sucursal = ?
+        AND rc.id_establecimiento = ?
         AND rc.serie NOT IN (
             SELECT DISTINCT serie 
             FROM series_ajenas sa 
-            WHERE sa.id_sucursal = rc.id_sucursal 
+            WHERE sa.id_establecimiento = rc.id_establecimiento 
             AND sa.estado = 1
             AND DATE_FORMAT(sa.fecha_registro, '%Y-%m') = ?
         )
         GROUP BY rc.serie, rc.id_reporte
         ";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("sis", $mes, $id_sucursal, $mes);
+        $stmt->bind_param("sis", $mes, $id_establecimiento, $mes);
         $stmt->execute();
         $result = $stmt->get_result();
         $series = [];

@@ -91,8 +91,8 @@ class CuadresController {
                 if ($fechaSIRE == $fechaNUBOX) {
 
                     $user = Usuario::obtenerId($_GET['user']);
-                    $id_sucursal = $user['id_sucursal'];
-                    $existeFecha = Cuadre::existeFecha($fechaSIRE, $id_sucursal);
+                    $id_establecimiento = $user['id_establecimiento'];
+                    $existeFecha = Cuadre::existeFecha($fechaSIRE, $id_establecimiento);
 
                     if (!$existeFecha) {
                         $SIRE = $this->sire($_FILES['exe_sire'], $_GET['user']);
@@ -441,7 +441,7 @@ class CuadresController {
         
         $user_create = $user['usuario'];
         $user_update = $user['usuario'];
-        $id_sucursal = $user['id_sucursal'];
+        $id_establecimiento = $user['id_establecimiento'];
         
         $data = [
             'serie' => $serie,
@@ -455,7 +455,7 @@ class CuadresController {
             'id_reporte' => $reporte,
             'user_create' => $user_create,
             'user_update' => $user_update,
-            'id_sucursal' => $id_sucursal,
+            'id_establecimiento' => $id_establecimiento,
             'fecha_registro' => $fecha_registro,
             'estado' => 1
         ];
@@ -559,7 +559,7 @@ class CuadresController {
         
         $user_create = $user['usuario'];
         $user_update = $user['usuario'];
-        $id_sucursal = $user['id_sucursal'];
+        $id_establecimiento = $user['id_establecimiento'];
 
 
         $ErrorValidarSeries = null;
@@ -652,7 +652,7 @@ class CuadresController {
         
         $user_create = $user['usuario'];
         $user_update = $user['usuario'];
-        $id_sucursal = $user['id_sucursal'];
+        $id_establecimiento = $user['id_establecimiento'];
 
         foreach ($ResultsSIRE as $resultado) {
             $this->guardarCuadre(
@@ -707,7 +707,7 @@ class CuadresController {
                 'fecha_registro' => $resultado['fecha'],
                 'user_create' => $user_create,
                 'user_update' => $user_update,
-                'id_sucursal' => $id_sucursal,
+                'id_establecimiento' => $id_establecimiento,
                 'estado' => 1
             ];
             SerieAjena::Insertar($data);
@@ -721,7 +721,7 @@ class CuadresController {
                 'total' => $resultado['total'],
                 'user_create' => $user_create,
                 'user_update' => $user_update,
-                'id_sucursal' => $id_sucursal,
+                'id_establecimiento' => $id_establecimiento,
                 'fecha_registro' => $fecha,
                 'estado' => 1
             ];  
