@@ -134,10 +134,10 @@ class ReporteController
         $nombreEstablecimiento = '';
         if ($id_establecimiento) {
             $id_cliente = $_SESSION['id_cliente'] ?? null;
-            $Establecimiento = \Establecimiento::obtenerPorId($id_establecimiento, $id_cliente);
-            if ($Establecimiento) {
-                $rucEstablecimiento = $Establecimiento['ruc_cliente'] ?? '';
-                $nombreEstablecimiento = $Establecimiento['razon_social_cliente'] ?? '';
+            $cliente = \Establecimiento::obtenerClientePorId($id_cliente);
+            if ($cliente) {
+                $rucEstablecimiento = $cliente['ruc'] ?? '';
+                $nombreEstablecimiento = $cliente['razon_social'] ?? '';
             }
         }
 
@@ -181,10 +181,10 @@ class ReporteController
 
         if ($id_establecimiento) {
             $id_cliente = $_SESSION['id_cliente'] ?? null;
-            $Establecimiento = \Establecimiento::obtenerPorId($id_establecimiento, $id_cliente);
-            if ($Establecimiento) {
-                $rucEstablecimiento = $Establecimiento['ruc_cliente'] ?? '';
-                $nombreEstablecimiento = $Establecimiento['razon_social_cliente'] ?? '';
+            $cliente = \Establecimiento::obtenerClientePorId($id_cliente);
+            if ($cliente) {
+                $rucEstablecimiento = $cliente['ruc'] ?? '';
+                $nombreEstablecimiento = $cliente['razon_social'] ?? '';
             }
         }
 

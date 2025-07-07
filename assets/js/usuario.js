@@ -13,6 +13,7 @@ class ModalCrudController {
         this.errorUsuario = document.getElementById(config.errorUsuarioId) || this._crearErrorDiv(this.inputs.usuario, config.errorUsuarioId);
         this.errorCorreo = document.getElementById(config.errorCorreoId) || this._crearErrorDiv(this.inputs.correo, config.errorCorreoId);
         this.errorContrasena = document.getElementById(config.errorContrasenaId) || this._crearErrorDiv(this.inputs.contraseña, config.errorContrasenaId);
+        this.errorEstablecimiento = document.getElementById(config.errorEstablecimientoId) || this._crearErrorDiv(this.inputs.establecimiento, config.errorEstablecimientoId);
         this.cambiarContrasenaWrapper = document.getElementById(config.cambiarContrasenaWrapperId);
         this.checkCambiarContrasena = document.getElementById(config.checkCambiarContrasenaId);
         this.camposContrasena = document.getElementById(config.camposContrasenaId);
@@ -63,60 +64,62 @@ class ModalCrudController {
         this.inputs.contraseña.value = '';
         this.inputs.confirmar_contraseña.value = '';
         this.inputs.correo.readOnly = false;
+
         this.ocultarError(this.errorUsuario, this.inputs.usuario);
         this.ocultarError(this.errorCorreo, this.inputs.correo);
         this.ocultarError(this.errorContrasena, this.inputs.contraseña);
+        this.ocultarError(this.errorEstablecimiento, this.inputs.establecimiento);
 
         const isEdicion = !!values.id;
-        const establecimientoSelect = this.inputs.establecimiento;
-        const esPropioUsuario = values.id && window.ID_USUARIO_LOGUEADO && String(values.id) === String(window.ID_USUARIO_LOGUEADO);
-        const inputestablecimientoReadonly = document.getElementById('modalUsuarioestablecimientoReadonly');
-        const inputestablecimientoHidden = document.getElementById('modalUsuarioestablecimientoHidden');
+        this.establecimientoOriginal = values.establecimiento || '';
 
-        if (esPropioUsuario) {
-            if (establecimientoSelect) establecimientoSelect.style.display = 'none';
-            if (inputestablecimientoReadonly) {
-                inputestablecimientoReadonly.style.display = '';
-                inputestablecimientoReadonly.value = values.establecimiento_nombre || '';
-            }
-            if (inputestablecimientoHidden) {
-                inputestablecimientoHidden.value = values.establecimiento || '';
-                inputestablecimientoHidden.disabled = false;
-            }
-        } else {
-            if (establecimientoSelect) establecimientoSelect.style.display = '';
-            if (inputestablecimientoReadonly) inputestablecimientoReadonly.style.display = 'none';
-            if (inputestablecimientoHidden) inputestablecimientoHidden.disabled = true;
-        }
-
-        if (!isEdicion) {
-            Array.from(establecimientoSelect.options).forEach(opt => {
-                if (opt.value && opt.value !== String(window.ID_establecimiento_LOGUEADO)) {
-                    opt.style.display = 'none';
-                } else {
-                    opt.style.display = '';
-                }
-            });
-            establecimientoSelect.value = window.ID_establecimiento_LOGUEADO || '';
-            establecimientoSelect.disabled = true;
-            establecimientoSelect.classList.add('bg-gray-100', 'cursor-not-allowed');
-        } else {
-            Array.from(establecimientoSelect.options).forEach(opt => {
-                opt.style.display = '';
-            });
-            establecimientoSelect.disabled = false;
-            establecimientoSelect.classList.remove('bg-gray-100', 'cursor-not-allowed');
-            this.establecimientoOriginal = values.establecimiento || '';
-        }
-
+        // Configurar permisos según el usuario
         if (values.id && window.ID_USUARIO_LOGUEADO && String(values.id) === String(window.ID_USUARIO_LOGUEADO)) {
             this.inputs.rol.disabled = true;
             this.inputs.establecimiento.disabled = true;
+            
+            // Agregar campos hidden para asegurar que los valores se envíen
+            let hiddenRol = document.querySelector('input[name="rol_hidden"]');
+            if (!hiddenRol) {
+                hiddenRol = document.createElement('input');
+                hiddenRol.type = 'hidden';
+                hiddenRol.name = 'rol_hidden';
+                this.form.appendChild(hiddenRol);
+            }
+            hiddenRol.value = this.inputs.rol.value;
+            
+            let hiddenEstablecimiento = document.querySelector('input[name="id_establecimiento_hidden"]');
+            if (!hiddenEstablecimiento) {
+                hiddenEstablecimiento = document.createElement('input');
+                hiddenEstablecimiento.type = 'hidden';
+                hiddenEstablecimiento.name = 'id_establecimiento_hidden';
+                this.form.appendChild(hiddenEstablecimiento);
+            }
+            hiddenEstablecimiento.value = this.inputs.establecimiento.value;
+            
+            // Asegurar que el estado se mantenga
+            let hiddenEstado = document.querySelector('input[name="estado_hidden"]');
+            if (!hiddenEstado) {
+                hiddenEstado = document.createElement('input');
+                hiddenEstado.type = 'hidden';
+                hiddenEstado.name = 'estado_hidden';
+                this.form.appendChild(hiddenEstado);
+            }
+            hiddenEstado.value = this.inputs.estado.value || '1';
         } else {
             this.inputs.rol.disabled = false;
-            if (isEdicion) this.inputs.establecimiento.disabled = false;
+            this.inputs.establecimiento.disabled = false;
+            
+            // Eliminar campos hidden si existen
+            const hiddenRol = document.querySelector('input[name="rol_hidden"]');
+            const hiddenEstablecimiento = document.querySelector('input[name="id_establecimiento_hidden"]');
+            const hiddenEstado = document.querySelector('input[name="estado_hidden"]');
+            if (hiddenRol) hiddenRol.remove();
+            if (hiddenEstablecimiento) hiddenEstablecimiento.remove();
+            if (hiddenEstado) hiddenEstado.remove();
         }
 
+        // Configurar campos de contraseña
         if (values.id) {
             this.cambiarContrasenaWrapper.classList.remove('hidden');
             this.checkCambiarContrasena.checked = false;
@@ -129,9 +132,6 @@ class ModalCrudController {
             this.inputs.contraseña.required = true;
             this.inputs.confirmar_contraseña.required = true;
         }
-
-        if (this.inputs.establecimiento.disabled) this.inputs.establecimiento.disabled = false;
-        if (this.inputs.rol.disabled) this.inputs.rol.disabled = false;
 
         this.modal.classList.remove('hidden');
         setTimeout(() => this.inputs.usuario.focus(), 100);
@@ -158,6 +158,7 @@ class ModalCrudController {
         this.ocultarError(this.errorUsuario, this.inputs.usuario);
         this.ocultarError(this.errorCorreo, this.inputs.correo);
         this.ocultarError(this.errorContrasena, this.inputs.contraseña);
+        this.ocultarError(this.errorEstablecimiento, this.inputs.establecimiento);
 
         const usuario = this.inputs.usuario.value.trim();
         const correo = this.inputs.correo.value.trim();
@@ -192,7 +193,7 @@ class ModalCrudController {
             return false;
         }
         if (!establecimiento) {
-            this.mostrarError(this.errorUsuario, 'La establecimiento es obligatoria', this.inputs.establecimiento);
+            this.mostrarError(this.errorEstablecimiento, 'El establecimiento es obligatorio', this.inputs.establecimiento);
             if (mostrarFocus) this.inputs.establecimiento.focus();
             return false;
         }
@@ -346,14 +347,35 @@ class ModalCrudController {
                     Swal.fire('Error', 'Datos inválidos para cambiar el estado.', 'error');
                     return;
                 }
+
+                // Determinar la acción basada en el estado objetivo
+                let textoAccion, textoEstado;
+                
+                if (estadoUsuario === '1') {
+                    // Cambiar a activo
+                    textoAccion = 'activar';
+                    textoEstado = 'activó';
+                } else if (estadoUsuario === '2') {
+                    // Cambiar a inactivo
+                    textoAccion = 'desactivar';
+                    textoEstado = 'desactivó';
+                } else if (estadoUsuario === '3') {
+                    // Cambiar a deshabilitado
+                    textoAccion = 'deshabilitar';
+                    textoEstado = 'deshabilitó';
+                } else {
+                    textoAccion = 'cambiar el estado de';
+                    textoEstado = 'cambió el estado de';
+                }
+
                 Swal.fire({
                     title: '¿Estás seguro?',
-                    text: '¿Deseas cambiar el estado de este usuario?',
+                    text: `¿Deseas ${textoAccion} este usuario?`,
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#0018F4',
                     cancelButtonColor: '#d33',
-                    confirmButtonText: 'Sí, cambiar',
+                    confirmButtonText: `Sí, ${textoAccion}`,
                     cancelButtonText: 'Cancelar'
                 }).then((result) => {
                     if (result.isConfirmed) {
@@ -361,8 +383,11 @@ class ModalCrudController {
                             .then(res => res.json())
                             .then(data => {
                                 if (data.success) {
-                                    Swal.fire('¡Listo!', 'El estado se cambió correctamente.', 'success')
-                                        .then(() => location.reload());
+                                    Swal.fire(
+                                        '¡Listo!', 
+                                        `El usuario se ${textoEstado} correctamente.`, 
+                                        'success'
+                                    ).then(() => location.reload());
                                 } else {
                                     Swal.fire('Error', data.error || 'No se pudo cambiar el estado.', 'error');
                                 }
@@ -376,11 +401,13 @@ class ModalCrudController {
         });
 
         this.form.addEventListener('submit', (e) => {
-            if (this.establecimientoOriginal && this.inputs.establecimiento.value !== this.establecimientoOriginal) {
+            const establecimientoActual = this.inputs.establecimiento.value;
+
+            if (this.establecimientoOriginal && establecimientoActual !== this.establecimientoOriginal) {
                 e.preventDefault();
                 Swal.fire({
                     title: '¿Estás seguro?',
-                    text: 'Estás cambiando la establecimiento de este usuario. ¿Deseas continuar?',
+                    text: 'Estás cambiando el establecimiento de este usuario. ¿Deseas continuar?',
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonText: 'Sí, cambiar',
@@ -398,6 +425,7 @@ class ModalCrudController {
             this.ocultarError(this.errorUsuario, this.inputs.usuario);
             this.ocultarError(this.errorCorreo, this.inputs.correo);
             this.ocultarError(this.errorContrasena, this.inputs.contraseña);
+            this.ocultarError(this.errorEstablecimiento, this.inputs.establecimiento);
 
             if (!this.validarFormulario()) return;
 
@@ -449,7 +477,7 @@ document.addEventListener('DOMContentLoaded', () => {
             usuario: 'modalUsuarioNombre',
             correo: 'modalUsuarioCorreo',
             rol: 'modalUsuarioRol',
-            establecimiento: 'modalUsuarioestablecimiento',
+            establecimiento: 'modalUsuarioEstablecimiento',
             contraseña: 'modalUsuarioContraseña',
             confirmar_contraseña: 'modalUsuarioConfirmarContraseña',
             estado: 'modalUsuarioEstado'
@@ -457,6 +485,7 @@ document.addEventListener('DOMContentLoaded', () => {
         errorUsuarioId: 'errorUsuario',
         errorCorreoId: 'errorCorreo',
         errorContrasenaId: 'errorContrasena',
+        errorEstablecimientoId: 'errorEstablecimiento',
         cambiarContrasenaWrapperId: 'cambiarContrasenaWrapper',
         checkCambiarContrasenaId: 'checkCambiarContrasena',
         camposContrasenaId: 'camposContrasena'

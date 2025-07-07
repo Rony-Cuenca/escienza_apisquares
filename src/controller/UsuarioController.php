@@ -16,6 +16,7 @@ class UsuarioController
         $total = Usuario::contarPorEstablecimiento($id_establecimiento);
         $establecimientos = Usuario::obtenerEstablecimientosPorCliente($_SESSION['id_cliente']);
         $correo_cliente = Usuario::obtenerCorreoCliente($_SESSION['id_cliente']);
+        $nombre_establecimiento_logueado = Usuario::obtenerNombreEstablecimiento($_SESSION['id_establecimiento']);
         $contenido = 'view/components/usuario.php';
         require 'view/layout.php';
     }
@@ -24,7 +25,8 @@ class UsuarioController
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $datos = $this->limpiarDatos($_POST);
-            $error = $this->validarDatos($datos);
+
+            $error = $this->validarDatos($datos, false, false);
             if ($error) {
                 $contenido = __DIR__ . '/../view/components/error.php';
                 require 'view/layout.php';
@@ -45,7 +47,9 @@ class UsuarioController
                 exit;
             }
 
-            $hashed_password = password_hash($datos['contraseña'], PASSWORD_BCRYPT);            Usuario::insertar(
+            $hashed_password = password_hash($datos['contraseña'], PASSWORD_BCRYPT);
+
+            Usuario::insertar(
                 $datos['usuario'],
                 $datos['correo'],
                 $datos['rol'],
@@ -64,8 +68,11 @@ class UsuarioController
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $datos = $this->limpiarDatos($_POST);
+
             $id_usuario = intval($datos['id_usuario']);
-            $error = $this->validarDatos($datos, true);
+            $es_propio_usuario = ($id_usuario == $_SESSION['id_usuario']);
+            
+            $error = $this->validarDatos($datos, true, $es_propio_usuario);
 
             if ($error) {
                 $contenido = __DIR__ . '/../view/components/error.php';
@@ -95,6 +102,13 @@ class UsuarioController
                 $hashed_password = password_hash($datos['contraseña'], PASSWORD_BCRYPT);
             }
 
+            // Si es el propio usuario, mantener ciertos valores de la sesión
+            if ($es_propio_usuario) {
+                // Mantener el rol y establecimiento actuales si se está editando a sí mismo
+                $datos['rol'] = $_SESSION['rol'];
+                $datos['id_establecimiento'] = $_SESSION['id_establecimiento'];
+            }
+
             Usuario::actualizar(
                 $id_usuario,
                 $datos['usuario'],
@@ -103,15 +117,14 @@ class UsuarioController
                 $datos['id_establecimiento'],
                 intval($datos['estado']),
                 $_SESSION['id_cliente'],
-                $hashed_password,
-                $_SESSION['usuario']
+                $_SESSION['usuario'],
+                $hashed_password
             );
 
-            if ($id_usuario == $_SESSION['id_usuario']) {
+            if ($es_propio_usuario) {
                 $_SESSION['usuario'] = $datos['usuario'];
                 $_SESSION['correo'] = $datos['correo'];
-                $_SESSION['rol'] = $datos['rol'];
-                $_SESSION['id_establecimiento'] = $datos['id_establecimiento'];
+                // No actualizar rol ni establecimiento en sesión ya que no los cambiamos
             }
             header('Location: index.php?controller=usuario');
             exit;
@@ -163,41 +176,58 @@ class UsuarioController
 
     private function limpiarDatos($data)
     {
+        // Si hay campos hidden (para el propio usuario), usar esos valores
+        $rol = isset($data['rol_hidden']) ? trim(strip_tags($data['rol_hidden'])) : trim(strip_tags($data['rol'] ?? ''));
+        $id_establecimiento = isset($data['id_establecimiento_hidden']) ? intval($data['id_establecimiento_hidden']) : intval($data['id_establecimiento'] ?? 0);
+        $estado = isset($data['estado_hidden']) ? intval($data['estado_hidden']) : (isset($data['estado']) ? intval($data['estado']) : 1);
+        
         return [
             'id_usuario' => isset($data['id_usuario']) ? intval($data['id_usuario']) : 0,
             'usuario' => trim(strip_tags($data['usuario'] ?? '')),
             'correo' => trim(strip_tags($data['correo'] ?? '')),
-            'rol' => trim(strip_tags($data['rol'] ?? '')),
-            'id_establecimiento' => intval($data['id_establecimiento'] ?? 0),
-            'estado' => isset($data['estado']) ? intval($data['estado']) : 1,
+            'rol' => $rol,
+            'id_establecimiento' => $id_establecimiento,
+            'estado' => $estado,
             'contraseña' => $data['contraseña'] ?? '',
             'confirmar_contraseña' => $data['confirmar_contraseña'] ?? ''
         ];
     }
 
-    private function validarDatos($datos, $esEdicion = false)
+    private function validarDatos($datos, $esEdicion = false, $esPropioUsuario = false)
     {
         if ($esEdicion && $datos['id_usuario'] <= 0) {
             return 'ID de usuario inválido';
         }
-        if (empty($datos['usuario']) || empty($datos['rol']) || $datos['id_establecimiento'] <= 0) {
-            return 'Todos los campos son obligatorios';
+        
+        // Validaciones básicas
+        if (empty($datos['usuario'])) {
+            return 'El nombre de usuario es obligatorio';
+        }
+        
+        if (empty($datos['correo'])) {
+            return 'El correo es obligatorio';
+        }
+
+        // Si no es el propio usuario, validar rol y establecimiento
+        if (!$esPropioUsuario) {
+            if (empty($datos['rol']) || $datos['id_establecimiento'] <= 0) {
+                return 'Todos los campos son obligatorios';
+            }
         }
 
         if (preg_match('/[áéíóúÁÉÍÓÚ]/u', $datos['usuario'])) {
             return 'El nombre de usuario no debe contener tildes';
         }
 
-        if (empty($datos['correo'])) {
-            return 'El correo es obligatorio';
-        }
-
         if (!filter_var($datos['correo'], FILTER_VALIDATE_EMAIL)) {
             return 'El correo no es válido';
         }
+        
+        // Validación de contraseña solo si se proporciona
         if (!$esEdicion && (empty($datos['contraseña']) || empty($datos['confirmar_contraseña']))) {
             return 'La contraseña es obligatoria';
         }
+        
         if (!empty($datos['contraseña']) || !empty($datos['confirmar_contraseña'])) {
             if ($datos['contraseña'] !== $datos['confirmar_contraseña']) {
                 return 'Las contraseñas no coinciden';

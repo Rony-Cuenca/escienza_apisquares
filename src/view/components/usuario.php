@@ -1,29 +1,27 @@
 <div class="w-full px-2 md:px-10 py-10 bg-gray-200 flex-1 flex flex-col">
-    <div class="flex items-center justify-between w-full pt-6 pb-10 px-8 rounded-t-lg"
-        style="background: linear-gradient(to bottom, #60A5FA 80%, #fff 100%);">
-        <span class="text-xl text-white" style="font-family: 'Montserrat', sans-serif;">LISTA DE USUARIOS</span>
-        <?php if ($_SESSION['rol'] === 'Administrador'): ?>
-            <div class="flex gap-2">
-                <button id="btnNuevoUsuario"
-                    class="flex items-center gap-2 bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-normal py-1.5 px-3 md:py-2 md:px-4 rounded-lg shadow text-sm md:text-base"
-                    data-correo-cliente="<?= htmlspecialchars($correo_cliente) ?>">
-                    <span class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-white">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="rgba(0,0,0,0.3)" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m6-6H6" />
+    <div class="w-full bg-white rounded-lg shadow-2xl shadow-gray-300/40 p-2 md:p-8">
+        <!-- Cabecera con título y botones -->
+        <div class="flex items-center justify-between w-full pb-6 px-6 border-b border-gray-200 mb-8">
+            <span class="text-xl text-gray-800 font-semibold" style="font-family: 'Montserrat', sans-serif;">LISTA DE USUARIOS</span>
+            <?php if ($_SESSION['rol'] === 'Administrador'): ?>
+                <div class="flex gap-2">
+                    <button id="btnNuevoUsuario"
+                        class="flex items-center gap-2 bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-normal py-1.5 px-3 md:py-2 md:px-4 rounded-lg shadow text-sm md:text-base"
+                        data-correo-cliente="<?= htmlspecialchars($correo_cliente) ?>">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
                         </svg>
-                    </span>
-                    Nuevo
-                </button>
-                <button id="btnGenerarCodigo" class="bg-green-600 hover:bg-green-700 text-white font-normal py-1.5 px-3 md:py-2 md:px-4 rounded-lg shadow flex items-center gap-2 text-sm md:text-base">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 010 5.656l-3.535 3.535a4 4 0 01-5.657-5.657l2.121-2.121m6.364-6.364a4 4 0 015.657 5.657l-2.121 2.121" />
-                    </svg>
-                    Generar Código de Acceso
-                </button>
-            </div>
-        <?php endif; ?>
-    </div>
-    <div class="w-full bg-white rounded-b-lg shadow-2xl shadow-blue-300 p-2 md:p-8">
+                        Nuevo
+                    </button>
+                    <button id="btnGenerarCodigo" class="bg-green-600 hover:bg-green-700 text-white font-normal py-1.5 px-3 md:py-2 md:px-4 rounded-lg shadow flex items-center gap-2 text-sm md:text-base">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 010 5.656l-3.535 3.535a4 4 0 01-5.657-5.657l2.121-2.121m6.364-6.364a4 4 0 015.657 5.657l-2.121 2.121" />
+                        </svg>
+                        Generar Código de Acceso
+                    </button>
+                </div>
+            <?php endif; ?>
+        </div>
         <!-- Tabla de Usuarios -->
         <div class="mb-8 overflow-x-auto rounded-xl border border-[#2563EB]" style="font-family: 'Poppins', sans-serif; font-weight: 300;">
             <table class="w-full min-w-max bg-white text-sm">
@@ -40,7 +38,7 @@
                             <a href="index.php?controller=usuario&sort=rol&dir=<?= $sort === 'rol' && $dir === 'ASC' ? 'DESC' : 'ASC' ?>" class="hover:underline"><strong>ROL</strong></a>
                         </th>
                         <th class="py-2 px-1 text-left font-semibold border-b border-[#2563EB] w-[220px]">
-                            <a href="index.php?controller=usuario&sort=establecimiento&dir=<?= $sort === 'establecimiento' && $dir === 'ASC' ? 'DESC' : 'ASC' ?>" class="hover:underline"><strong>establecimiento</strong></a>
+                            <a href="index.php?controller=usuario&sort=establecimiento&dir=<?= $sort === 'establecimiento' && $dir === 'ASC' ? 'DESC' : 'ASC' ?>" class="hover:underline"><strong>ESTABLECIMIENTO</strong></a>
                         </th>
                         <th class="py-2 px-1 text-left font-semibold border-b border-[#2563EB] w-[120px]">
                             <a href="index.php?controller=usuario&sort=estado&dir=<?= $sort === 'estado' && $dir === 'ASC' ? 'DESC' : 'ASC' ?>" class="hover:underline"><strong>ESTADO</strong></a>
@@ -184,7 +182,7 @@
                     <label class="block mb-1 font-semibold text-sm text-gray-700">Nombre de usuario</label>
                     <input type="text" name="usuario" id="modalUsuarioNombre" required
                         class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400" />
-                    <div id="errorUsuario" class="text-red-600 text-sm mb-1 hidden flex items-center gap-1 pt-1">
+                    <div id="errorUsuario" class="text-red-600 text-sm mb-1 hidden pt-1">
                         <!-- El icono y mensaje se insertan por JS -->
                     </div>
                 </div>
@@ -192,7 +190,7 @@
                     <label class="block mb-1 font-semibold text-sm text-gray-700">Correo electrónico</label>
                     <input type="email" name="correo" id="modalUsuarioCorreo" required
                         class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors" />
-                    <div id="errorCorreo" class="text-red-600 text-sm mb-1 hidden flex items-center gap-1 pt-1">
+                    <div id="errorCorreo" class="text-red-600 text-sm mb-1 hidden pt-1">
                         <!-- El icono y mensaje se insertan por JS -->
                     </div>
                 </div>
@@ -205,25 +203,18 @@
                         <option value="Vendedor">Vendedor</option>
                     </select>
                 </div>
-                <?php if (isset($_SESSION['id_usuario']) && isset($editingUserId) && $_SESSION['id_usuario'] == $editingUserId): ?>
-                    <div>
-                        <label class="block mb-1 font-semibold text-sm text-gray-700">establecimiento</label>
-                        <input type="text" value="<?= htmlspecialchars($establecimientoNombre) ?>" class="w-full border rounded px-3 py-2 bg-gray-100" readonly>
-                        <input type="hidden" name="id_establecimiento" value="<?= htmlspecialchars($idestablecimiento) ?>">
+                <div>
+                    <label class="block mb-1 font-semibold text-sm text-gray-700">Establecimiento</label>
+                    <select name="id_establecimiento" id="modalUsuarioEstablecimiento" required class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                        <option value="">Selecciona un establecimiento</option>
+                        <?php foreach ($establecimientos as $est): ?>
+                            <option value="<?= $est['id'] ?>"><?= htmlspecialchars($est['etiqueta']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                    <div id="errorEstablecimiento" class="text-red-600 text-sm mb-1 hidden pt-1">
+                        <!-- El icono y mensaje se insertan por JS -->
                     </div>
-                <?php else: ?>
-                    <div>
-                        <label class="block mb-1 font-semibold text-sm text-gray-700">establecimiento</label>
-                        <select name="id_establecimiento" id="modalUsuarioestablecimiento" required class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400">
-                            <option value="">Selecciona una establecimiento</option>
-                            <?php foreach ($establecimientoes as $suc): ?>
-                                <option value="<?= $suc['id'] ?>"><?= htmlspecialchars($suc['razon_social']) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                        <input type="text" id="modalUsuarioestablecimientoReadonly" class="w-full border rounded px-3 py-2 bg-gray-100 mt-2" readonly style="display:none;">
-                        <input type="hidden" name="id_establecimiento" id="modalUsuarioestablecimientoHidden" />
-                    </div>
-                <?php endif; ?>
+                </div>
             </div>
             <div id="cambiarContrasenaWrapper" class="md:col-span-2 mt-4 mb-2 hidden">
                 <label class="inline-flex items-center">
@@ -239,7 +230,7 @@
                 <div>
                     <label class="block mb-1 font-semibold text-sm text-gray-700">Confirmar Contraseña</label>
                     <input type="password" name="confirmar_contraseña" id="modalUsuarioConfirmarContraseña" required class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400" autocomplete="new-password" />
-                    <div id="errorContrasena" class="text-red-600 text-sm mb-1 hidden flex items-center gap-1 pt-1">
+                    <div id="errorContrasena" class="text-red-600 text-sm mb-1 hidden pt-1">
                         <!-- El icono y mensaje se insertan por JS -->
                     </div>
                 </div>
@@ -300,7 +291,8 @@
 <script>
     window.ID_USUARIO_LOGUEADO = <?= json_encode($_SESSION['id_usuario']) ?>;
     window.ROL_USUARIO_LOGUEADO = <?= json_encode($_SESSION['rol']) ?>;
-    window.ID_establecimiento_LOGUEADO = <?= json_encode($_SESSION['id_establecimiento']) ?>;
+    window.ID_ESTABLECIMIENTO_LOGUEADO = <?= json_encode($_SESSION['id_establecimiento']) ?>;
+    window.NOMBRE_ESTABLECIMIENTO_LOGUEADO = <?= json_encode($nombre_establecimiento_logueado) ?>;
 </script>
 
 <script src="../assets/js/usuario.js"></script>

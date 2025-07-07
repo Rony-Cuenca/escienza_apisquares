@@ -116,7 +116,7 @@ class AccessTokenController
             $id_establecimiento = $decoded->id_establecimiento ?? $token['id_establecimiento'];
             $id_cliente = $token['id_cliente'] ?? null;
             $establecimiento = \Establecimiento::obtenerPorId($id_establecimiento, $id_cliente);
-            $nombre_establecimiento = $establecimiento ? $establecimiento['razon_social'] : $id_establecimiento;
+            $nombre_establecimiento = $establecimiento ? $establecimiento['etiqueta'] : $id_establecimiento;
             echo json_encode([
                 'success' => true,
                 'token' => $token,

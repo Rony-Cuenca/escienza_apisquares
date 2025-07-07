@@ -31,27 +31,25 @@
     </script>
 <?php endif; ?>
 
-<div class="w-full items-center px-2 md:px-5 py-10 bg-gray-200 flex-1 flex flex-col">
-    <div class="flex flex-col items-center w-full">
-        <div class="w-full">
-            <div class="mx-auto bg-white rounded-lg shadow-lg overflow-hidden max-w-7xl">
-                <div class="p-8">
-                    <div class="w-full flex flex-col md:flex-row items-center justify-between mb-6 gap-4">
-                        <h2 class="text-2xl md:text-4xl font-bold text-gray-800 text-center w-full md:w-auto uppercase">
-                            Comparación de Reportes
-                        </h2>
-                        <button onclick="abrirModal()" id="btnNuevoEstablecimiento" class="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold 
-                                py-2.5 px-5 rounded-xl shadow-md transition duration-200">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none"
-                                viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.586-6.586A4 4 0 0015.172 7z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M16 3h5v5" />
-                            </svg>
-                            Unir Excel
-                        </button>
-                    </div>
+<div class="w-full px-2 md:px-10 py-10 bg-gray-200 flex-1 flex flex-col">
+    <div class="w-full bg-white rounded-lg shadow-2xl shadow-gray-300/40 p-2 md:p-8">
+        <!-- Cabecera -->
+        <div class="w-full flex flex-col md:flex-row items-center justify-between pt-6 pb-6 px-6 border-b border-gray-200 mb-8 gap-4">
+            <h2 class="text-2xl md:text-4xl font-bold text-gray-800 text-center w-full md:w-auto uppercase">
+                Comparación de Reportes
+            </h2>
+            <button onclick="abrirModal()" id="btnNuevoEstablecimiento" class="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold 
+                    py-2.5 px-5 rounded-xl shadow-md transition duration-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none"
+                    viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.586-6.586A4 4 0 0015.172 7z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M16 3h5v5" />
+                </svg>
+                Unir Excel
+            </button>
+        </div>
                     <form action="index.php?controller=cuadres&action=cuadre&user=<?php echo $_SESSION['id_usuario'] ?>" method="post" enctype="multipart/form-data">
                         <div class="flex gap-4 mb-6 mt-12">
                             <div class="flex-1">
@@ -97,7 +95,6 @@
                 </div>
             </div>
             <?php include __DIR__ . '/cuadre_resultados.php'; ?>
-        </div>
     </div>
 </div>
 

@@ -1,6 +1,11 @@
 <div class="w-full px-2 md:px-10 py-10 bg-gray-200 flex-1 flex flex-col">
-    <div class="w-full mx-auto bg-white rounded-lg shadow-lg p-8">
-        <h2 class="text-3xl font-bold text-gray-900 text-center mb-8 uppercase">Reporte de Cuadres</h2>
+    <div class="w-full mx-auto bg-white rounded-lg shadow-2xl shadow-gray-300/40 p-8">
+        <!-- Cabecera -->
+        <div class="flex flex-col items-center w-full pb-6 border-b border-gray-200 mb-8">
+            <h2 class="text-3xl font-bold text-gray-900 text-center uppercase">Reporte de Cuadres</h2>
+        </div>
+        
+        <!-- Formulario de filtros -->
         <form method="GET" action="index.php" class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-6">
             <input type="hidden" name="controller" value="reporte">
             <input type="hidden" name="action" value="index">

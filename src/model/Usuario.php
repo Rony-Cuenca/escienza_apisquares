@@ -37,7 +37,7 @@ class Usuario
         }
     }
 
-    public static function actualizar($id, $usuario, $correo, $rol, $id_establecimiento, $estado, $id_cliente, $hashed_password = null, $user_update)
+    public static function actualizar($id, $usuario, $correo, $rol, $id_establecimiento, $estado, $id_cliente, $user_update, $hashed_password = null)
     {
         $conn = Conexion::conectar();
         $date_update = date('Y-m-d H:i:s');
@@ -94,7 +94,7 @@ class Usuario
     {
         $conn = Conexion::conectar();
         $sql = "SELECT e.id, e.codigo_establecimiento, e.tipo_establecimiento, e.direccion, 
-                       c.razon_social, c.ruc 
+                       e.etiqueta, c.razon_social, c.ruc 
                 FROM establecimiento e 
                 INNER JOIN cliente c ON e.id_cliente = c.id 
                 WHERE e.id_cliente = ? AND e.estado = 1 
@@ -106,6 +106,21 @@ class Usuario
         return $res->fetch_all(MYSQLI_ASSOC);
     }
 
+    public static function obtenerNombreEstablecimiento($id_establecimiento)
+    {
+        $conn = Conexion::conectar();
+        $sql = "SELECT CONCAT(e.etiqueta, ' (', e.codigo_establecimiento, ')') AS nombre_completo
+                FROM establecimiento e 
+                INNER JOIN cliente c ON e.id_cliente = c.id 
+                WHERE e.id = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i", $id_establecimiento);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        $row = $res->fetch_assoc();
+        return $row['nombre_completo'] ?? null;
+    }
+
     public static function obtenerPaginadoPorEstablecimiento($id_establecimiento, $limit, $offset, $sort, $dir)
     {
         $conn = Conexion::conectar();
@@ -114,7 +129,7 @@ class Usuario
         $dir = $dir === 'DESC' ? 'DESC' : 'ASC';
         $sql = "
         SELECT u.id, u.usuario, u.correo, u.estado, u.rol, 
-               CONCAT(c.razon_social, ' - ', e.tipo_establecimiento, ' (', e.codigo_establecimiento, ')') AS establecimiento, 
+               CONCAT(e.etiqueta, ' (', e.codigo_establecimiento, ')') AS establecimiento, 
                u.id_establecimiento
         FROM usuario u
         INNER JOIN establecimiento e ON u.id_establecimiento = e.id
