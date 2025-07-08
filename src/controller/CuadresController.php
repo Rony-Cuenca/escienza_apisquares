@@ -89,6 +89,7 @@ class CuadresController {
                     $SIRE = $this->sire($_FILES['exe_sire'], $_GET['user']);
                     extract($SIRE);
                     $this->ResultsSIRE = $SIRE['ResultsSIRE'];
+                    $this->validarSire = $SIRE['ResultsSIRE'];
                     try {
                         $nuboxResponse = $this->cargar_archivo($_FILES['exe_nubox'], 1);
                     } catch (Exception $e) {
@@ -96,11 +97,11 @@ class CuadresController {
                         header("Location: index.php?controller=cuadres&action=index&error={$errorMsg}");
                         exit;
                     }
-                    if (isset($nuboxResponse['resultados']) && $nuboxResponse['estado'] == 1 && isset($nuboxResponse['validarNubox'])) {
+                    if (isset($nuboxResponse['resultados']) && $nuboxResponse['estado'] == 1) {
                         $NUBOX = $this->procesarDatosNubox($nuboxResponse['resultados']);
                         extract($NUBOX);
                         $this->ResultsNUBOX = $NUBOX['ResultsNUBOX'];
-                        $this->validarNubox = $nuboxResponse['validarNubox'];
+                        $this->validarNubox = $NUBOX['ResultsNUBOX'];
                     }
                     $validarSeries = $this->Validar_series();
                     extract($validarSeries);
@@ -278,13 +279,6 @@ class CuadresController {
                     $IGVSIRE = $fila[$colIGV];
                     $DscBISIRE = $fila[$colDscBI];
                     $DscIGVSIRE = $fila[$colDscIGV];
-
-                    $total_fila = floatval($GravSIRE) + floatval($ExoSIRE) + floatval($InaSIRE) + floatval($IGVSIRE) + floatval($DscBISIRE) + floatval($DscIGVSIRE);
-                    $this->validarSire[] = [
-                        'serie' => $serieSIRE,
-                        'total' => $total_fila,
-                        'fecha' => $fechaSIRE
-                    ];
     
                     if (!isset($DataSerieGraSIRE[$serieSIRE])) {
                         $DataSerieGraSIRE[$serieSIRE] = 0;
@@ -304,7 +298,6 @@ class CuadresController {
                     $DataSerieDscIGVSIRE[$serieSIRE] += floatval($DscIGVSIRE);
                     $conteoSeriesSIRE[$serieSIRE]++;
                 }
-                //print_r($this->validarSire);
     
                 ksort($DataSerieGraSIRE);
                 
@@ -547,90 +540,56 @@ class CuadresController {
     }
 
     private function Validar_series() {
-        $user = Usuario::obtenerId($_GET['user']);
-        
-        $user_create = $user['usuario'];
-        $user_update = $user['usuario'];
-        $id_establecimiento = $user['id_establecimiento'];
-
-
         $ErrorValidarSeries = null;
         $ResultsValidarSeries = [];
 
         $sire = $this->validarSire;
         $nubox = $this->validarNubox;
 
-        $numeros_sire = array_column($sire, 'serie');
-        $numeros_nubox = array_column($nubox, 'serie');
+        $series_sire = array_column($sire, 'serie');
+        $series_nubox = array_column($nubox, 'serie');
 
-        $faltantes_en_nubox = array_diff($numeros_sire, $numeros_nubox);
-        $faltantes_en_sire = array_diff($numeros_nubox, $numeros_sire);
+        $solo_en_sire = array_diff($series_sire, $series_nubox);
+        $solo_en_nubox = array_diff($series_nubox, $series_sire);
 
-        $resultado = [];
-        $totalSerie = 0;
-        $fechas = [];
-    
-        foreach ($faltantes_en_nubox as $serie) {
-            foreach ($sire as $item) {
-                if ($item['serie'] === $serie) {
-                    $totalSerie += $item['total'];
-                    if (!empty($item['fecha'])) {
-                        $fechas[] = $item['fecha'];
-                    }
-                }
-            }
-
-            $resultado[] = [
-                'serie' => $serie,
-                'total' => $totalSerie,
-                'fecha' => !empty($fechas) ? min($fechas) : null,
-                'cuadre' => 'NUBOX'
-            ];
-        }
-    
-        foreach ($faltantes_en_sire as $serie) {
-            $totalSerie = 0;
-            $fechas = [];
-            foreach ($nubox as $item) {
-                if ($item['serie'] === $serie) {
-                    $totalSerie += $item['total'];
-                    if (!empty($item['fecha'])) {
-                        $fechas[] = $item['fecha'];
-                    }
-                }
-            }
-    
-            $resultado[] = [
-                'serie' => $serie,
-                'total' => $totalSerie,
-                'fecha' => !empty($fechas) ? min($fechas) : null,
-                'cuadre' => 'SIRE'
-            ];
-        }
-
-        $agrupados = [];
-
-        foreach ($resultado as $item) {
-            $serie = $item['serie'];
-            $total = $item['total'];
-            $cuadre = $item['cuadre'];
-
-            if (!isset($agrupados[$serie])) {
-                $agrupados[$serie] = [
-                    'serie' => $serie,
-                    'conteo' => 0,
-                    'total' => 0,
-                    'fecha' => $item['fecha'] ?? null,
-                    'cuadre' => $cuadre
+        $resultado_sire = [];
+        foreach ($sire as $item) {
+            if (in_array($item['serie'], $solo_en_sire)) {
+                $resultado_sire[] = [
+                    'origen' => 'SIRE',
+                    'serie' => $item['serie'],
+                    'conteo' => $item['conteo'],
+                    'total' => $item['total'],
+                    'fecha' => $item['fecha_registro']
                 ];
             }
-
-            $agrupados[$serie]['conteo']++;
-            $agrupados[$serie]['total'] += $total;
         }
 
-        // Si deseas que sea array con índices numéricos:
-        $ResultsValidarSeries = array_values($agrupados);
+        $resultado_nubox = [];
+        foreach ($nubox as $item) {
+            if (in_array($item['serie'], $solo_en_nubox)) {
+                $resultado_nubox[] = [
+                    'origen' => 'NUBOX',
+                    'serie' => $item['serie'],
+                    'conteo' => $item['conteo'],
+                    'total' => $item['total'],
+                    'fecha' => $item['fecha_registro']
+                ];
+            }
+        }
+
+        
+        $resultado_final = array_merge($resultado_sire, $resultado_nubox);
+
+        foreach ($resultado_final as $item) {
+            $ResultsValidarSeries[] = [
+                'serie'          => $item['serie'],
+                'conteo'         => $item['conteo'],
+                'total'          => $item['total'],
+                'fecha'          => $item['fecha'],
+                'cuadre'         => $item['origen']
+            ];
+        }
     
         return compact('ErrorValidarSeries', 'ResultsValidarSeries');
     }
