@@ -32,8 +32,33 @@
                     Resultados de Cuadres
                 </h2>
             </div>
+
+            <div class="w-full mt-8">
+                <div class="bg-gray-50 rounded-lg border border-gray-200 overflow-hidden shadow-sm">
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm min-w-max">
+                            <thead class="bg-gray-50 text-xs uppercase text-gray-900">
+                                <tr>
+                                    <th class="px-3 py-2 font-semibold text-lg border-b text-center whitespace-nowrap">SIRE</th>
+                                    <th class="px-3 py-2 font-semibold text-lg border-b text-center whitespace-nowrap">NUBOX</th>
+                                    <th class="px-3 py-2 font-semibold text-lg border-b text-center whitespace-nowrap">EDSUITE</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-3 py-2 text-lg text-gray-700 text-center font-semibold whitespace-nowrap"><?php echo number_format(array_sum(array_column($ResultsEDSUITE, 'total')), 2); ?></td>
+                                    <td class="px-3 py-2 text-lg text-gray-700 text-center font-semibold whitespace-nowrap"><?php echo number_format(array_sum(array_column($ResultsNUBOX, 'total')), 2); ?></td>
+                                    <td class="px-3 py-2 text-lg text-gray-700 text-center font-semibold whitespace-nowrap"><?php echo number_format(array_sum(array_column($ResultsSIRE, 'total')), 2); ?></td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                </div>
+            </div>
+
             <!-- Contenido de resultados -->
-            <div class="flex flex-col xl:flex-row gap-6 w-full">
+            <div class="flex flex-col xl:flex-row gap-6 w-full mt-8">
                 <?php if (!empty($ResultsSIRE)): ?>
                     <div class="w-full xl:w-1/2 min-w-0">
                         <div class="bg-gray-50 rounded-lg border border-gray-200 overflow-hidden shadow-sm">
@@ -67,6 +92,17 @@
                                                 </tr>
                                             <?php endforeach; ?>
                                         </tbody>
+                                        <tfoot class="divide-y divide-gray-200">
+                                            <tr>
+                                                <td class="px-3 py-2 text-gray-900 font-semibold whitespace-nowrap">Total:</td>
+                                                <td class="px-3 py-2 text-gray-900 font-semibold whitespace-nowrap"><?php echo array_sum(array_column($ResultsSIRE, 'conteo')); ?></td>
+                                                <td class="px-3 py-2 text-gray-900 font-semibold whitespace-nowrap"><?php echo number_format(array_sum(array_column($ResultsSIRE, 'bi')), 2); ?></td>
+                                                <td class="px-3 py-2 text-gray-900 font-semibold whitespace-nowrap"><?php echo number_format(array_sum(array_column($ResultsSIRE, 'exonerado')), 2); ?></td>
+                                                <td class="px-3 py-2 text-gray-900 font-semibold whitespace-nowrap"><?php echo number_format(array_sum(array_column($ResultsSIRE, 'inafecto')), 2); ?></td>
+                                                <td class="px-3 py-2 text-gray-900 font-semibold whitespace-nowrap"><?php echo number_format(array_sum(array_column($ResultsSIRE, 'igv')), 2); ?></td>
+                                                <td class="px-3 py-2 text-gray-900 font-semibold whitespace-nowrap"><?php echo number_format(array_sum(array_column($ResultsSIRE, 'total')), 2); ?></td>
+                                            </tr>
+                                        </tfoot>
                                     </table>
                                 </div>
                             </div>
@@ -107,6 +143,17 @@
                                                 </tr>
                                             <?php endforeach; ?>
                                         </tbody>
+                                        <tfoot class="divide-y divide-gray-200">
+                                            <tr>
+                                                <td class="px-3 py-2 text-gray-900 font-semibold whitespace-nowrap">Total:</td>
+                                                <td class="px-3 py-2 text-gray-900 font-semibold whitespace-nowrap"><?php echo array_sum(array_column($ResultsNUBOX, 'conteo')); ?></td>
+                                                <td class="px-3 py-2 text-gray-900 font-semibold whitespace-nowrap"><?php echo number_format(array_sum(array_column($ResultsNUBOX, 'bi')), 2); ?></td>
+                                                <td class="px-3 py-2 text-gray-900 font-semibold whitespace-nowrap"><?php echo number_format(array_sum(array_column($ResultsNUBOX, 'exonerado')), 2); ?></td>
+                                                <td class="px-3 py-2 text-gray-900 font-semibold whitespace-nowrap"><?php echo number_format(array_sum(array_column($ResultsNUBOX, 'inafecto')), 2); ?></td>
+                                                <td class="px-3 py-2 text-gray-900 font-semibold whitespace-nowrap"><?php echo number_format(array_sum(array_column($ResultsNUBOX, 'igv')), 2); ?></td>
+                                                <td class="px-3 py-2 text-gray-900 font-semibold whitespace-nowrap"><?php echo number_format(array_sum(array_column($ResultsNUBOX, 'total')), 2); ?></td>
+                                            </tr>
+                                        </tfoot>
                                     </table>
                                 </div>
                             </div>
@@ -142,6 +189,14 @@
                                             </tr>
                                         <?php endforeach; ?>
                                     </tbody>
+                                    <tfoot class="divide-y divide-gray-200">
+                                        <tr>
+                                            <td class="px-3 py-2 text-gray-900 text-center font-semibold whitespace-nowrap">Total:</td>
+                                            <td class="px-3 py-2 text-gray-900 text-center font-semibold whitespace-nowrap"><?php echo array_sum(array_column($ResultsEDSUITE, 'conteo')); ?></td>
+                                            <td class="px-3 py-2 text-gray-900 text-center font-semibold whitespace-nowrap"><?php echo number_format(array_sum(array_column($ResultsEDSUITE, 'igv')), 2); ?></td>
+                                            <td class="px-3 py-2 text-gray-900 text-center font-semibold whitespace-nowrap"><?php echo number_format(array_sum(array_column($ResultsEDSUITE, 'total')), 2); ?></td>
+                                        </tr>
+                                    </tfoot>
                                 </table>
                             </div>
                         </div>
