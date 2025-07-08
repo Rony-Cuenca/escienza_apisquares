@@ -33,9 +33,8 @@
                 </h2>
             </div>
 
-            <div class="w-full mt-8">
+            <!--<div class="w-full mt-8">
                 <div class="bg-gray-50 rounded-lg border border-gray-200 overflow-hidden shadow-sm">
-
                     <div class="overflow-x-auto">
                         <table class="w-full text-sm min-w-max">
                             <thead class="bg-gray-50 text-xs uppercase text-gray-900">
@@ -55,7 +54,7 @@
                         </table>
 
                 </div>
-            </div>
+            </div>-->
 
             <!-- Contenido de resultados -->
             <div class="flex flex-col xl:flex-row gap-6 w-full mt-8">
