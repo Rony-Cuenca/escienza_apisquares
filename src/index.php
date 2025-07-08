@@ -7,24 +7,59 @@ $controller = $_GET['controller'] ?? null;
 $action = $_GET['action'] ?? null;
 $controlador = null;
 
-if (!isset($_SESSION['id_cliente'])) {
+// Verificar acceso de Super Admin
+if (!isset($_SESSION['id_cliente']) || $_SESSION['id_cliente'] === 0) {
     $accionesPublicas = [
         'auth' => ['login', 'register'],
         'accessToken' => ['validar'],
-        'usuario' => ['verificarUsuario', 'verificarCorreo']
+        'usuario' => ['verificarUsuario', 'verificarCorreo'],
+        'superadmin' => ['index', 'clientes', 'verCliente', 'volverSuperAdmin']
     ];
-    if (!isset($accionesPublicas[$controller]) || !in_array($action, $accionesPublicas[$controller])) {
+
+    // Si es Super Admin logueado, permitir acceso a todo
+    if (isset($_SESSION['is_super_admin']) && $_SESSION['is_super_admin'] === true) {
+        // Super Admin tiene acceso a todo
+    } elseif (isset($_SESSION['impersonating']) && $_SESSION['impersonating'] === true) {
+        // Si está impersonando, permitir volverSuperAdmin
+        if ($controller === 'superadmin' && $action === 'volverSuperAdmin') {
+            // Permitir acceso
+        } elseif (!isset($accionesPublicas[$controller]) || !in_array($action, $accionesPublicas[$controller])) {
+            header('Location: index.php?controller=auth&action=login');
+            exit;
+        }
+    } elseif (!isset($accionesPublicas[$controller]) || !in_array($action, $accionesPublicas[$controller])) {
         header('Location: index.php?controller=auth&action=login');
         exit;
     }
 } else {
+    // Verificar si es Super Admin por rol (casos especiales)
+    if (isset($_SESSION['rol']) && $_SESSION['rol'] === 'SuperAdmin') {
+        $_SESSION['is_super_admin'] = true; // Asegurar que esté marcado
+    }
+
     if ($controller === 'auth' && $action === 'login') {
         header('Location: index.php?controller=home');
         exit;
     }
     if ($controller === null) {
+        // Si es SuperAdmin sin controller, ir a superadmin
+        if (isset($_SESSION['rol']) && $_SESSION['rol'] === 'SuperAdmin') {
+            header('Location: index.php?controller=superadmin');
+            exit;
+        }
         header('Location: index.php?controller=home');
         exit;
+    }
+    // No permitir acceso a superadmin si no es super admin
+    if ($controller === 'superadmin') {
+        $esSuperAdmin = (isset($_SESSION['is_super_admin']) && $_SESSION['is_super_admin'] === true) ||
+            (isset($_SESSION['rol']) && $_SESSION['rol'] === 'SuperAdmin') ||
+            (isset($_SESSION['impersonating']) && $_SESSION['impersonating'] === true && $action === 'volverSuperAdmin');
+
+        if (!$esSuperAdmin) {
+            header('Location: index.php?controller=home');
+            exit;
+        }
     }
 }
 
@@ -44,6 +79,10 @@ switch ($controller) {
     case 'auth':
         require_once 'controller/AuthController.php';
         $controlador = new AuthController();
+        break;
+    case 'superadmin':
+        require_once 'controller/SuperAdminController.php';
+        $controlador = new SuperAdminController();
         break;
     case 'usuario':
         require_once 'controller/UsuarioController.php';

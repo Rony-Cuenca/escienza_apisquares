@@ -198,6 +198,9 @@
                     <label class="block mb-1 font-semibold text-sm text-gray-700">Rol</label>
                     <select name="rol" id="modalUsuarioRol" required class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400">
                         <option value="">Selecciona un rol</option>
+                        <?php if (isset($_SESSION['is_super_admin']) && $_SESSION['is_super_admin']): ?>
+                            <option value="SuperAdmin">Super Administrador</option>
+                        <?php endif; ?>
                         <option value="Administrador">Administrador</option>
                         <option value="Contador">Contador</option>
                         <option value="Vendedor">Vendedor</option>

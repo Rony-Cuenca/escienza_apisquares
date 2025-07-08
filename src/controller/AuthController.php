@@ -25,15 +25,31 @@ class AuthController
             $user = Usuario::autenticar($usuario, $contrasena);
             if ($user) {
                 session_regenerate_id(true);
-                $_SESSION['id_cliente'] = $user['id_cliente'];
-                $_SESSION['usuario'] = $user['usuario'];
-                $_SESSION['id_usuario'] = $user['id'];
-                $_SESSION['correo'] = $user['correo'];
-                $_SESSION['rol'] = $user['rol'];
-                $_SESSION['id_establecimiento'] = $user['id_establecimiento'];
-                $_SESSION['ultima_actividad'] = time();
-                header('Location: index.php?controller=home');
-                exit;
+                
+                // Verificar si es Super Admin
+                if ($user['rol'] == 'SuperAdmin') {
+                    $_SESSION['id_cliente'] = $user['id_cliente']; // Mantener el cliente original
+                    $_SESSION['usuario'] = $user['usuario'];
+                    $_SESSION['id_usuario'] = $user['id'];
+                    $_SESSION['correo'] = $user['correo'];
+                    $_SESSION['rol'] = $user['rol'];
+                    $_SESSION['id_establecimiento'] = $user['id_establecimiento'];
+                    $_SESSION['is_super_admin'] = true;
+                    $_SESSION['ultima_actividad'] = time();
+                    header('Location: index.php?controller=superadmin');
+                    exit;
+                } else {
+                    $_SESSION['id_cliente'] = $user['id_cliente'];
+                    $_SESSION['usuario'] = $user['usuario'];
+                    $_SESSION['id_usuario'] = $user['id'];
+                    $_SESSION['correo'] = $user['correo'];
+                    $_SESSION['rol'] = $user['rol'];
+                    $_SESSION['id_establecimiento'] = $user['id_establecimiento'];
+                    $_SESSION['is_super_admin'] = false;
+                    $_SESSION['ultima_actividad'] = time();
+                    header('Location: index.php?controller=home');
+                    exit;
+                }
             } else {
                 $this->renderLoginView("Usuario o contraseña incorrectos");
             }

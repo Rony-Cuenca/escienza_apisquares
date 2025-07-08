@@ -19,6 +19,46 @@ class Usuario
         return false;
     }
 
+    // Verificar si es Super Admin
+    public static function esSuperAdmin($usuario_id = null)
+    {
+        if ($usuario_id === null && isset($_SESSION['id_usuario'])) {
+            $usuario_id = $_SESSION['id_usuario'];
+        }
+        
+        if (!$usuario_id) return false;
+        
+        $conn = Conexion::conectar();
+        $sql = "SELECT id FROM usuario WHERE id = ? AND (rol = 'SuperAdmin' OR (id_cliente = 9999 AND rol = 'SuperAdmin')) AND estado = 1";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i", $usuario_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result->num_rows > 0;
+    }
+
+    // Crear Super Admin (solo uso manual o migración)
+    public static function crearSuperAdmin($usuario, $correo, $contrasena)
+    {
+        $conn = Conexion::conectar();
+        $date_create = date('Y-m-d H:i:s');
+        $hashed_password = password_hash($contrasena, PASSWORD_BCRYPT);
+        
+        $sql = "INSERT INTO usuario (usuario, correo, contraseña, rol, user_create, user_update, id_cliente, id_establecimiento, estado, date_create, date_update)
+        VALUES (?, ?, ?, 'SuperAdmin', 'system', 'system', 0, 0, 1, ?, ?)";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("sssss", $usuario, $correo, $hashed_password, $date_create, $date_create);
+        
+        try {
+            return $stmt->execute();
+        } catch (mysqli_sql_exception $e) {
+            if ($e->getCode() == 1062) {
+                return false;
+            }
+            throw $e;
+        }
+    }
+
     public static function insertar($usuario, $correo, $rol, $id_establecimiento, $estado, $id_cliente, $hashed_password, $user_create)
     {
         $conn = Conexion::conectar();
@@ -190,5 +230,32 @@ class Usuario
         $stmt->execute();
         $res = $stmt->get_result();
         return $res->fetch_assoc() ? true : false;
+    }
+
+    // Obtener todos los clientes (solo para Super Admin)
+    public static function obtenerTodosLosClientes($limit = 10, $offset = 0, $sort = 'razon_social', $dir = 'ASC')
+    {
+        $conn = Conexion::conectar();
+        $validSorts = ['id', 'razon_social', 'ruc', 'telefono', 'correo', 'estado'];
+        if (!in_array($sort, $validSorts)) {
+            $sort = 'razon_social';
+        }
+        
+        $sql = "SELECT * FROM cliente ORDER BY $sort $dir LIMIT ? OFFSET ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("ii", $limit, $offset);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result->fetch_all(MYSQLI_ASSOC);
+    }
+
+    // Contar todos los clientes
+    public static function contarTodosLosClientes()
+    {
+        $conn = Conexion::conectar();
+        $sql = "SELECT COUNT(*) as total FROM cliente";
+        $result = $conn->query($sql);
+        $row = $result->fetch_assoc();
+        return $row['total'];
     }
 }
