@@ -1,8 +1,8 @@
 <div class="w-full">
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <div class="flex flex-col">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Reporte</label>
-            <select id="select-tipo-vari" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white">
+        <div class="flex flex-row items-center gap-2"> <!-- Cambiado a fila -->
+            <label class="block text-sm font-medium text-gray-700 mb-0">Tipo de Reporte</label>
+            <select id="select-tipo-vari" class="border border-gray-300 rounded-lg  px-6  py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white">
                 <option value="NUBOX360">NUBOX360</option>
                 <option value="SIRE">SIRE</option>
                 <option value="EDSUITE">EDSUITE</option>

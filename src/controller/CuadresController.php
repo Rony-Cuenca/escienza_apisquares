@@ -6,6 +6,7 @@ use Box\Spout\Reader\Common\Creator\ReaderEntityFactory;
 require __DIR__ . '/../../vendor/autoload.php'; 
 require_once __DIR__ . '/../model/Cuadre.php';
 require_once __DIR__ . '/../model/Usuario.php';
+require_once __DIR__ . '/../model/Cliente.php';
 require_once __DIR__ . '/../model/SerieAjena.php';
 require_once __DIR__ . '/../model/VentaGlobal.php';
 
@@ -27,37 +28,27 @@ class CuadresController {
     }
 
     public function cuadre() {
-        $fechaSIRE = null;
-        $fechaNUBOX = null;
-
-
         if (isset($_FILES['exe_sire']) && $_FILES['exe_sire']['error'] === UPLOAD_ERR_OK) {
-            //Procesar RUC SIRE
             $nombTemp = $_FILES['exe_sire']['tmp_name'];
-            if (($handle = fopen($nombTemp, "r")) != false) {
+            if (($handle = fopen($nombTemp, "r")) !== false) {
                 $header = fgetcsv($handle);
                 if ($header !== false && isset($header[0])) {
-                    if (substr($header[0], 0, 3) == "\xEF\xBB\xBF") {
+                    if (substr($header[0], 0, 3) === "\xEF\xBB\xBF") {
                         $header[0] = substr($header[0], 3);
-                }
+                    }
                 }
                 $colRUC = array_search('Ruc', $header);
-                $colFecha = array_search('Fecha de emisión', $header);
                 $dataRow = fgetcsv($handle);
                 $RUCSIRE = trim($dataRow[$colRUC]);
-                $fechaSIRE = trim($dataRow[$colFecha]);
                 fclose($handle);
             } else {
                 $ErrorSIRE = "No se pudo abrir el archivo SIRE.";
             }
-            $fechaSIRE = date('Y-d-01', strtotime($fechaSIRE));
         } else {
             $ErrorSIRE = "No se subió ningún archivo válido.";
-
         }
 
         if (isset($_FILES['exe_nubox']) && $_FILES['exe_nubox']['error'] === UPLOAD_ERR_OK) {
-            //Procesar RUC NUBOX
             $nombTemp = $_FILES['exe_nubox']['tmp_name'];
             $reader = ReaderEntityFactory::createXLSXReader();
             $reader->open($nombTemp);
@@ -68,85 +59,79 @@ class CuadresController {
                     if ($fila == 3) {
                         $cells = $row->toArray();
                         $RUCNUBOX = $cells[1];
-                    }
-                    if ($fila == 5) {
-                        $cells = $row->toArray();
-                        $fechaNUBOX = $cells[4];
-                    }
-                    // Terminar el bucle si ya se capturaron ambos valores
-                    if ($RUCNUBOX !== null && $fechaNUBOX !== null) {
-                        break 2;
+                        break 2; // ya no necesitamos seguir
                     }
                     $fila++;
                 }
             }
             $reader->close();
-            $fechaNUBOX = date('Y-m-01', strtotime($fechaNUBOX));
         } else {
             $ErrorNUBOX = "No se subió ningún archivo válido.";
         }
 
+        if (!isset($_FILES['exe_edsuite']) || $_FILES['exe_edsuite']['error'] !== UPLOAD_ERR_OK) {
+            $ErrorEDSUITE = "No se selecciono EDSUITE.";
+        }
+
+        $user = Usuario::obtenerId($_GET['user']);
+        $id_cliente = $user['id_cliente'];
+        $cliente = Cliente::obtenerCliente($id_cliente);
+        $rol = $user['rol'];
+        if ($rol == 'Administrador') {
+            $RUCCLiente = $RUCSIRE;
+        } else {
+            $RUCCLiente = $cliente['ruc'];
+        }
+
         if ($RUCSIRE && $RUCNUBOX) {
             if ($RUCSIRE == $RUCNUBOX) {
-                if ($fechaSIRE == $fechaNUBOX) {
+                if ($RUCSIRE == $RUCCLiente) {
+                    $SIRE = $this->sire($_FILES['exe_sire'], $_GET['user']);
+                    extract($SIRE);
+                    $this->ResultsSIRE = $SIRE['ResultsSIRE'];
+                    $this->validarSire = $SIRE['ResultsSIRE'];
+                    try {
+                        $nuboxResponse = $this->cargar_archivo($_FILES['exe_nubox'], 1);
+                    } catch (Exception $e) {
+                        $errorMsg = urlencode($e->getMessage());
+                        header("Location: index.php?controller=cuadres&action=index&error={$errorMsg}");
+                        exit;
+                    }
+                    if (isset($nuboxResponse['resultados']) && $nuboxResponse['estado'] == 1) {
+                        $NUBOX = $this->procesarDatosNubox($nuboxResponse['resultados']);
+                        extract($NUBOX);
+                        $this->ResultsNUBOX = $NUBOX['ResultsNUBOX'];
+                        $this->validarNubox = $NUBOX['ResultsNUBOX'];
+                    }
+                    $validarSeries = $this->Validar_series();
+                    extract($validarSeries);
+                    $this->ResultsValidarSeries = $validarSeries['ResultsValidarSeries'];
 
-                    $user = Usuario::obtenerId($_GET['user']);
-                    $id_establecimiento = $user['id_establecimiento'];
-                    $existeFecha = Cuadre::existeFecha($fechaSIRE, $id_establecimiento);
-
-                    if (!$existeFecha) {
-                        $SIRE = $this->sire($_FILES['exe_sire'], $_GET['user']);
-                        extract($SIRE);
-                        $this->ResultsSIRE = $SIRE['ResultsSIRE'];
-                        try {
-                            $nuboxResponse = $this->cargar_archivo($_FILES['exe_nubox'], 1);
-                        } catch (Exception $e) {
-                            $errorMsg = urlencode($e->getMessage());
-                            header("Location: index.php?controller=cuadres&action=index&error={$errorMsg}");
-                            exit;
-                        }
-                        if (isset($nuboxResponse['resultados']) && $nuboxResponse['estado'] == 1 && isset($nuboxResponse['validarNubox'])) {
-                            $NUBOX = $this->procesarDatosNubox($nuboxResponse['resultados']);
-                            extract($NUBOX);
-                            $this->ResultsNUBOX = $NUBOX['ResultsNUBOX'];
-                            $this->validarNubox = $nuboxResponse['validarNubox'];
-                        }
-                        $validarSeries = $this->Validar_series();
-                        extract($validarSeries);
-                        $this->ResultsValidarSeries = $validarSeries['ResultsValidarSeries'];
-                    } else {
-                        $ErrorSIRE = "Ya existe un cuadre para la fecha seleccionada.";
+                    try {
+                        $edsuiteResponse = $this->cargar_archivo($_FILES['exe_edsuite'], 2);
+                    } catch (Exception $e) {
+                        $errorMsg = urlencode($e->getMessage());
+                        header("Location: index.php?controller=cuadres&action=index&error={$errorMsg}");
+                        exit;
+                    }
+                    if (isset($edsuiteResponse['resultados']) && $edsuiteResponse['estado'] == 2) {
+                        $EDSUITE = $this->procesarDatosEDSuite($edsuiteResponse['resultados']);
+                        extract($EDSUITE);
+                        
+                        $this->ResultsEDSUITE = $EDSUITE['ResultsEDSUITE'];
+        
+                        $this->resultsVentaGlobal = $edsuiteResponse['resultados_productos'];
+                    } elseif (isset($edsuiteResponse['message'])) {
+                        $ErrorEDSUITE = $edsuiteResponse['message'];
                     }
                 } else {
-                    $ErrorSIRE = "Las fechas de los archivos no coinciden.";
+                    $ErrorNUBOX = "Los RUC de los archivos no  pertenece a la empresa.";
                 }
             } else {
                 $ErrorSIRE = "Los RUC de los archivos no coinciden.";
             }
         } else {
             $ErrorSIRE = "No se subieron archivos válidos.";
-        }
-
-        if (!isset($_FILES['exe_edsuite']) || $_FILES['exe_edsuite']['error'] !== UPLOAD_ERR_OK) {
-            $ErrorEDSUITE = "No se selecciono EDSUITE.";
-        } else {
-            try {
-                $edsuiteResponse = $this->cargar_archivo($_FILES['exe_edsuite'], 2);
-            } catch (Exception $e) {
-                $errorMsg = urlencode($e->getMessage());
-                header("Location: index.php?controller=cuadres&action=index&error={$errorMsg}");
-                exit;
-            }
-            if (isset($edsuiteResponse['resultados']) && $edsuiteResponse['estado'] == 2) {
-                $EDSUITE = $this->procesarDatosEDSuite($edsuiteResponse['resultados']);
-                extract($EDSUITE);
-                
-                $this->ResultsEDSUITE = $EDSUITE['ResultsEDSUITE'];
-
-                $this->resultsVentaGlobal = $edsuiteResponse['resultados_productos'];
-            } elseif (isset($edsuiteResponse['message'])) {
-                $ErrorEDSUITE = $edsuiteResponse['message'];
-            }
         }
 
         $_SESSION['ResultsSIRE'] = $this->ResultsSIRE;
@@ -160,17 +145,25 @@ class CuadresController {
     }
 
     public function cargarBD() {
-        $this->guardarBD(
+        $user = Usuario::obtenerId($_GET['user']);
+        $id_establecimiento = $user['id_establecimiento'];
+        $sire = $_SESSION['ResultsSIRE'][0]['fecha_registro'];
+        $existeFecha = Cuadre::existeFecha($sire, $id_establecimiento);
+        if (!$existeFecha) {
+            $this->guardarBD(
             $_SESSION['ResultsSIRE'],
             $_SESSION['ResultsEDSUITE'],
             $_SESSION['ResultsNUBOX'],
             $_SESSION['ResultsValidarSeries'],
             $_SESSION['resultsVentaGlobal']
-        );
+            );
+            header("Location: index.php?controller=cuadres&action=index&sms=1");
+            exit();
+        } else {
+            header("Location: index.php?controller=cuadres&action=index&sms=2");
+            exit();
+        }
 
-        $sms = 1;
-        header("Location: index.php?controller=cuadres&action=index&sms=1");
-        exit();
     }
 
     public function unirExcel() {
@@ -286,13 +279,6 @@ class CuadresController {
                     $IGVSIRE = $fila[$colIGV];
                     $DscBISIRE = $fila[$colDscBI];
                     $DscIGVSIRE = $fila[$colDscIGV];
-
-                    $total_fila = floatval($GravSIRE) + floatval($ExoSIRE) + floatval($InaSIRE) + floatval($IGVSIRE) + floatval($DscBISIRE) + floatval($DscIGVSIRE);
-                    $this->validarSire[] = [
-                        'serie' => $serieSIRE,
-                        'total' => $total_fila,
-                        'fecha' => $fechaSIRE
-                    ];
     
                     if (!isset($DataSerieGraSIRE[$serieSIRE])) {
                         $DataSerieGraSIRE[$serieSIRE] = 0;
@@ -312,7 +298,6 @@ class CuadresController {
                     $DataSerieDscIGVSIRE[$serieSIRE] += floatval($DscIGVSIRE);
                     $conteoSeriesSIRE[$serieSIRE]++;
                 }
-                //print_r($this->validarSire);
     
                 ksort($DataSerieGraSIRE);
                 
@@ -555,90 +540,56 @@ class CuadresController {
     }
 
     private function Validar_series() {
-        $user = Usuario::obtenerId($_GET['user']);
-        
-        $user_create = $user['usuario'];
-        $user_update = $user['usuario'];
-        $id_establecimiento = $user['id_establecimiento'];
-
-
         $ErrorValidarSeries = null;
         $ResultsValidarSeries = [];
 
         $sire = $this->validarSire;
         $nubox = $this->validarNubox;
 
-        $numeros_sire = array_column($sire, 'serie');
-        $numeros_nubox = array_column($nubox, 'serie');
+        $series_sire = array_column($sire, 'serie');
+        $series_nubox = array_column($nubox, 'serie');
 
-        $faltantes_en_nubox = array_diff($numeros_sire, $numeros_nubox);
-        $faltantes_en_sire = array_diff($numeros_nubox, $numeros_sire);
+        $solo_en_sire = array_diff($series_sire, $series_nubox);
+        $solo_en_nubox = array_diff($series_nubox, $series_sire);
 
-        $resultado = [];
-        $totalSerie = 0;
-        $fechas = [];
-    
-        foreach ($faltantes_en_nubox as $serie) {
-            foreach ($sire as $item) {
-                if ($item['serie'] === $serie) {
-                    $totalSerie += $item['total'];
-                    if (!empty($item['fecha'])) {
-                        $fechas[] = $item['fecha'];
-                    }
-                }
-            }
-
-            $resultado[] = [
-                'serie' => $serie,
-                'total' => $totalSerie,
-                'fecha' => !empty($fechas) ? min($fechas) : null,
-                'cuadre' => 'NUBOX'
-            ];
-        }
-    
-        foreach ($faltantes_en_sire as $serie) {
-            $totalSerie = 0;
-            $fechas = [];
-            foreach ($nubox as $item) {
-                if ($item['serie'] === $serie) {
-                    $totalSerie += $item['total'];
-                    if (!empty($item['fecha'])) {
-                        $fechas[] = $item['fecha'];
-                    }
-                }
-            }
-    
-            $resultado[] = [
-                'serie' => $serie,
-                'total' => $totalSerie,
-                'fecha' => !empty($fechas) ? min($fechas) : null,
-                'cuadre' => 'SIRE'
-            ];
-        }
-
-        $agrupados = [];
-
-        foreach ($resultado as $item) {
-            $serie = $item['serie'];
-            $total = $item['total'];
-            $cuadre = $item['cuadre'];
-
-            if (!isset($agrupados[$serie])) {
-                $agrupados[$serie] = [
-                    'serie' => $serie,
-                    'conteo' => 0,
-                    'total' => 0,
-                    'fecha' => $item['fecha'] ?? null,
-                    'cuadre' => $cuadre
+        $resultado_sire = [];
+        foreach ($sire as $item) {
+            if (in_array($item['serie'], $solo_en_sire)) {
+                $resultado_sire[] = [
+                    'origen' => 'SIRE',
+                    'serie' => $item['serie'],
+                    'conteo' => $item['conteo'],
+                    'total' => $item['total'],
+                    'fecha' => $item['fecha_registro']
                 ];
             }
-
-            $agrupados[$serie]['conteo']++;
-            $agrupados[$serie]['total'] += $total;
         }
 
-        // Si deseas que sea array con índices numéricos:
-        $ResultsValidarSeries = array_values($agrupados);
+        $resultado_nubox = [];
+        foreach ($nubox as $item) {
+            if (in_array($item['serie'], $solo_en_nubox)) {
+                $resultado_nubox[] = [
+                    'origen' => 'NUBOX',
+                    'serie' => $item['serie'],
+                    'conteo' => $item['conteo'],
+                    'total' => $item['total'],
+                    'fecha' => $item['fecha_registro']
+                ];
+            }
+        }
+
+        
+        $resultado_final = array_merge($resultado_sire, $resultado_nubox);
+
+        foreach ($resultado_final as $item) {
+            $ResultsValidarSeries[] = [
+                'serie'          => $item['serie'],
+                'conteo'         => $item['conteo'],
+                'total'          => $item['total'],
+                'fecha'          => $item['fecha'],
+                'cuadre'         => $item['origen']
+            ];
+        }
     
         return compact('ErrorValidarSeries', 'ResultsValidarSeries');
     }

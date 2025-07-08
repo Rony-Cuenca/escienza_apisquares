@@ -24,10 +24,10 @@
     </div>
 
     <!-- Layout principal de gráficos -->
-    <div class="flex flex-col gap-8">
+    <div class="flex flex-col md:flex-row gap-8"> <!-- Cambiado a flex-row en md+ -->
 
       <!-- Fila 1: Resumen de ventas -->
-      <div class="w-full">
+      <div class="w-full md:w-1/2"> <!-- Ocupa la mitad en md+ -->
         <div class="bg-gradient-to-br from-white to-gray-50 rounded-xl border border-gray-200 shadow-lg overflow-hidden">
           <div class="px-6 py-4 bg-gradient-to-r from-blue-50 to-blue-100 border-b border-gray-200">
             <h1 class="text-lg md:text-xl font-semibold text-gray-800 text-center">RESUMEN DE VENTAS</h1>
@@ -48,14 +48,14 @@
               </div>
             </div>
             <div class="bg-white rounded-lg border border-gray-100 p-4 overflow-x-auto">
-              <div id="columnchart_material" class="min-w-[300px] md:min-w-[900px] h-[300px] md:h-[350px]" style="overflow-x: auto; white-space: nowrap;"></div>
+              <div id="columnchart_material" class="min-w-[300px] md:min-w-[900px] h-[400px] md:h-[380px]" style="overflow-x: auto; white-space: nowrap;"></div>
             </div>
           </div>
         </div>
       </div>
 
       <!-- Fila 2: Variación mensual -->
-      <div class="w-full">
+      <div class="w-full md:w-1/2"> <!-- Ocupa la mitad en md+ -->
         <div class="bg-gradient-to-br from-white to-gray-50 rounded-xl border border-gray-200 shadow-lg overflow-hidden">
           <div class="px-6 py-4 bg-gradient-to-r from-green-50 to-green-100 border-b border-gray-200">
             <h2 class="text-lg md:text-xl font-semibold text-gray-800 text-center">VARIACIÓN MENSUAL</h2>
@@ -65,7 +65,46 @@
           </div>
         </div>
       </div>
+    </div>
+    <!--filtros -->
+    <div class="flex flex-col items-center pt-6 pb-6 px-6 border-b border-gray-200 mb-8">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-center gap-6 w-full">
+    
+            <div class="flex flex-col w-full sm:w-auto">
+      <label class="block text-sm font-medium text-gray-600 mb-1">Tipo</label>
+      <select id="select-tipo" class="border border-gray-300 rounded-md px-6 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400 bg-white">
+        <option value="NUBOX360">NUBOX360</option>
+        <option value="SIRE">SIRE</option>
+        <option value="EDSUITE">EDSUITE</option>
+      </select>
+    </div>
+    <div class="flex flex-col w-full sm:w-auto">
+      <label class="block text-sm font-medium text-gray-600 mb-1">Mes</label>
+      <select id="select-mes" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400 bg-white">
+      <?php
+        $meses = [
+          '01' => 'Enero', '02' => 'Febrero', '03' => 'Marzo', '04' => 'Abril',
+          '05' => 'Mayo', '06' => 'Junio', '07' => 'Julio', '08' => 'Agosto',
+          '09' => 'Septiembre', '10' => 'Octubre', '11' => 'Noviembre', '12' => 'Diciembre'
+        ];
+        // Calcular el mes anterior
+        $mesActual = date('n'); // 1-12
+        $mesAnterior = $mesActual - 1;
+        if ($mesAnterior == 0) {
+          $mesAnterior = 12;
+        }
+        $mesAnteriorStr = str_pad($mesAnterior, 2, '0', STR_PAD_LEFT);
 
+        foreach ($meses as $num => $nombre) {
+          $selected = ($num == $mesAnteriorStr) ? 'selected' : '';
+          echo "<option value=\"$num\" $selected>$nombre</option>";
+        }
+      ?>
+      </select>
+    </div>
+      </div>
+
+  </div>
       <!-- Fila 3: Gráficos secundarios en columnas responsivas -->
       <div class="w-full grid grid-cols-1 md:grid-cols-3 gap-6">
         <div class="w-full min-h-[400px] max-h-[500px] bg-gradient-to-br from-white to-gray-50 rounded-xl border border-gray-200 shadow-lg overflow-hidden">

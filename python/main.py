@@ -54,7 +54,6 @@ def procesar():
             data_serie_ina = {}
             data_serie_igv = {}
             conteo_series = {}
-            validarNubox = []
 
             primer_valor_fecha = df.iloc[8, col_fecha]
 
@@ -78,13 +77,6 @@ def procesar():
                     exonerado = clean_number(row[col_exonerado])
                     inafecto = clean_number(row[col_inafecto])
                     igv = clean_number(row[col_igv])
-
-                    total_fila = gravado + exonerado + inafecto + igv
-                    validarNubox.append({
-                        'serie': serie,
-                        'total': total_fila,
-                        'fecha': primer_valor_fecha
-                    })
 
                     if serie not in data_serie_gra:
                         data_serie_gra[serie] = 0.0
@@ -124,8 +116,7 @@ def procesar():
             return jsonify({
                 'status': 'success',
                 'estado': estado,
-                'resultados': resultados,
-                'validarNubox': validarNubox
+                'resultados': resultados
             })
 
         elif estado == 2:  # EDSuite

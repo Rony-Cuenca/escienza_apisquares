@@ -1,43 +1,12 @@
 <!-- Gráfico de Pastel -->
-<div class="w-full h-full flex flex-col max-h-[400px]">
-    <div class="flex flex-col gap-3 mb-4 flex-shrink-0">
-      <div class="flex flex-col">
-        <label class="block text-sm font-medium text-gray-600 mb-1">Tipo</label>
-        <select id="select-tipo" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400 bg-white">
-          <option value="NUBOX360">NUBOX360</option>
-          <option value="SIRE">SIRE</option>
-          <option value="EDSUITE">EDSUITE</option>
-        </select>
-      </div>
-      <div class="flex flex-col">
-        <label class="block text-sm font-medium text-gray-600 mb-1">Mes</label>
-        <select id="select-mes" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400 bg-white">
-        <?php
-          $meses = [
-            '01' => 'Enero', '02' => 'Febrero', '03' => 'Marzo', '04' => 'Abril',
-            '05' => 'Mayo', '06' => 'Junio', '07' => 'Julio', '08' => 'Agosto',
-            '09' => 'Septiembre', '10' => 'Octubre', '11' => 'Noviembre', '12' => 'Diciembre'
-          ];
-          // Calcular el mes anterior
-          $mesActual = date('n'); // 1-12
-          $mesAnterior = $mesActual - 1;
-          if ($mesAnterior == 0) {
-            $mesAnterior = 12;
-          }
-          $mesAnteriorStr = str_pad($mesAnterior, 2, '0', STR_PAD_LEFT);
-
-          foreach ($meses as $num => $nombre) {
-            $selected = ($num == $mesAnteriorStr) ? 'selected' : '';
-            echo "<option value=\"$num\" $selected>$nombre</option>";
-          }
-        ?>
-      </select>
-    </div>
-    <div class="flex-1 w-full flex items-center justify-center min-h-[200px] max-h-[250px] overflow-hidden">
-      <div id="piechart" style="width: 100%; height: 100%; min-height: 200px; max-height: 250px;"></div>
-    </div>
+<div class="w-full h-full flex flex-row items-stretch max-h-[400px] gap-4">
+  <!-- Selectores a la izquierda -->
+  
+  <!-- Gráfico a la derecha -->
+  <div class="flex-1 flex items-center justify-center min-h-[200px] max-h-[250px] overflow-hidden">
+    <div id="piechart" style="width: 100%; height: 100%; min-height: 200px; max-height: 250px;"></div>
+  </div>
 </div>
-
 
 <script>
 // --- GRÁFICO DE PASTEL ---
