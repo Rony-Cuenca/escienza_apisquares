@@ -63,10 +63,20 @@ class Cuadre
     public static function obtenerMesesDisponibles()
     {
         $conn = Conexion::conectar();
-        $sql = "SELECT DISTINCT DATE_FORMAT(fecha_registro, '%Y-%m') as mes, DATE_FORMAT(fecha_registro, '%M %Y') as mes_nombre FROM resumen_comprobante ORDER BY mes DESC";
-        $stmt = $conn->query($sql);
+        $id_cliente = $_SESSION['id_cliente'] ?? null;
+        
+        $sql = "SELECT DISTINCT DATE_FORMAT(rc.fecha_registro, '%Y-%m') as mes, DATE_FORMAT(rc.fecha_registro, '%M %Y') as mes_nombre 
+                FROM resumen_comprobante rc
+                INNER JOIN establecimiento e ON rc.id_establecimiento = e.id
+                WHERE e.id_cliente = ? 
+                ORDER BY mes DESC";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i", $id_cliente);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
         $meses = [];
-        while ($row = $stmt->fetch_assoc()) {
+        while ($row = $result->fetch_assoc()) {
             $meses[] = $row;
         }
         return $meses;
@@ -75,9 +85,15 @@ class Cuadre
     public static function obtenerCuadresPorMes($mes)
     {
         $conn = Conexion::conectar();
-        $sql = "SELECT * FROM resumen_comprobante WHERE DATE_FORMAT(fecha_registro, '%Y-%m') = ? ORDER BY fecha_registro DESC";
+        $id_cliente = $_SESSION['id_cliente'] ?? null;
+        
+        $sql = "SELECT rc.* FROM resumen_comprobante rc
+                INNER JOIN establecimiento e ON rc.id_establecimiento = e.id
+                WHERE DATE_FORMAT(rc.fecha_registro, '%Y-%m') = ? 
+                AND e.id_cliente = ? 
+                ORDER BY rc.fecha_registro DESC";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("s", $mes);
+        $stmt->bind_param("si", $mes, $id_cliente);
         $stmt->execute();
         $result = $stmt->get_result();
         $cuadres = [];
@@ -90,14 +106,18 @@ class Cuadre
     public static function obtenerTotalesPorTipoComprobante($mes)
     {
         $conn = Conexion::conectar();
+        $id_cliente = $_SESSION['id_cliente'] ?? null;
+        
         $sql = "
-        SELECT tipo_comprobante, id_reporte, SUM(monto_total) as total
-        FROM resumen_comprobante
-        WHERE DATE_FORMAT(fecha_registro, '%Y-%m') = ?
-        GROUP BY tipo_comprobante, id_reporte
-    ";
+        SELECT rc.tipo_comprobante, rc.id_reporte, SUM(rc.monto_total) as total
+        FROM resumen_comprobante rc
+        INNER JOIN establecimiento e ON rc.id_establecimiento = e.id
+        WHERE DATE_FORMAT(rc.fecha_registro, '%Y-%m') = ?
+        AND e.id_cliente = ?
+        GROUP BY rc.tipo_comprobante, rc.id_reporte
+        ";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("s", $mes);
+        $stmt->bind_param("si", $mes, $id_cliente);
         $stmt->execute();
         $result = $stmt->get_result();
         $totales = [];
@@ -110,17 +130,21 @@ class Cuadre
     public static function obtenerTotalesPorSerie($mes)
     {
         $conn = Conexion::conectar();
+        $id_cliente = $_SESSION['id_cliente'] ?? null;
+        
         $sql = "
         SELECT 
-            serie,
-            id_reporte,
-            SUM(monto_total) as total
-        FROM resumen_comprobante
-        WHERE DATE_FORMAT(fecha_registro, '%Y-%m') = ?
-        GROUP BY serie, id_reporte
-    ";
+            rc.serie,
+            rc.id_reporte,
+            SUM(rc.monto_total) as total
+        FROM resumen_comprobante rc
+        INNER JOIN establecimiento e ON rc.id_establecimiento = e.id
+        WHERE DATE_FORMAT(rc.fecha_registro, '%Y-%m') = ?
+        AND e.id_cliente = ?
+        GROUP BY rc.serie, rc.id_reporte
+        ";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("s", $mes);
+        $stmt->bind_param("si", $mes, $id_cliente);
         $stmt->execute();
         $result = $stmt->get_result();
         $series = [];
@@ -133,24 +157,28 @@ class Cuadre
     public static function obtenerResumenComprobantes($mes)
     {
         $conn = Conexion::conectar();
+        $id_cliente = $_SESSION['id_cliente'] ?? null;
+        
         $sql = "
             SELECT 
-                serie,
-                tipo_comprobante,
-                SUM(cantidad_compr) as cantidad_comprobantes,
-                SUM(suma_gravada) as suma_gravada,
-                SUM(suma_exonerada) as suma_exonerada,
-                SUM(suma_inafecto) as suma_inafecto,
-                SUM(suma_igv) as suma_igv,
-                SUM(monto_total) as monto_total
-            FROM resumen_comprobante 
-            WHERE DATE_FORMAT(fecha_registro, '%Y-%m') = ?
-            AND id_reporte = 3
-            GROUP BY serie, tipo_comprobante
-            ORDER BY serie, tipo_comprobante
+                rc.serie,
+                rc.tipo_comprobante,
+                SUM(rc.cantidad_compr) as cantidad_comprobantes,
+                SUM(rc.suma_gravada) as suma_gravada,
+                SUM(rc.suma_exonerada) as suma_exonerada,
+                SUM(rc.suma_inafecto) as suma_inafecto,
+                SUM(rc.suma_igv) as suma_igv,
+                SUM(rc.monto_total) as monto_total
+            FROM resumen_comprobante rc
+            INNER JOIN establecimiento e ON rc.id_establecimiento = e.id
+            WHERE DATE_FORMAT(rc.fecha_registro, '%Y-%m') = ?
+            AND e.id_cliente = ?
+            AND rc.id_reporte = 3
+            GROUP BY rc.serie, rc.tipo_comprobante
+            ORDER BY rc.serie, rc.tipo_comprobante
         ";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("s", $mes);
+        $stmt->bind_param("si", $mes, $id_cliente);
         $stmt->execute();
         $result = $stmt->get_result();
         
@@ -175,24 +203,26 @@ class Cuadre
     public static function obtenerTotalesPorTipoComprobanteExcluyendoAjenas($mes)
     {
         $conn = Conexion::conectar();
-        $id_establecimiento = $_SESSION['id_establecimiento'] ?? null;
+        $id_cliente = $_SESSION['id_cliente'] ?? null;
         
         $sql = "
-        SELECT tipo_comprobante, id_reporte, SUM(monto_total) as total
+        SELECT rc.tipo_comprobante, rc.id_reporte, SUM(rc.monto_total) as total
         FROM resumen_comprobante rc
+        INNER JOIN establecimiento e ON rc.id_establecimiento = e.id
         WHERE DATE_FORMAT(rc.fecha_registro, '%Y-%m') = ?
-        AND rc.id_establecimiento = ?
+        AND e.id_cliente = ?
         AND rc.serie NOT IN (
-            SELECT DISTINCT serie 
+            SELECT DISTINCT sa.serie 
             FROM series_ajenas sa 
-            WHERE sa.id_establecimiento = rc.id_establecimiento 
+            INNER JOIN establecimiento e2 ON sa.id_establecimiento = e2.id
+            WHERE e2.id_cliente = ?
             AND sa.estado = 1
             AND DATE_FORMAT(sa.fecha_registro, '%Y-%m') = ?
         )
-        GROUP BY tipo_comprobante, id_reporte
+        GROUP BY rc.tipo_comprobante, rc.id_reporte
         ";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("sis", $mes, $id_establecimiento, $mes);
+        $stmt->bind_param("siis", $mes, $id_cliente, $id_cliente, $mes);
         $stmt->execute();
         $result = $stmt->get_result();
         $totales = [];
@@ -205,7 +235,7 @@ class Cuadre
     public static function obtenerTotalesPorSerieExcluyendoAjenas($mes)
     {
         $conn = Conexion::conectar();
-        $id_establecimiento = $_SESSION['id_establecimiento'] ?? null;
+        $id_cliente = $_SESSION['id_cliente'] ?? null;
         
         $sql = "
         SELECT 
@@ -213,19 +243,21 @@ class Cuadre
             rc.id_reporte,
             SUM(rc.monto_total) as total
         FROM resumen_comprobante rc
+        INNER JOIN establecimiento e ON rc.id_establecimiento = e.id
         WHERE DATE_FORMAT(rc.fecha_registro, '%Y-%m') = ?
-        AND rc.id_establecimiento = ?
+        AND e.id_cliente = ?
         AND rc.serie NOT IN (
-            SELECT DISTINCT serie 
+            SELECT DISTINCT sa.serie 
             FROM series_ajenas sa 
-            WHERE sa.id_establecimiento = rc.id_establecimiento 
+            INNER JOIN establecimiento e2 ON sa.id_establecimiento = e2.id
+            WHERE e2.id_cliente = ?
             AND sa.estado = 1
             AND DATE_FORMAT(sa.fecha_registro, '%Y-%m') = ?
         )
         GROUP BY rc.serie, rc.id_reporte
         ";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("sis", $mes, $id_establecimiento, $mes);
+        $stmt->bind_param("siis", $mes, $id_cliente, $id_cliente, $mes);
         $stmt->execute();
         $result = $stmt->get_result();
         $series = [];

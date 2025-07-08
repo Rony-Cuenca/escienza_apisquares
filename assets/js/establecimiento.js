@@ -207,7 +207,8 @@ class EstablecimientoController {
             .then(data => {
                 if (data.id) {
                     document.getElementById('editId').value = data.id;
-                    document.getElementById('editEtiqueta').value = data.etiqueta || '';
+                    // La etiqueta debería tener siempre un valor (razón social por defecto)
+                    document.getElementById('editEtiqueta').value = data.etiqueta || data.cliente_razon_social || '';
                     document.getElementById('editDireccion').value = data.direccion || '';
                     document.getElementById('modalEditarEstablecimiento').classList.remove('hidden');
                 } else {
@@ -253,7 +254,7 @@ class EstablecimientoController {
             }
         });
 
-        fetch('index.php?controller=establecimiento&action=guardarEdicion', {
+        fetch('index.php?controller=establecimiento&action=editarEstablecimiento', {
             method: 'POST',
             body: formData
         })

@@ -31,7 +31,7 @@
     </script>
 <?php endif; ?>
 
-<div class="w-full px-2 md:px-10 py-10 bg-gray-200 flex-1 flex flex-col">
+<div class="w-full px-2 md:px-10 pt-10 bg-gray-200 flex-1 flex flex-col">
     <div class="w-full bg-white rounded-lg shadow-2xl shadow-gray-300/40 p-2 md:p-8">
         <!-- Cabecera -->
         <div class="w-full flex flex-col md:flex-row items-center justify-between pt-6 pb-6 px-6 border-b border-gray-200 mb-8 gap-4">
@@ -51,32 +51,32 @@
             </button>
         </div>
                     <form action="index.php?controller=cuadres&action=cuadre&user=<?php echo $_SESSION['id_usuario'] ?>" method="post" enctype="multipart/form-data">
-                        <div class="flex gap-4 mb-6 mt-12">
-                            <div class="flex-1">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 mt-8">
+                            <div class="w-full">
                                 <label class="block font-medium mb-1">Archivo SIRE</label>
                                 <div class="flex">
                                     <input type="text" id="file-sire" class="flex-grow px-2 py-2 border rounded-l-lg bg-gray-50" readonly placeholder="Ningún archivo seleccionado">
-                                    <label for="sire" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-r-lg border border-l-0 hover:bg-gray-300">
+                                    <label for="sire" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-r-lg border border-l-0 hover:bg-gray-300 whitespace-nowrap">
                                         Seleccionar archivo
                                     </label>
                                     <input type="file" name="exe_sire" id="sire" accept=".csv" class="hidden" onchange="update(this, 'file-sire')">
                                 </div>
                             </div>
-                            <div class="flex-1">
+                            <div class="w-full">
                                 <label class="block font-medium mb-1">Archivo Nubox360</label>
                                 <div class="flex">
                                     <input type="text" id="file-nubox" class="flex-grow px-2 py-2 border rounded-l-lg bg-gray-50" readonly placeholder="Ningún archivo seleccionado">
-                                    <label for="nubox" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-r-lg border border-l-0 hover:bg-gray-300">
+                                    <label for="nubox" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-r-lg border border-l-0 hover:bg-gray-300 whitespace-nowrap">
                                         Seleccionar archivo
                                     </label>
                                     <input type="file" name="exe_nubox" id="nubox" accept=".xlsx" class="hidden" onchange="update(this, 'file-nubox')">
                                 </div>
                             </div>
-                            <div class="flex-1">
+                            <div class="w-full">
                                 <label class="block font-medium mb-1">Archivo EDSuite</label>
                                 <div class="flex">
                                     <input type="text" id="file-edsuite" class="flex-grow px-2 py-2 border rounded-l-lg bg-gray-50" readonly placeholder="Ningún archivo seleccionado">
-                                    <label for="edsuite" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-r-lg border border-l-0 hover:bg-gray-300">
+                                    <label for="edsuite" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-r-lg border border-l-0 hover:bg-gray-300 whitespace-nowrap">
                                         Seleccionar archivo
                                     </label>
                                     <input type="file" name="exe_edsuite" id="edsuite" accept=".xlsx" class="hidden" onchange="update(this, 'file-edsuite')">

@@ -30,7 +30,9 @@ class EstablecimientoController
         $offset = ($page - 1) * $limit;
         $sort = $_GET['sort'] ?? 'codigo_establecimiento';
         $dir = ($_GET['dir'] ?? 'ASC') === 'DESC' ? 'DESC' : 'ASC';
+        
         $this->asegurarEstablecimientoPrincipal($id_cliente);
+        $this->actualizarEtiquetasVacias($id_cliente);
 
         $establecimientos = Establecimiento::obtenerPorCliente($id_cliente, $limit, $offset, $sort, $dir);
         $total = Establecimiento::contarPorCliente($id_cliente);
@@ -57,6 +59,7 @@ class EstablecimientoController
                     'id_cliente' => $id_cliente,
                     'codigo_establecimiento' => '0000',
                     'tipo_establecimiento' => 'MATRIZ',
+                    'etiqueta' => $cliente['razon_social'] ?? 'Establecimiento Principal',
                     'direccion' => $cliente['direccion'] ?? 'Sin dirección',
                     'direccion_completa' => $cliente['direccion'] ?? 'Sin dirección',
                     'departamento' => $cliente['departamento'] ?? '',
@@ -147,12 +150,18 @@ class EstablecimientoController
         $departamento = $datosEstablecimiento['departamento'] ?? '';
         $provincia = $datosEstablecimiento['provincia'] ?? '';
         $distrito = $datosEstablecimiento['distrito'] ?? '';
+        
+        // Obtener la razón social del cliente para usar como etiqueta por defecto
+        $cliente = Establecimiento::obtenerClientePorId($id_cliente);
+        $etiquetaPorDefecto = $cliente['razon_social'] ?? 'Establecimiento';
+        
         $establecimientoExistente = Establecimiento::obtenerPorCodigoYCliente($codigo, $id_cliente);
 
         $datosCompletos = [
             'id_cliente' => $id_cliente,
             'codigo_establecimiento' => $codigo,
             'tipo_establecimiento' => $tipo,
+            'etiqueta' => $etiquetaPorDefecto,
             'direccion' => $direccion,
             'direccion_completa' => $direccion_completa,
             'departamento' => $departamento,
@@ -164,7 +173,20 @@ class EstablecimientoController
         ];
 
         if ($establecimientoExistente) {
+            // Solo actualizar los datos de SUNAT, preservar la etiqueta existente
             Establecimiento::actualizarPorCodigo($establecimientoExistente['id'], $datosCompletos);
+            
+            // Si el establecimiento existente no tiene etiqueta, establecer la razón social
+            if (empty($establecimientoExistente['etiqueta'])) {
+                Establecimiento::actualizarEtiquetaYDireccion(
+                    $establecimientoExistente['id'],
+                    $etiquetaPorDefecto,
+                    $direccion,
+                    $id_cliente,
+                    $_SESSION['usuario'] ?? 'sistema'
+                );
+            }
+            
             return ['accion' => 'actualizado', 'codigo' => $codigo];
         } else {
             Establecimiento::insertar($datosCompletos);
@@ -467,13 +489,13 @@ class EstablecimientoController
             $id_cliente = $_SESSION['id_cliente'];
 
             if ($id <= 0) {
-                echo json_encode(['success' => false, 'error' => 'ID inválido']);
+                $this->responseJson(['success' => false, 'error' => 'ID inválido']);
                 return;
             }
 
             $establecimiento = Establecimiento::obtenerPorId($id, $id_cliente);
             if (!$establecimiento) {
-                echo json_encode(['success' => false, 'error' => 'Establecimiento no encontrado']);
+                $this->responseJson(['success' => false, 'error' => 'Establecimiento no encontrado']);
                 return;
             }
 
@@ -486,9 +508,9 @@ class EstablecimientoController
             );
 
             if ($resultado) {
-                echo json_encode(['success' => true, 'message' => 'Establecimiento actualizado correctamente']);
+                $this->responseJson(['success' => true, 'message' => 'Establecimiento actualizado correctamente']);
             } else {
-                echo json_encode(['success' => false, 'error' => 'No se pudo actualizar el establecimiento']);
+                $this->responseJson(['success' => false, 'error' => 'No se pudo actualizar el establecimiento']);
             }
         } else {
             $id = intval($_GET['id'] ?? 0);
@@ -505,6 +527,11 @@ class EstablecimientoController
                 exit;
             }
 
+            // Agregar información del cliente para usar como etiqueta por defecto
+            $cliente = Establecimiento::obtenerClientePorId($id_cliente);
+            $establecimiento['cliente_razon_social'] = $cliente['razon_social'] ?? '';
+
+            header('Content-Type: application/json');
             echo json_encode($establecimiento);
         }
     }
@@ -534,39 +561,39 @@ class EstablecimientoController
             ];
 
             if (empty($datos['codigo_establecimiento'])) {
-                echo json_encode(['success' => false, 'error' => 'El código de establecimiento es obligatorio']);
+                $this->responseJson(['success' => false, 'error' => 'El código de establecimiento es obligatorio']);
                 return;
             }
 
             if (empty($datos['tipo_establecimiento'])) {
-                echo json_encode(['success' => false, 'error' => 'El tipo de establecimiento es obligatorio']);
+                $this->responseJson(['success' => false, 'error' => 'El tipo de establecimiento es obligatorio']);
                 return;
             }
 
             if (empty($datos['etiqueta'])) {
-                echo json_encode(['success' => false, 'error' => 'La etiqueta es obligatoria']);
+                $this->responseJson(['success' => false, 'error' => 'La etiqueta es obligatoria']);
                 return;
             }
 
             if (empty($datos['direccion'])) {
-                echo json_encode(['success' => false, 'error' => 'La dirección es obligatoria']);
+                $this->responseJson(['success' => false, 'error' => 'La dirección es obligatoria']);
                 return;
             }
 
             if (Establecimiento::existeCodigoEstablecimiento($id_cliente, $datos['codigo_establecimiento'])) {
-                echo json_encode(['success' => false, 'error' => 'Ya existe un establecimiento con ese código']);
+                $this->responseJson(['success' => false, 'error' => 'Ya existe un establecimiento con ese código']);
                 return;
             }
 
             $resultado = Establecimiento::crearEstablecimientoManual($datos);
 
             if ($resultado['success']) {
-                echo json_encode(['success' => true, 'message' => 'Establecimiento creado correctamente']);
+                $this->responseJson(['success' => true, 'message' => 'Establecimiento creado correctamente']);
             } else {
-                echo json_encode(['success' => false, 'error' => $resultado['error']]);
+                $this->responseJson(['success' => false, 'error' => $resultado['error']]);
             }
         } else {
-            echo json_encode(['success' => false, 'error' => 'Método no permitido']);
+            $this->responseJson(['success' => false, 'error' => 'Método no permitido']);
         }
     }
 
@@ -579,11 +606,31 @@ class EstablecimientoController
         $id_excluir = isset($_GET['id']) ? intval($_GET['id']) : null;
 
         if (empty($codigo)) {
-            echo json_encode(['existe' => false]);
+            $this->responseJson(['existe' => false]);
             return;
         }
 
         $existe = Establecimiento::existeCodigoEstablecimiento($id_cliente, $codigo, $id_excluir);
-        echo json_encode(['existe' => $existe]);
+        $this->responseJson(['existe' => $existe]);
+    }
+
+    private function actualizarEtiquetasVacias($id_cliente)
+    {
+        $cliente = Establecimiento::obtenerClientePorId($id_cliente);
+        if (!$cliente) return;
+
+        $conn = Conexion::conectar();
+        $date_update = date('Y-m-d H:i:s');
+        $user_update = $_SESSION['usuario'] ?? 'sistema';
+        
+        // Actualizar todos los establecimientos sin etiqueta
+        $sql = "UPDATE establecimiento SET 
+                etiqueta = ?, 
+                user_update = ?, 
+                date_update = ? 
+                WHERE id_cliente = ? AND (etiqueta IS NULL OR etiqueta = '')";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("sssi", $cliente['razon_social'], $user_update, $date_update, $id_cliente);
+        $stmt->execute();
     }
 }

@@ -1,18 +1,18 @@
 <?php if (!empty($ErrorSIRE) || !empty($ErrorNUBOX) || !empty($ErrorEDSUITE)) : ?>
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             Swal.fire({
                 icon: 'error',
                 title: '¡Error!',
                 html: `
-                    <?php 
-                        if (!empty($ErrorSIRE)) {
-                            echo addslashes($ErrorSIRE);
-                        } elseif (!empty($ErrorNUBOX)) {
-                            echo addslashes($ErrorNUBOX);
-                        } elseif (!empty($ErrorEDSUITE)) {
-                            echo addslashes($ErrorEDSUITE);
-                        }
+                    <?php
+                    if (!empty($ErrorSIRE)) {
+                        echo addslashes($ErrorSIRE);
+                    } elseif (!empty($ErrorNUBOX)) {
+                        echo addslashes($ErrorNUBOX);
+                    } elseif (!empty($ErrorEDSUITE)) {
+                        echo addslashes($ErrorEDSUITE);
+                    }
                     ?>
                 `,
                 confirmButtonText: 'Cerrar',
@@ -23,162 +23,183 @@
 <?php endif; ?>
 
 <?php if (isset($ResultsSIRE) || isset($ResultsNUBOX) || isset($ResultsEDSUITE)) : ?>
-    <div class="flex flex-col xl:flex-row gap-8 mx-auto w-full mt-8">
-        <?php if (!empty($ResultsSIRE)): ?>
-            <div class="w-full xl:w-1/2 bg-white rounded-lg shadow-md overflow-hidden">
-                <div class="p-4">
-                    <h3 class="text-2xl text-center font-semibold text-gray-900 mb-4">Resumen de Series - SIRE</h3>
-                    <div class="overflow-x-auto">
-                        <table class="w-full whitespace-nowrap">
-                            <thead class="bg-gray-50 text-xs uppercase">
-                                <tr>
-                                    <th class="px-4 py-2 text-left font-medium">Serie</th>
-                                    <th class="px-4 py-2 text-left font-medium">Conteo</th>
-                                    <th class="px-4 py-2 text-left font-medium">BI Gravada</th>
-                                    <th class="px-4 py-2 text-left font-medium">Exonerado</th>
-                                    <th class="px-4 py-2 text-left font-medium">Inafecto</th>
-                                    <th class="px-4 py-2 text-left font-medium">IGV</th>
-                                    <th class="px-4 py-2 text-left font-medium">Total</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-200">
-                                <?php foreach ($ResultsSIRE as $resultado): ?>
-                                    <tr class="hover:bg-gray-50">
-                                        <td class="px-4 py-2 text-sm text-gray-900"><?php echo $resultado['serie']; ?></td>
-                                        <td class="px-4 py-2 text-sm text-gray-900"><?php echo $resultado['conteo']; ?></td>
-                                        <td class="px-4 py-2 text-sm text-gray-900"><?php echo number_format($resultado['bi'], 2); ?></td>
-                                        <td class="px-4 py-2 text-sm text-gray-900"><?php echo number_format($resultado['exonerado'], 2); ?></td>
-                                        <td class="px-4 py-2 text-sm text-gray-900"><?php echo number_format($resultado['inafecto'], 2); ?></td>
-                                        <td class="px-4 py-2 text-sm text-gray-900"><?php echo number_format($resultado['igv'], 2); ?></td>
-                                        <td class="px-4 py-2 text-sm text-gray-900 font-semibold"><?php echo number_format($resultado['total'], 2); ?></td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+    <!-- Resultados de los cuadres -->
+    <div class="w-full px-2 md:px-10 py-10 bg-gray-200 flex-1 flex flex-col">
+        <div class="w-full bg-white rounded-lg shadow-2xl shadow-gray-300/40 p-2 md:p-8">
+            <!-- Cabecera -->
+            <div class="flex items-center justify-center w-full pb-6 px-6 border-b border-gray-200 mb-8">
+                <h2 class="text-xl md:text-2xl font-semibold text-gray-800 text-center uppercase" style="font-family: 'Montserrat', sans-serif;">
+                    Resultados de Cuadres
+                </h2>
             </div>
-        <?php endif; ?>
+            <!-- Contenido de resultados -->
+            <div class="flex flex-col xl:flex-row gap-6 w-full">
+                <?php if (!empty($ResultsSIRE)): ?>
+                    <div class="w-full xl:w-1/2 min-w-0">
+                        <div class="bg-gray-50 rounded-lg border border-gray-200 overflow-hidden shadow-sm">
+                            <div class="px-6 py-4 bg-gradient-to-r from-blue-50 to-blue-100 border-b border-gray-200">
+                                <h3 class="text-lg font-semibold text-gray-800 text-center">Resumen de Series - SIRE</h3>
+                            </div>
+                            <div class="p-4">
+                                <div class="overflow-x-auto">
+                                    <table class="w-full text-sm min-w-max">
+                                        <thead class="bg-gray-50 text-xs uppercase text-gray-700">
+                                            <tr>
+                                                <th class="px-3 py-2 text-left font-medium border-b whitespace-nowrap">Serie</th>
+                                                <th class="px-3 py-2 text-left font-medium border-b whitespace-nowrap">Conteo</th>
+                                                <th class="px-3 py-2 text-left font-medium border-b whitespace-nowrap">BI Gravada</th>
+                                                <th class="px-3 py-2 text-left font-medium border-b whitespace-nowrap">Exonerado</th>
+                                                <th class="px-3 py-2 text-left font-medium border-b whitespace-nowrap">Inafecto</th>
+                                                <th class="px-3 py-2 text-left font-medium border-b whitespace-nowrap">IGV</th>
+                                                <th class="px-3 py-2 text-left font-medium border-b whitespace-nowrap">Total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-gray-200">
+                                            <?php foreach ($ResultsSIRE as $resultado): ?>
+                                                <tr class="hover:bg-gray-50">
+                                                    <td class="px-3 py-2 text-gray-900 whitespace-nowrap"><?php echo $resultado['serie']; ?></td>
+                                                    <td class="px-3 py-2 text-gray-900 whitespace-nowrap"><?php echo $resultado['conteo']; ?></td>
+                                                    <td class="px-3 py-2 text-gray-900 whitespace-nowrap"><?php echo number_format($resultado['bi'], 2); ?></td>
+                                                    <td class="px-3 py-2 text-gray-900 whitespace-nowrap"><?php echo number_format($resultado['exonerado'], 2); ?></td>
+                                                    <td class="px-3 py-2 text-gray-900 whitespace-nowrap"><?php echo number_format($resultado['inafecto'], 2); ?></td>
+                                                    <td class="px-3 py-2 text-gray-900 whitespace-nowrap"><?php echo number_format($resultado['igv'], 2); ?></td>
+                                                    <td class="px-3 py-2 text-gray-900 font-semibold whitespace-nowrap"><?php echo number_format($resultado['total'], 2); ?></td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <?php endif; ?>
 
-        <?php if (!empty($ResultsNUBOX)): ?>
-            <div class="w-full xl:w-1/2 bg-white rounded-lg shadow-md overflow-hidden">
-                <div class="p-4">
-                    <h3 class="text-2xl text-center font-semibold text-gray-900 mb-4">Resumen de Series - NUBOX360</h3>
-                    <div class="overflow-x-auto">
-                        <table class="w-full whitespace-nowrap">
-                            <thead class="bg-gray-50 text-xs uppercase">
-                                <tr>
-                                    <th class="px-4 py-2 text-left font-medium">Serie</th>
-                                    <th class="px-4 py-2 text-left font-medium">Conteo</th>
-                                    <th class="px-4 py-2 text-left font-medium">BI Gravada</th>
-                                    <th class="px-4 py-2 text-left font-medium">Exonerado</th>
-                                    <th class="px-4 py-2 text-left font-medium">Inafecto</th>
-                                    <th class="px-4 py-2 text-left font-medium">IGV</th>
-                                    <th class="px-4 py-2 text-left font-medium">Total</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-200">
-                                <?php foreach ($ResultsNUBOX as $resultado): ?>
-                                    <tr class="hover:bg-gray-50">
-                                        <td class="px-4 py-2 text-sm text-gray-900"><?php echo $resultado['serie']; ?></td>
-                                        <td class="px-4 py-2 text-sm text-gray-900"><?php echo $resultado['conteo']; ?></td>
-                                        <td class="px-4 py-2 text-sm text-gray-900"><?php echo number_format($resultado['bi'], 2); ?></td>
-                                        <td class="px-4 py-2 text-sm text-gray-900"><?php echo number_format($resultado['exonerado'], 2); ?></td>
-                                        <td class="px-4 py-2 text-sm text-gray-900"><?php echo number_format($resultado['inafecto'], 2); ?></td>
-                                        <td class="px-4 py-2 text-sm text-gray-900"><?php echo number_format($resultado['igv'], 2); ?></td>
-                                        <td class="px-4 py-2 text-sm text-gray-900 font-semibold"><?php echo number_format($resultado['total'], 2); ?></td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
+                <?php if (!empty($ResultsNUBOX)): ?>
+                    <div class="w-full xl:w-1/2 min-w-0">
+                        <div class="bg-gray-50 rounded-lg border border-gray-200 overflow-hidden shadow-sm">
+                            <div class="px-6 py-4 bg-gradient-to-r from-green-50 to-green-100 border-b border-gray-200">
+                                <h3 class="text-lg font-semibold text-gray-800 text-center">Resumen de Series - NUBOX360</h3>
+                            </div>
+                            <div class="p-4">
+                                <div class="overflow-x-auto">
+                                    <table class="w-full text-sm min-w-max">
+                                        <thead class="bg-gray-50 text-xs uppercase text-gray-700">
+                                            <tr>
+                                                <th class="px-3 py-2 text-left font-medium border-b whitespace-nowrap">Serie</th>
+                                                <th class="px-3 py-2 text-left font-medium border-b whitespace-nowrap">Conteo</th>
+                                                <th class="px-3 py-2 text-left font-medium border-b whitespace-nowrap">BI Gravada</th>
+                                                <th class="px-3 py-2 text-left font-medium border-b whitespace-nowrap">Exonerado</th>
+                                                <th class="px-3 py-2 text-left font-medium border-b whitespace-nowrap">Inafecto</th>
+                                                <th class="px-3 py-2 text-left font-medium border-b whitespace-nowrap">IGV</th>
+                                                <th class="px-3 py-2 text-left font-medium border-b whitespace-nowrap">Total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-gray-200">
+                                            <?php foreach ($ResultsNUBOX as $resultado): ?>
+                                                <tr class="hover:bg-gray-50">
+                                                    <td class="px-3 py-2 text-gray-900 whitespace-nowrap"><?php echo $resultado['serie']; ?></td>
+                                                    <td class="px-3 py-2 text-gray-900 whitespace-nowrap"><?php echo $resultado['conteo']; ?></td>
+                                                    <td class="px-3 py-2 text-gray-900 whitespace-nowrap"><?php echo number_format($resultado['bi'], 2); ?></td>
+                                                    <td class="px-3 py-2 text-gray-900 whitespace-nowrap"><?php echo number_format($resultado['exonerado'], 2); ?></td>
+                                                    <td class="px-3 py-2 text-gray-900 whitespace-nowrap"><?php echo number_format($resultado['inafecto'], 2); ?></td>
+                                                    <td class="px-3 py-2 text-gray-900 whitespace-nowrap"><?php echo number_format($resultado['igv'], 2); ?></td>
+                                                    <td class="px-3 py-2 text-gray-900 font-semibold whitespace-nowrap"><?php echo number_format($resultado['total'], 2); ?></td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <?php endif; ?>
+            </div>
+
+            <?php if (!empty($ResultsEDSUITE)): ?>
+                <div class="w-full mt-8">
+                    <div class="bg-gray-50 rounded-lg border border-gray-200 overflow-hidden shadow-sm">
+                        <div class="px-6 py-4 bg-gradient-to-r from-purple-50 to-purple-100 border-b border-gray-200">
+                            <h3 class="text-lg font-semibold text-gray-800 text-center">Resumen de Series - EDSUITE</h3>
+                        </div>
+                        <div class="p-4">
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm min-w-max">
+                                    <thead class="bg-gray-50 text-xs uppercase text-gray-700">
+                                        <tr>
+                                            <th class="px-3 py-2 font-medium border-b text-center whitespace-nowrap">Serie</th>
+                                            <th class="px-3 py-2 font-medium border-b text-center whitespace-nowrap">Conteo</th>
+                                            <th class="px-3 py-2 font-medium border-b text-center whitespace-nowrap">IGV</th>
+                                            <th class="px-3 py-2 font-medium border-b text-center whitespace-nowrap">Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-200">
+                                        <?php foreach ($ResultsEDSUITE as $resultado): ?>
+                                            <tr class="hover:bg-gray-50">
+                                                <td class="px-3 py-2 text-gray-900 text-center whitespace-nowrap"><?php echo $resultado['serie']; ?></td>
+                                                <td class="px-3 py-2 text-gray-900 text-center whitespace-nowrap"><?php echo $resultado['conteo']; ?></td>
+                                                <td class="px-3 py-2 text-gray-900 text-center whitespace-nowrap"><?php echo number_format($resultado['igv'], 2); ?></td>
+                                                <td class="px-3 py-2 text-gray-900 font-semibold text-center whitespace-nowrap"><?php echo number_format($resultado['total'], 2); ?></td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
+            <?php endif; ?>
+
+            <?php if (!empty($ResultsValidarSeries)): ?>
+                <div class="w-full mt-8">
+                    <div class="bg-gray-50 rounded-lg border border-gray-200 overflow-hidden shadow-sm">
+                        <div class="px-6 py-4 bg-gradient-to-r from-orange-50 to-orange-100 border-b border-gray-200">
+                            <h3 class="text-lg font-semibold text-gray-800 text-center">Validar Series - Series Ajenas</h3>
+                        </div>
+                        <div class="p-4">
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm min-w-max">
+                                    <thead class="bg-gray-50 text-xs uppercase text-gray-700">
+                                        <tr>
+                                            <th class="px-3 py-2 font-medium border-b text-center whitespace-nowrap">Serie</th>
+                                            <th class="px-3 py-2 font-medium border-b text-center whitespace-nowrap">Conteo</th>
+                                            <th class="px-3 py-2 font-medium border-b text-center whitespace-nowrap">Cuadres</th>
+                                            <th class="px-3 py-2 font-medium border-b text-center whitespace-nowrap">Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-200">
+                                        <?php foreach ($ResultsValidarSeries as $resultado): ?>
+                                            <tr class="hover:bg-gray-50">
+                                                <td class="px-3 py-2 text-gray-900 text-center whitespace-nowrap"><?php echo $resultado['serie']; ?></td>
+                                                <td class="px-3 py-2 text-gray-900 text-center whitespace-nowrap"><?php echo $resultado['conteo']; ?></td>
+                                                <td class="px-3 py-2 text-gray-900 text-center whitespace-nowrap"><?php echo $resultado['cuadre']; ?></td>
+                                                <td class="px-3 py-2 text-gray-900 text-center whitespace-nowrap"><?php echo $resultado['total']; ?></td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <?php endif; ?>
+            
+            <!-- Botón de acciones -->
+            <div class="flex justify-center mt-8 pt-6 border-t border-gray-200">
+                <button id="btnGuardarCuadres" 
+                        class="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition duration-200"
+                        onclick="window.location.href='index.php?controller=cuadres&action=cargarBD&user=<?php echo $_SESSION['id_usuario'] ?>'">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                    </svg>
+                    Guardar Cuadres
+                </button>
             </div>
-        <?php endif; ?>
+        </div>
     </div>
-    <?php if (!empty($ResultsEDSUITE)): ?>
-        <div class="p-8">
-            <div class="mx-auto bg-white rounded-lg shadow-lg overflow-hidden max-w-7xl">
-                <div class="p-4">
-                    <h3 class="text-2xl text-center font-semibold text-gray-900 mb-4">Resumen de Series - EDSUITE</h3>
-                    <div class="overflow-x-auto">
-                        <table class="w-full whitespace-nowrap text-center align-middle">
-                            <thead class="bg-gray-50 divide-y divide-gray-200 uppercase">
-                                <tr>
-                                    <th class="px-4 py-2 font-medium">Serie</th>
-                                    <th class="px-4 py-2 font-medium">Conteo</th>
-                                    <th class="px-4 py-2 font-medium">IGV</th>
-                                    <th class="px-4 py-2 font-medium">Total</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-200">
-                                <?php foreach ($ResultsEDSUITE as $resultado): ?>
-                                    <tr class="hover:bg-gray-50">
-                                        <td class="px-4 py-2 text-sm text-gray-900"><?php echo $resultado['serie']; ?></td>
-                                        <td class="px-4 py-2 text-sm text-gray-900"><?php echo $resultado['conteo']; ?></td>
-                                        <td class="px-4 py-2 text-sm text-gray-900"><?php echo number_format($resultado['igv'], 2); ?></td>
-                                        <td class="px-4 py-2 text-sm text-gray-900 font-semibold"><?php echo number_format($resultado['total'], 2); ?></td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    <?php endif; ?>
-    <?php if (!empty($ResultsValidarSeries)): ?>
-        <div class="p-8">
-            <div class="mx-auto bg-white rounded-lg shadow-lg overflow-hidden max-w-7xl">
-                <div class="p-4">
-                    <h3 class="text-2xl text-center font-semibold text-gray-900 mb-4">Validar Series - Series Ajenas</h3>
-                    <div class="overflow-x-auto">
-                        <table class="w-full whitespace-nowrap text-center align-middle">
-                            <thead class="bg-gray-50 divide-y divide-gray-200 uppercase">
-                                <tr>
-                                    <th class="px-4 py-2 font-medium">Serie</th>
-                                    <th class="px-4 py-2 font-medium">Conteo</th>
-                                    <th class="px-4 py-2 font-medium">Cuadres</th>
-                                    <th class="px-4 py-2 font-medium">Total</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-200">
-                                <?php foreach ($ResultsValidarSeries as $resultado): ?>
-                                    <tr class="hover:bg-gray-50">
-                                        <td class="px-4 py-2 text-sm text-gray-900"><?php echo $resultado['serie']; ?></td>
-                                        <td class="px-4 py-2 text-sm text-gray-900"><?php echo $resultado['conteo']; ?></td>
-                                        <td class="px-4 py-2 text-sm text-gray-900"><?php echo $resultado['cuadre']; ?></td>
-                                        <td class="px-4 py-2 text-sm text-gray-900"><?php echo $resultado['total']; ?></td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    <?php endif; ?>
+
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const container = document.getElementById('botonesContainer');
-
-            // Verificar si ya existe el nuevo botón para no duplicarlo
-            if (!document.getElementById('btnNuevo')) {
-                const nuevoBtn = document.createElement('button');
-                nuevoBtn.id = 'btnNuevo';
-                nuevoBtn.type = 'button';
-                nuevoBtn.className = 'ml-4 py-2 px-6 border text-white rounded-lg bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500';
-                nuevoBtn.textContent = 'Guardar Cuadres';
-
-                // Acción personalizada
-                nuevoBtn.addEventListener('click', function () {
-                    window.location.href = 'index.php?controller=cuadres&action=cargarBD&user=<?php echo $_SESSION['id_usuario'] ?>';
-                });
-
-                container.appendChild(nuevoBtn);
-            }
-        });
+        // Script simplificado - el botón ahora está integrado en el HTML
+        console.log('Resultados de cuadres cargados correctamente');
     </script>
 
 <?php endif; ?>
-

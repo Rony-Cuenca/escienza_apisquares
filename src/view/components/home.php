@@ -2,19 +2,19 @@
   <div class="w-full bg-white rounded-xl shadow-2xl shadow-gray-300/40 p-2 md:p-8">
     <!-- Cabecera con filtros -->
     <div class="flex flex-col items-center pt-6 pb-6 px-6 border-b border-gray-200 mb-8">
-      <span class="text-center text-xl text-gray-800 font-semibold mb-4" style="font-family: 'Montserrat', sans-serif;">DASHBOARD DE VENTAS</span>
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-center gap-4 sm:gap-8 w-full">
+      <span class="text-center text-xl md:text-2xl text-gray-800 font-semibold mb-6" style="font-family: 'Montserrat', sans-serif;">DASHBOARD DE VENTAS</span>
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-center gap-6 w-full">
         <div class="flex flex-col w-full sm:w-auto">
-          <label class="block text-base font-semibold text-slate-700 mb-1" for="select-establecimiento">Establecimiento</label>
-          <select id="select-establecimiento" class="border border-gray-300 rounded-lg px-4 py-2 text-base w-full md:w-[400px] sm:w-64 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white">
+          <label class="block text-base font-semibold text-slate-700 mb-2" for="select-establecimiento">Establecimiento</label>
+          <select id="select-establecimiento" class="border border-gray-300 rounded-lg px-4 py-3 text-base w-full md:w-[400px] sm:w-64 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 bg-white shadow-sm transition duration-200">
             <?php foreach ($establecimientos as $s): ?>
               <option value="<?= $s['id'] ?>"><?= htmlspecialchars($s['etiqueta']) ?></option>
             <?php endforeach; ?>
           </select>
         </div>
         <div class="flex flex-col w-full sm:w-auto">
-          <label class="block text-base font-semibold text-slate-700 mb-1" for="select-anio">Año</label>
-          <select id="select-anio" class="border border-gray-300 rounded-lg px-4 py-2 text-base w-full sm:w-40 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white">
+          <label class="block text-base font-semibold text-slate-700 mb-2" for="select-anio">Año</label>
+          <select id="select-anio" class="border border-gray-300 rounded-lg px-4 py-3 text-base w-full sm:w-40 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 bg-white shadow-sm transition duration-200">
             <?php foreach ($anios as $anio): ?>
               <option value="<?= $anio ?>"><?= $anio ?></option>
             <?php endforeach; ?>
@@ -22,52 +22,73 @@
         </div>
       </div>
     </div>
-    
+
     <!-- Layout principal de gráficos -->
     <div class="flex flex-col gap-8">
 
       <!-- Fila 1: Resumen de ventas -->
-      <div class="w-full flex flex-col items-center">
-        <div class="bg-gray-50 rounded-xl border p-4 sm:p-6 w-full">
-          <h1 class="text-xl font-bold text-gray-800">RESUMEN DE VENTAS</h1>
-          <div class="flex items-center space-x-6 mb-2">
-            <div class="flex items-center space-x-2">
-              <span class="inline-block w-3 h-3 rounded-full bg-blue-600"></span>
-              <span class="text-xs text-gray-700">Nubox</span>
+      <div class="w-full">
+        <div class="bg-gradient-to-br from-white to-gray-50 rounded-xl border border-gray-200 shadow-lg overflow-hidden">
+          <div class="px-6 py-4 bg-gradient-to-r from-blue-50 to-blue-100 border-b border-gray-200">
+            <h1 class="text-lg md:text-xl font-semibold text-gray-800 text-center">RESUMEN DE VENTAS</h1>
+          </div>
+          <div class="p-6">
+            <div class="flex flex-wrap items-center justify-center gap-6 mb-6">
+              <div class="flex items-center space-x-3 bg-white px-4 py-2 rounded-lg shadow-sm">
+                <span class="inline-block w-4 h-4 rounded-full bg-blue-600 shadow-sm"></span>
+                <span class="text-sm font-medium text-gray-700">NUBOX360</span>
+              </div>
+              <div class="flex items-center space-x-3 bg-white px-4 py-2 rounded-lg shadow-sm">
+                <span class="inline-block w-4 h-4 rounded-full bg-pink-500 shadow-sm"></span>
+                <span class="text-sm font-medium text-gray-700">EDSUITE</span>
+              </div>
+              <div class="flex items-center space-x-3 bg-white px-4 py-2 rounded-lg shadow-sm">
+                <span class="inline-block w-4 h-4 rounded-full bg-green-500 shadow-sm"></span>
+                <span class="text-sm font-medium text-gray-700">SIRE</span>
+              </div>
             </div>
-            <div class="flex items-center space-x-2">
-              <span class="inline-block w-3 h-3 rounded-full bg-pink-500"></span>
-              <span class="text-xs text-gray-700">EDSuite</span>
-            </div>
-            <div class="flex items-center space-x-2">
-              <span class="inline-block w-3 h-3 rounded-full bg-green-500"></span>
-              <span class="text-xs text-gray-700">SIRE</span>
+            <div class="bg-white rounded-lg border border-gray-100 p-4 overflow-x-auto">
+              <div id="columnchart_material" class="min-w-[300px] md:min-w-[900px] h-[300px] md:h-[350px]" style="overflow-x: auto; white-space: nowrap;"></div>
             </div>
           </div>
-          <div class="overflow-x-auto">
-            <div id="columnchart_material" class="min-w-[900px] h-[350px]" style="overflow-x: auto; white-space: nowrap;"></div>
-          </div>
+        </div>
       </div>
 
       <!-- Fila 2: Variación mensual -->
-      <div class="w-full flex flex-col items-center">
-        <?php require_once "graficos/variacion.php" ?>
+      <div class="w-full">
+        <div class="bg-gradient-to-br from-white to-gray-50 rounded-xl border border-gray-200 shadow-lg overflow-hidden">
+          <div class="px-6 py-4 bg-gradient-to-r from-green-50 to-green-100 border-b border-gray-200">
+            <h2 class="text-lg md:text-xl font-semibold text-gray-800 text-center">VARIACIÓN MENSUAL</h2>
+          </div>
+          <div class="p-6">
+            <?php require_once "graficos/variacion.php" ?>
+          </div>
+        </div>
       </div>
 
-      <!-- Fila 3: Gráficos secundarios en dos columnas -->
-      <div class="w-full grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div class="flex justify-center">
-          <div class="w-full max-w-md">
+      <!-- Fila 3: Gráficos secundarios en columnas responsivas -->
+      <div class="w-full grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="w-full min-h-[400px] max-h-[500px] bg-gradient-to-br from-white to-gray-50 rounded-xl border border-gray-200 shadow-lg overflow-hidden">
+          <div class="px-6 py-4 bg-gradient-to-r from-purple-50 to-purple-100 border-b border-gray-200">
+            <h3 class="text-base font-semibold text-gray-800 text-center">ANÁLISIS POR CATEGORÍAS</h3>
+          </div>
+          <div class="p-6 h-[calc(100%-4rem)] overflow-hidden">
             <?php require_once "graficos/pastel.php" ?>
           </div>
         </div>
-        <div class="flex justify-center">
-          <div class="w-full max-w-md">
+        <div class="w-full min-h-[400px] max-h-[500px] bg-gradient-to-br from-white to-gray-50 rounded-xl border border-gray-200 shadow-lg overflow-hidden">
+          <div class="px-6 py-4 bg-gradient-to-r from-orange-50 to-orange-100 border-b border-gray-200">
+            <h3 class="text-base font-semibold text-gray-800 text-center">EXONERACIONES</h3>
+          </div>
+          <div class="p-6 h-[calc(100%-4rem)] overflow-hidden">
             <?php require_once "graficos/exoneracion.php" ?>
           </div>
         </div>
-        <div class="flex justify-center">
-          <div class="w-full max-w-md">
+        <div class="w-full min-h-[400px] max-h-[500px] bg-gradient-to-br from-white to-gray-50 rounded-xl border border-gray-200 shadow-lg overflow-hidden">
+          <div class="px-6 py-4 bg-gradient-to-r from-teal-50 to-teal-100 border-b border-gray-200">
+            <h3 class="text-base font-semibold text-gray-800 text-center">PROMEDIO MENSUAL</h3>
+          </div>
+          <div class="p-6 h-[calc(100%-4rem)] overflow-hidden">
             <?php require_once "graficos/promedio.php" ?>
           </div>
         </div>
@@ -77,20 +98,51 @@
 </div>
 
 <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-  // --- GRÁFICO DE BARRAS ---
-  google.charts.load('current', {
-    'packages': ['bar']
-  });
-  google.charts.setOnLoadCallback(drawChart);
+  // Esperar a que Google Charts se cargue completamente
+  function initializeGoogleCharts() {
+    if (typeof google !== 'undefined' && google.charts) {
+      console.log('Google Charts disponible, inicializando...');
+      google.charts.load('current', {'packages': ['bar', 'corechart']});
+      google.charts.setOnLoadCallback(function() {
+        console.log('Google Charts cargado completamente');
+        drawChart();
+      });
+    } else {
+      console.log('Google Charts no disponible, reintentando...');
+      setTimeout(initializeGoogleCharts, 100);
+    }
+  }
 
+  // Inicializar cuando el DOM esté listo
+  document.addEventListener('DOMContentLoaded', function() {
+    initializeGoogleCharts();
+  });
+
+  // --- GRÁFICO DE BARRAS ---
   function drawChart() {
+    if (typeof google === 'undefined' || !google.charts) {
+      console.log('Google Charts no está disponible aún');
+      return;
+    }
+
     let anio = document.getElementById('select-anio').value;
     let establecimiento = document.getElementById('select-establecimiento').value;
+    
+    console.log('Cargando datos del resumen de ventas...');
+    
     fetch(`index.php?controller=home&action=resumenVentas&establecimiento=${establecimiento}&anio=${anio}`)
-      .then(r => r.json())
+      .then(r => {
+        if (!r.ok) {
+          throw new Error(`HTTP error! status: ${r.status}`);
+        }
+        return r.json();
+      })
       .then(datos => {
+        console.log('Datos resumen ventas recibidos:', datos);
+        
         let meses = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
         let tipos = ['NUBOX360', 'EDSUITE', 'SIRE'];
         let data = [
@@ -121,9 +173,100 @@
         };
         var chart = new google.charts.Bar(document.getElementById('columnchart_material'));
         chart.draw(chartData, google.charts.Bar.convertOptions(options));
+      })
+      .catch(error => {
+        console.error('Error al cargar datos del resumen de ventas:', error);
       });
   }
 
-  document.getElementById('select-anio').addEventListener('change', drawChart);
-  document.getElementById('select-establecimiento').addEventListener('change', drawChart);
+  document.addEventListener('DOMContentLoaded', function() {
+    // Event listeners para los filtros principales
+    document.getElementById('select-anio').addEventListener('change', drawChart);
+    document.getElementById('select-establecimiento').addEventListener('change', drawChart);
+  });
+
+  // Inicializar otros gráficos después de un pequeño delay
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, iniciando gráficos...');
+    
+    // Dar tiempo para que se carguen las librerías
+    setTimeout(function() {
+      // Gráfico de pastel (análisis por categorías)
+      if (typeof drawPieChart === 'function') {
+        console.log('Ejecutando drawPieChart');
+        try {
+          drawPieChart();
+          // Event listeners para el gráfico de pastel
+          document.getElementById('select-tipo').addEventListener('change', function() {
+            drawPieChart();
+            if (typeof drawPromedioVentaChart === 'function') drawPromedioVentaChart();
+          });
+          document.getElementById('select-mes').addEventListener('change', function() {
+            drawPieChart();
+            if (typeof drawPromedioVentaChart === 'function') drawPromedioVentaChart();
+          });
+        } catch (error) {
+          console.error('Error al ejecutar drawPieChart:', error);
+        }
+      } else {
+        console.log('drawPieChart no está disponible');
+      }
+
+      // Gráfico de exoneración
+      if (typeof drawExoneracionChart === 'function') {
+        console.log('Ejecutando drawExoneracionChart');
+        try {
+          drawExoneracionChart();
+        } catch (error) {
+          console.error('Error al ejecutar drawExoneracionChart:', error);
+        }
+      } else {
+        console.log('drawExoneracionChart no está disponible');
+      }
+
+      // Gráfico de promedio
+      if (typeof drawPromedioVentaChart === 'function') {
+        console.log('Ejecutando drawPromedioVentaChart');
+        try {
+          drawPromedioVentaChart();
+        } catch (error) {
+          console.error('Error al ejecutar drawPromedioVentaChart:', error);
+        }
+      } else {
+        console.log('drawPromedioVentaChart no está disponible');
+      }
+
+      // Gráfico de variación
+      if (typeof drawVariacionVentasChart === 'function') {
+        console.log('Ejecutando drawVariacionVentasChart');
+        try {
+          drawVariacionVentasChart();
+          document.getElementById('select-tipo-vari').addEventListener('change', drawVariacionVentasChart);
+        } catch (error) {
+          console.error('Error al ejecutar drawVariacionVentasChart:', error);
+        }
+      } else {
+        console.log('drawVariacionVentasChart no está disponible');
+      }
+    }, 1000); // Esperar 1 segundo
+
+    // Event listeners para filtros principales
+    document.getElementById('select-anio').addEventListener('change', function() {
+      console.log('Cambió año, actualizando gráficos...');
+      setTimeout(function() {
+        if (typeof drawExoneracionChart === 'function') drawExoneracionChart();
+        if (typeof drawPromedioVentaChart === 'function') drawPromedioVentaChart();
+        if (typeof drawVariacionVentasChart === 'function') drawVariacionVentasChart();
+      }, 100);
+    });
+
+    document.getElementById('select-establecimiento').addEventListener('change', function() {
+      console.log('Cambió establecimiento, actualizando gráficos...');
+      setTimeout(function() {
+        if (typeof drawExoneracionChart === 'function') drawExoneracionChart();
+        if (typeof drawPromedioVentaChart === 'function') drawPromedioVentaChart();
+        if (typeof drawVariacionVentasChart === 'function') drawVariacionVentasChart();
+      }, 100);
+    });
+  });
 </script>

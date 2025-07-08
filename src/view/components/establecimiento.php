@@ -63,11 +63,7 @@
                                     </span>
                                 </td>
                                 <td class="py-2 px-1">
-                                    <?php if (!empty($row['etiqueta'])): ?>
-                                        <?= htmlspecialchars($row['etiqueta']) ?>
-                                    <?php else: ?>
-                                        <span class="text-gray-400 italic">Sin etiqueta</span>
-                                    <?php endif; ?>
+                                    <?= htmlspecialchars($row['etiqueta'] ?? $cliente['razon_social'] ?? 'Sin etiqueta') ?>
                                 </td>
                                 <td class="py-2 px-1"><?= !empty($row['direccion']) ? htmlspecialchars($row['direccion']) : 'Sin establecer' ?></td>
                                 <td class="py-2 px-1 text-center">
@@ -179,7 +175,7 @@
                             name="etiqueta"
                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             placeholder="Ej: Grifo Principal, Sucursal Centro, etc.">
-                        <p class="text-xs text-gray-500 mt-1">Este nombre se mostrará en la tabla en lugar de la razón social</p>
+                        <p class="text-xs text-gray-500 mt-1">Este nombre se mostrará en la tabla. Si se deja vacío, se usará la razón social.</p>
                     </div>
 
                     <div>

@@ -1,20 +1,35 @@
-<div id="tablaPromedioVenta" class="mt-4"></div>
-
-<div class="bg-white rounded-xl shadow p-4 sm:p-6 mt-8 min-h-[350px] flex flex-col justify-center">
-  <h1 class="text-xl font-bold text-gray-800 mb-4">PROMEDIO DE VENTA POR COMPROBANTE (SERIE)</h1>
-  
-  <canvas id="promedioVentaChart" height="200"></canvas>
+<div class="w-full h-full flex items-center justify-center min-h-[200px] max-h-[300px] overflow-hidden">
+  <canvas id="promedioVentaChart" style="width: 100%; height: 100%; min-height: 200px; max-height: 300px;"></canvas>
+</div>
     <script>
 function drawPromedioVentaChart() {
     let anio = document.getElementById('select-anio').value;
     let establecimiento = document.getElementById('select-establecimiento').value;
-    let mes = document.getElementById('select-mes').value;
-  let tipo = document.getElementById('select-tipo').value;
+    
+    // Verificar si existen los elementos antes de usarlos
+    let mesElement = document.getElementById('select-mes');
+    let tipoElement = document.getElementById('select-tipo');
+    
+    let mes = mesElement ? mesElement.value : '06'; // Valor por defecto
+    let tipo = tipoElement ? tipoElement.value : 'NUBOX360'; // Valor por defecto
+    
+    console.log('drawPromedioVentaChart - Año:', anio, 'Establecimiento:', establecimiento, 'Mes:', mes, 'Tipo:', tipo);
+    
     fetch(`index.php?controller=home&action=promedioVentaPorSerie&establecimiento=${establecimiento}&anio=${anio}&mes=${mes}&tipo=${tipo}`)
         .then(r => r.json())
         .then(datos => {
+            console.log('Datos promedio recibidos:', datos);
+            
             if (!datos.length) {
+                console.log('No hay datos para el gráfico de promedio');
                 if(window.promedioVentaChartObj) window.promedioVentaChartObj.destroy();
+                
+                const ctx = document.getElementById('promedioVentaChart').getContext('2d');
+                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                ctx.font = '16px Arial';
+                ctx.fillStyle = '#666';
+                ctx.textAlign = 'center';
+                ctx.fillText('No hay datos disponibles', ctx.canvas.width/2, ctx.canvas.height/2);
                 return;
             }
             const series = datos.map(d => d.serie);
@@ -41,6 +56,8 @@ function drawPromedioVentaChart() {
                     }]
                 },
                 options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
                     plugins: {
                         title: {
                             display: true,
@@ -72,38 +89,11 @@ function drawPromedioVentaChart() {
                     }
                 }
             });
+        })
+        .catch(error => {
+            console.error('Error al cargar datos de promedio:', error);
         });
 }
-document.getElementById('select-anio').addEventListener('change', drawPromedioVentaChart);
-document.getElementById('select-establecimiento').addEventListener('change', drawPromedioVentaChart);
-document.getElementById('select-mes').addEventListener('change', drawPromedioVentaChart);
-document.getElementById('select-tipo').addEventListener('change', drawPromedioVentaChart);
-window.addEventListener('DOMContentLoaded', drawPromedioVentaChart);
 </script>
-<div id="tablaPromedioVenta" class="mt-4"></div>
-<script>
-function drawTablaPromedioVenta() {
-    let anio = document.getElementById('select-anio').value;
-    let establecimiento = document.getElementById('select-establecimiento').value;
-    fetch(`index.php?controller=home&action=promedioVentaPorSerie&establecimiento=${establecimiento}&anio=${anio}&mes=${mes}&tipo=${tipo}`)
-        .then(r => r.json())
-        .then(datos => {
-            let html = '<table class="min-w-full text-sm text-left border mt-2"><thead><tr><th class="border px-2">Serie</th><th class="border px-2">Total vendido</th><th class="border px-2">Comprobantes</th><th class="border px-2">Promedio</th></tr></thead><tbody>';
-            datos.forEach(d => {
-                html += `<tr>
-                    <td class="border px-2">${d.serie}</td>
-                    <td class="border px-2">S/ ${parseFloat(d.total_vendido).toLocaleString()}</td>
-                    <td class="border px-2">${d.total_comprobantes}</td>
-                    <td class="border px-2">S/ ${parseFloat(d.promedio).toLocaleString()}</td>
-                </tr>`;
-            });
-            html += '</tbody></table>';
-            document.getElementById('tablaPromedioVenta').innerHTML = html;
-        });
-}
-document.getElementById('select-anio').addEventListener('change', drawTablaPromedioVenta);
-document.getElementById('select-establecimiento').addEventListener('change', drawTablaPromedioVenta);
-document.getElementById('select-mes').addEventListener('change', drawTablaPromedioVenta);
-document.getElementById('select-tipo').addEventListener('change', drawTablaPromedioVenta);
-window.addEventListener('DOMContentLoaded', drawTablaPromedioVenta);
+
 </script>

@@ -1,11 +1,6 @@
-<!-- //Record exoneracion de IGV with chart js -->
-<div class="bg-white rounded-xl shadow p-4 sm:p-6 mt-8">
-  <h1 class="text-xl font-bold text-gray-800 mb-4">RECORD EXONERACIÓN DE IGV</h1>
-  <div class="overflow-x-auto">
-  <canvas id="exoneracionChart" width="500" height="400"></canvas>
-
-  </div>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Record exoneracion de IGV with chart js -->
+<div class="w-full h-full flex items-center justify-center min-h-[200px] max-h-[300px] overflow-hidden">
+  <canvas id="exoneracionChart" style="width: 100%; height: 100%; min-height: 200px; max-height: 300px;"></canvas>
 </div>
 
 <script>
@@ -13,11 +8,22 @@
 function drawExoneracionChart() {
   let anio = document.getElementById('select-anio').value;
   let establecimiento = document.getElementById('select-establecimiento').value;
+  
+  console.log('drawExoneracionChart - Año:', anio, 'Establecimiento:', establecimiento);
+  
   fetch(`index.php?controller=home&action=exoneracionIGV&establecimiento=${establecimiento}&anio=${anio}`)
     .then(r => r.json())
     .then(datos => {
+      console.log('Datos exoneración recibidos:', datos);
+      
       if (!datos.length) {
-        document.getElementById('exoneracionChart').getContext('2d').clearRect(0,0,400,200);
+        console.log('No hay datos para el gráfico de exoneración');
+        const ctx = document.getElementById('exoneracionChart').getContext('2d');
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        ctx.font = '16px Arial';
+        ctx.fillStyle = '#666';
+        ctx.textAlign = 'center';
+        ctx.fillText('No hay datos disponibles', ctx.canvas.width/2, ctx.canvas.height/2);
         return;
       }
       const series = datos.map(d => d.serie);
@@ -47,6 +53,8 @@ function drawExoneracionChart() {
           }]
         },
         options: {
+          responsive: true,
+          maintainAspectRatio: false,
           plugins: {
             title: {
               display: true,
@@ -74,11 +82,9 @@ function drawExoneracionChart() {
           }
         }
       });
+    })
+    .catch(error => {
+      console.error('Error al cargar datos de exoneración:', error);
     });
 }
-
-// Llama al cargar y al cambiar filtros
-document.getElementById('select-anio').addEventListener('change', drawExoneracionChart);
-document.getElementById('select-establecimiento').addEventListener('change', drawExoneracionChart);
-window.addEventListener('DOMContentLoaded', drawExoneracionChart);
 </script>

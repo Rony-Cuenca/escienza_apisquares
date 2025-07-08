@@ -1,13 +1,17 @@
-<div class="bg-white rounded-xl shadow p-4 sm:p-6 w-full md:w-[900px] mb-8">
-    <select id="select-tipo-vari" class="border rounded px-2 py-1 text-sm w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-blue-400 mb-4">
-        <option value="NUBOX360">Nubox</option>
-        <option value="SIRE">SIRE</option>
-        <option value="EDSUITE">EDSuite</option>
-    </select>
-    <h1 class="text-xl font-bold text-gray-800 mb-6">VENTAS RESPECTO AL MES ANTERIOR</h1>
-    <div class="overflow-x-auto pb-2">
-        <div style="width:100%; min-width:600px; max-width:900px; margin:auto;">
-            <canvas id="variacionVentasChart"  style="width:100%; min-width:600px; max-width:900px;"></canvas>
+<div class="w-full">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <div class="flex flex-col">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Reporte</label>
+            <select id="select-tipo-vari" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white">
+                <option value="NUBOX360">NUBOX360</option>
+                <option value="SIRE">SIRE</option>
+                <option value="EDSUITE">EDSUITE</option>
+            </select>
+        </div>
+    </div>
+    <div class="bg-white rounded-lg border border-gray-100 p-4 overflow-x-auto">
+        <div style="width:100%; min-width:600px; max-width:100%; margin:auto; height: 400px;">
+            <canvas id="variacionVentasChart" style="width:100%; min-width:600px; max-width:100%; height: 100%;"></canvas>
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -65,6 +69,8 @@ function drawVariacionVentasChart() {
                     ]
                 },
                 options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
                     plugins: {
                         legend: { display: true },
                         tooltip: {
