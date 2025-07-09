@@ -33,29 +33,6 @@
                 </h2>
             </div>
 
-            <!--<div class="w-full mt-8">
-                <div class="bg-gray-50 rounded-lg border border-gray-200 overflow-hidden shadow-sm">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm min-w-max">
-                            <thead class="bg-gray-50 text-xs uppercase text-gray-900">
-                                <tr>
-                                    <th class="px-3 py-2 font-semibold text-lg border-b text-center whitespace-nowrap">SIRE</th>
-                                    <th class="px-3 py-2 font-semibold text-lg border-b text-center whitespace-nowrap">NUBOX</th>
-                                    <th class="px-3 py-2 font-semibold text-lg border-b text-center whitespace-nowrap">EDSUITE</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-200">
-                                <tr class="hover:bg-gray-50">
-                                    <td class="px-3 py-2 text-lg text-gray-700 text-center font-semibold whitespace-nowrap"><?php echo number_format(array_sum(array_column($ResultsSIRE, 'total')), 2); ?></td>
-                                    <td class="px-3 py-2 text-lg text-gray-700 text-center font-semibold whitespace-nowrap"><?php echo number_format(array_sum(array_column($ResultsNUBOX, 'total')), 2); ?></td>
-                                    <td class="px-3 py-2 text-lg text-gray-700 text-center font-semibold whitespace-nowrap"><?php echo number_format(array_sum(array_column($ResultsEDSUITE, 'total')), 2); ?></td>
-                                </tr>
-                            </tbody>
-                        </table>
-
-                </div>
-            </div>-->
-
             <!-- Contenido de resultados -->
             <div class="flex flex-col xl:flex-row gap-6 w-full mt-8">
                 <?php if (!empty($ResultsSIRE)): ?>
@@ -66,40 +43,40 @@
                             </div>
                             <div class="p-4">
                                 <div class="overflow-x-auto">
-                                    <table class="w-full text-sm min-w-max">
-                                        <thead class="bg-gray-50 text-xs uppercase text-gray-700">
+                                    <table class="min-w-full text-sm border border-gray-300 rounded-lg overflow-hidden">
+                                        <thead class="bg-gray-100 text-xs uppercase text-gray-700">
                                             <tr>
-                                                <th class="px-3 py-2 text-left font-medium border-b whitespace-nowrap">Serie</th>
-                                                <th class="px-3 py-2 text-left font-medium border-b whitespace-nowrap">Conteo</th>
-                                                <th class="px-3 py-2 text-left font-medium border-b whitespace-nowrap">BI Gravada</th>
-                                                <th class="px-3 py-2 text-left font-medium border-b whitespace-nowrap">Exonerado</th>
-                                                <th class="px-3 py-2 text-left font-medium border-b whitespace-nowrap">Inafecto</th>
-                                                <th class="px-3 py-2 text-left font-medium border-b whitespace-nowrap">IGV</th>
-                                                <th class="px-3 py-2 text-left font-medium border-b whitespace-nowrap">Total</th>
+                                                <th class="border border-gray-300 px-3 py-2 text-gray-900 font-bold whitespace-nowrap">Serie</th>
+                                                <th class="border border-gray-300 px-3 py-2 text-gray-900 font-bold whitespace-nowrap">Conteo</th>
+                                                <th class="border border-gray-300 px-3 py-2 text-gray-900 font-bold whitespace-nowrap">BI Gravada</th>
+                                                <th class="border border-gray-300 px-3 py-2 text-gray-900 font-bold whitespace-nowrap">Exonerado</th>
+                                                <th class="border border-gray-300 px-3 py-2 text-gray-900 font-bold whitespace-nowrap">Inafecto</th>
+                                                <th class="border border-gray-300 px-3 py-2 text-gray-900 font-bold whitespace-nowrap">IGV</th>
+                                                <th class="border border-gray-300 px-3 py-2 text-gray-900 font-bold whitespace-nowrap">Total</th>
                                             </tr>
                                         </thead>
-                                        <tbody class="divide-y divide-gray-200">
+                                        <tbody>
                                             <?php foreach ($ResultsSIRE as $resultado): ?>
-                                                <tr class="hover:bg-gray-50">
-                                                    <td class="px-3 py-2 text-gray-900 whitespace-nowrap"><?php echo $resultado['serie']; ?></td>
-                                                    <td class="px-3 py-2 text-gray-900 whitespace-nowrap"><?php echo $resultado['conteo']; ?></td>
-                                                    <td class="px-3 py-2 text-gray-900 whitespace-nowrap"><?php echo number_format($resultado['bi'], 2); ?></td>
-                                                    <td class="px-3 py-2 text-gray-900 whitespace-nowrap"><?php echo number_format($resultado['exonerado'], 2); ?></td>
-                                                    <td class="px-3 py-2 text-gray-900 whitespace-nowrap"><?php echo number_format($resultado['inafecto'], 2); ?></td>
-                                                    <td class="px-3 py-2 text-gray-900 whitespace-nowrap"><?php echo number_format($resultado['igv'], 2); ?></td>
-                                                    <td class="px-3 py-2 text-gray-900 font-semibold whitespace-nowrap"><?php echo number_format($resultado['total'], 2); ?></td>
+                                                <tr class="hover:bg-gray-50 even:bg-gray-50">
+                                                    <td class="border border-gray-300 px-3 py-2 text-gray-900 whitespace-nowrap"><?php echo $resultado['serie']; ?></td>
+                                                    <td class="border border-gray-300 px-3 py-2 text-gray-900 whitespace-nowrap"><?php echo $resultado['conteo']; ?></td>
+                                                    <td class="border border-gray-300 px-3 py-2 text-gray-900 whitespace-nowrap"><?php echo number_format($resultado['bi'], 2); ?></td>
+                                                    <td class="border border-gray-300 px-3 py-2 text-gray-900 whitespace-nowrap"><?php echo number_format($resultado['exonerado'], 2); ?></td>
+                                                    <td class="border border-gray-300 px-3 py-2 text-gray-900 whitespace-nowrap"><?php echo number_format($resultado['inafecto'], 2); ?></td>
+                                                    <td class="border border-gray-300 px-3 py-2 text-gray-900 whitespace-nowrap"><?php echo number_format($resultado['igv'], 2); ?></td>
+                                                    <td class="border border-gray-300 px-3 py-2 text-gray-900 font-semibold whitespace-nowrap"><?php echo number_format($resultado['total'], 2); ?></td>
                                                 </tr>
                                             <?php endforeach; ?>
                                         </tbody>
-                                        <tfoot class="divide-y divide-gray-200">
+                                        <tfoot class="bg-gray-100">
                                             <tr>
-                                                <td class="px-3 py-2 text-gray-900 font-semibold whitespace-nowrap">Total:</td>
-                                                <td class="px-3 py-2 text-gray-900 font-semibold whitespace-nowrap"><?php echo array_sum(array_column($ResultsSIRE, 'conteo')); ?></td>
-                                                <td class="px-3 py-2 text-gray-900 font-semibold whitespace-nowrap"><?php echo number_format(array_sum(array_column($ResultsSIRE, 'bi')), 2); ?></td>
-                                                <td class="px-3 py-2 text-gray-900 font-semibold whitespace-nowrap"><?php echo number_format(array_sum(array_column($ResultsSIRE, 'exonerado')), 2); ?></td>
-                                                <td class="px-3 py-2 text-gray-900 font-semibold whitespace-nowrap"><?php echo number_format(array_sum(array_column($ResultsSIRE, 'inafecto')), 2); ?></td>
-                                                <td class="px-3 py-2 text-gray-900 font-semibold whitespace-nowrap"><?php echo number_format(array_sum(array_column($ResultsSIRE, 'igv')), 2); ?></td>
-                                                <td class="px-3 py-2 text-gray-900 font-semibold whitespace-nowrap"><?php echo number_format(array_sum(array_column($ResultsSIRE, 'total')), 2); ?></td>
+                                                <td class="border border-gray-300 px-3 py-2 text-gray-900 font-bold whitespace-nowrap">Total:</td>
+                                                <td class="border border-gray-300 px-3 py-2 text-gray-900 font-bold whitespace-nowrap"><?php echo array_sum(array_column($ResultsSIRE, 'conteo')); ?></td>
+                                                <td class="border border-gray-300 px-3 py-2 text-gray-900 font-bold whitespace-nowrap"><?php echo number_format(array_sum(array_column($ResultsSIRE, 'bi')), 2); ?></td>
+                                                <td class="border border-gray-300 px-3 py-2 text-gray-900 font-bold whitespace-nowrap"><?php echo number_format(array_sum(array_column($ResultsSIRE, 'exonerado')), 2); ?></td>
+                                                <td class="border border-gray-300 px-3 py-2 text-gray-900 font-bold whitespace-nowrap"><?php echo number_format(array_sum(array_column($ResultsSIRE, 'inafecto')), 2); ?></td>
+                                                <td class="border border-gray-300 px-3 py-2 text-gray-900 font-bold whitespace-nowrap"><?php echo number_format(array_sum(array_column($ResultsSIRE, 'igv')), 2); ?></td>
+                                                <td class="border border-gray-300 px-3 py-2 text-gray-900 font-bold whitespace-nowrap"><?php echo number_format(array_sum(array_column($ResultsSIRE, 'total')), 2); ?></td>
                                             </tr>
                                         </tfoot>
                                     </table>
@@ -117,40 +94,40 @@
                             </div>
                             <div class="p-4">
                                 <div class="overflow-x-auto">
-                                    <table class="w-full text-sm min-w-max">
-                                        <thead class="bg-gray-50 text-xs uppercase text-gray-700">
+                                    <table class="min-w-full text-sm border border-gray-300 rounded-lg overflow-hidden">
+                                        <thead class="bg-gray-100 text-xs uppercase text-gray-700">
                                             <tr>
-                                                <th class="px-3 py-2 text-left font-medium border-b whitespace-nowrap">Serie</th>
-                                                <th class="px-3 py-2 text-left font-medium border-b whitespace-nowrap">Conteo</th>
-                                                <th class="px-3 py-2 text-left font-medium border-b whitespace-nowrap">BI Gravada</th>
-                                                <th class="px-3 py-2 text-left font-medium border-b whitespace-nowrap">Exonerado</th>
-                                                <th class="px-3 py-2 text-left font-medium border-b whitespace-nowrap">Inafecto</th>
-                                                <th class="px-3 py-2 text-left font-medium border-b whitespace-nowrap">IGV</th>
-                                                <th class="px-3 py-2 text-left font-medium border-b whitespace-nowrap">Total</th>
+                                                <th class="border border-gray-300 px-3 py-2 text-gray-900 font-bold whitespace-nowrap">Serie</th>
+                                                <th class="border border-gray-300 px-3 py-2 text-gray-900 font-bold whitespace-nowrap">Conteo</th>
+                                                <th class="border border-gray-300 px-3 py-2 text-gray-900 font-bold whitespace-nowrap">BI Gravada</th>
+                                                <th class="border border-gray-300 px-3 py-2 text-gray-900 font-bold whitespace-nowrap">Exonerado</th>
+                                                <th class="border border-gray-300 px-3 py-2 text-gray-900 font-bold whitespace-nowrap">Inafecto</th>
+                                                <th class="border border-gray-300 px-3 py-2 text-gray-900 font-bold whitespace-nowrap">IGV</th>
+                                                <th class="border border-gray-300 px-3 py-2 text-gray-900 font-bold whitespace-nowrap">Total</th>
                                             </tr>
                                         </thead>
-                                        <tbody class="divide-y divide-gray-200">
+                                        <tbody>
                                             <?php foreach ($ResultsNUBOX as $resultado): ?>
-                                                <tr class="hover:bg-gray-50">
-                                                    <td class="px-3 py-2 text-gray-900 whitespace-nowrap"><?php echo $resultado['serie']; ?></td>
-                                                    <td class="px-3 py-2 text-gray-900 whitespace-nowrap"><?php echo $resultado['conteo']; ?></td>
-                                                    <td class="px-3 py-2 text-gray-900 whitespace-nowrap"><?php echo number_format($resultado['bi'], 2); ?></td>
-                                                    <td class="px-3 py-2 text-gray-900 whitespace-nowrap"><?php echo number_format($resultado['exonerado'], 2); ?></td>
-                                                    <td class="px-3 py-2 text-gray-900 whitespace-nowrap"><?php echo number_format($resultado['inafecto'], 2); ?></td>
-                                                    <td class="px-3 py-2 text-gray-900 whitespace-nowrap"><?php echo number_format($resultado['igv'], 2); ?></td>
-                                                    <td class="px-3 py-2 text-gray-900 font-semibold whitespace-nowrap"><?php echo number_format($resultado['total'], 2); ?></td>
+                                                <tr class="hover:bg-gray-50 even:bg-gray-50">
+                                                    <td class="border border-gray-300 px-3 py-2 text-gray-900 whitespace-nowrap"><?php echo $resultado['serie']; ?></td>
+                                                    <td class="border border-gray-300 px-3 py-2 text-gray-900 whitespace-nowrap"><?php echo $resultado['conteo']; ?></td>
+                                                    <td class="border border-gray-300 px-3 py-2 text-gray-900 whitespace-nowrap"><?php echo number_format($resultado['bi'], 2); ?></td>
+                                                    <td class="border border-gray-300 px-3 py-2 text-gray-900 whitespace-nowrap"><?php echo number_format($resultado['exonerado'], 2); ?></td>
+                                                    <td class="border border-gray-300 px-3 py-2 text-gray-900 whitespace-nowrap"><?php echo number_format($resultado['inafecto'], 2); ?></td>
+                                                    <td class="border border-gray-300 px-3 py-2 text-gray-900 whitespace-nowrap"><?php echo number_format($resultado['igv'], 2); ?></td>
+                                                    <td class="border border-gray-300 px-3 py-2 text-gray-900 font-semibold whitespace-nowrap"><?php echo number_format($resultado['total'], 2); ?></td>
                                                 </tr>
                                             <?php endforeach; ?>
                                         </tbody>
-                                        <tfoot class="divide-y divide-gray-200">
+                                        <tfoot class="bg-gray-100">
                                             <tr>
-                                                <td class="px-3 py-2 text-gray-900 font-semibold whitespace-nowrap">Total:</td>
-                                                <td class="px-3 py-2 text-gray-900 font-semibold whitespace-nowrap"><?php echo array_sum(array_column($ResultsNUBOX, 'conteo')); ?></td>
-                                                <td class="px-3 py-2 text-gray-900 font-semibold whitespace-nowrap"><?php echo number_format(array_sum(array_column($ResultsNUBOX, 'bi')), 2); ?></td>
-                                                <td class="px-3 py-2 text-gray-900 font-semibold whitespace-nowrap"><?php echo number_format(array_sum(array_column($ResultsNUBOX, 'exonerado')), 2); ?></td>
-                                                <td class="px-3 py-2 text-gray-900 font-semibold whitespace-nowrap"><?php echo number_format(array_sum(array_column($ResultsNUBOX, 'inafecto')), 2); ?></td>
-                                                <td class="px-3 py-2 text-gray-900 font-semibold whitespace-nowrap"><?php echo number_format(array_sum(array_column($ResultsNUBOX, 'igv')), 2); ?></td>
-                                                <td class="px-3 py-2 text-gray-900 font-semibold whitespace-nowrap"><?php echo number_format(array_sum(array_column($ResultsNUBOX, 'total')), 2); ?></td>
+                                                <td class="border border-gray-300 px-3 py-2 text-gray-900 font-bold whitespace-nowrap">Total:</td>
+                                                <td class="border border-gray-300 px-3 py-2 text-gray-900 font-bold whitespace-nowrap"><?php echo array_sum(array_column($ResultsNUBOX, 'conteo')); ?></td>
+                                                <td class="border border-gray-300 px-3 py-2 text-gray-900 font-bold whitespace-nowrap"><?php echo number_format(array_sum(array_column($ResultsNUBOX, 'bi')), 2); ?></td>
+                                                <td class="border border-gray-300 px-3 py-2 text-gray-900 font-bold whitespace-nowrap"><?php echo number_format(array_sum(array_column($ResultsNUBOX, 'exonerado')), 2); ?></td>
+                                                <td class="border border-gray-300 px-3 py-2 text-gray-900 font-bold whitespace-nowrap"><?php echo number_format(array_sum(array_column($ResultsNUBOX, 'inafecto')), 2); ?></td>
+                                                <td class="border border-gray-300 px-3 py-2 text-gray-900 font-bold whitespace-nowrap"><?php echo number_format(array_sum(array_column($ResultsNUBOX, 'igv')), 2); ?></td>
+                                                <td class="border border-gray-300 px-3 py-2 text-gray-900 font-bold whitespace-nowrap"><?php echo number_format(array_sum(array_column($ResultsNUBOX, 'total')), 2); ?></td>
                                             </tr>
                                         </tfoot>
                                     </table>
@@ -169,31 +146,31 @@
                         </div>
                         <div class="p-4">
                             <div class="overflow-x-auto">
-                                <table class="w-full text-sm min-w-max">
-                                    <thead class="bg-gray-50 text-xs uppercase text-gray-700">
+                                <table class="min-w-full text-sm border border-gray-300 rounded-lg overflow-hidden">
+                                    <thead class="bg-gray-100 text-xs uppercase text-gray-700">
                                         <tr>
-                                            <th class="px-3 py-2 font-medium border-b text-center whitespace-nowrap">Serie</th>
-                                            <th class="px-3 py-2 font-medium border-b text-center whitespace-nowrap">Conteo</th>
-                                            <th class="px-3 py-2 font-medium border-b text-center whitespace-nowrap">IGV</th>
-                                            <th class="px-3 py-2 font-medium border-b text-center whitespace-nowrap">Total</th>
+                                            <th class="border border-gray-300 px-3 py-2 text-center text-gray-900 font-bold whitespace-nowrap">Serie</th>
+                                            <th class="border border-gray-300 px-3 py-2 text-center text-gray-900 font-bold whitespace-nowrap">Conteo</th>
+                                            <th class="border border-gray-300 px-3 py-2 text-center text-gray-900 font-bold whitespace-nowrap">IGV</th>
+                                            <th class="border border-gray-300 px-3 py-2 text-center text-gray-900 font-bold whitespace-nowrap">Total</th>
                                         </tr>
                                     </thead>
-                                    <tbody class="divide-y divide-gray-200">
+                                    <tbody>
                                         <?php foreach ($ResultsEDSUITE as $resultado): ?>
-                                            <tr class="hover:bg-gray-50">
-                                                <td class="px-3 py-2 text-gray-900 text-center whitespace-nowrap"><?php echo $resultado['serie']; ?></td>
-                                                <td class="px-3 py-2 text-gray-900 text-center whitespace-nowrap"><?php echo $resultado['conteo']; ?></td>
-                                                <td class="px-3 py-2 text-gray-900 text-center whitespace-nowrap"><?php echo number_format($resultado['igv'], 2); ?></td>
-                                                <td class="px-3 py-2 text-gray-900 font-semibold text-center whitespace-nowrap"><?php echo number_format($resultado['total'], 2); ?></td>
+                                            <tr class="hover:bg-gray-50 even:bg-gray-50">
+                                                <td class="border border-gray-300 px-3 py-2 text-gray-900 text-center whitespace-nowrap"><?php echo $resultado['serie']; ?></td>
+                                                <td class="border border-gray-300 px-3 py-2 text-gray-900 text-center whitespace-nowrap"><?php echo $resultado['conteo']; ?></td>
+                                                <td class="border border-gray-300 px-3 py-2 text-gray-900 text-center whitespace-nowrap"><?php echo number_format($resultado['igv'], 2); ?></td>
+                                                <td class="border border-gray-300 px-3 py-2 text-gray-900 font-semibold text-center whitespace-nowrap"><?php echo number_format($resultado['total'], 2); ?></td>
                                             </tr>
                                         <?php endforeach; ?>
                                     </tbody>
-                                    <tfoot class="divide-y divide-gray-200">
+                                    <tfoot class="bg-gray-100">
                                         <tr>
-                                            <td class="px-3 py-2 text-gray-900 text-center font-semibold whitespace-nowrap">Total:</td>
-                                            <td class="px-3 py-2 text-gray-900 text-center font-semibold whitespace-nowrap"><?php echo array_sum(array_column($ResultsEDSUITE, 'conteo')); ?></td>
-                                            <td class="px-3 py-2 text-gray-900 text-center font-semibold whitespace-nowrap"><?php echo number_format(array_sum(array_column($ResultsEDSUITE, 'igv')), 2); ?></td>
-                                            <td class="px-3 py-2 text-gray-900 text-center font-semibold whitespace-nowrap"><?php echo number_format(array_sum(array_column($ResultsEDSUITE, 'total')), 2); ?></td>
+                                            <td class="border border-gray-300 px-3 py-2 text-gray-900 text-center font-bold whitespace-nowrap">Total:</td>
+                                            <td class="border border-gray-300 px-3 py-2 text-gray-900 text-center font-bold whitespace-nowrap"><?php echo array_sum(array_column($ResultsEDSUITE, 'conteo')); ?></td>
+                                            <td class="border border-gray-300 px-3 py-2 text-gray-900 text-center font-bold whitespace-nowrap"><?php echo number_format(array_sum(array_column($ResultsEDSUITE, 'igv')), 2); ?></td>
+                                            <td class="border border-gray-300 px-3 py-2 text-gray-900 text-center font-bold whitespace-nowrap"><?php echo number_format(array_sum(array_column($ResultsEDSUITE, 'total')), 2); ?></td>
                                         </tr>
                                     </tfoot>
                                 </table>
@@ -211,22 +188,22 @@
                         </div>
                         <div class="p-4">
                             <div class="overflow-x-auto">
-                                <table class="w-full text-sm min-w-max">
-                                    <thead class="bg-gray-50 text-xs uppercase text-gray-700">
+                                <table class="min-w-full text-sm border border-gray-300 rounded-lg overflow-hidden">
+                                    <thead class="bg-gray-100 text-xs uppercase text-gray-700">
                                         <tr>
-                                            <th class="px-3 py-2 font-medium border-b text-center whitespace-nowrap">Serie</th>
-                                            <th class="px-3 py-2 font-medium border-b text-center whitespace-nowrap">Conteo</th>
-                                            <th class="px-3 py-2 font-medium border-b text-center whitespace-nowrap">Cuadres</th>
-                                            <th class="px-3 py-2 font-medium border-b text-center whitespace-nowrap">Total</th>
+                                            <th class="border border-gray-300 px-3 py-2 text-gray-900 font-bold whitespace-nowrap">Serie</th>
+                                            <th class="border border-gray-300 px-3 py-2 text-gray-900 font-bold whitespace-nowrap">Conteo</th>
+                                            <th class="border border-gray-300 px-3 py-2 text-gray-900 font-bold whitespace-nowrap">Cuadres</th>
+                                            <th class="border border-gray-300 px-3 py-2 text-gray-900 font-bold whitespace-nowrap">Total</th>
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-gray-200">
                                         <?php foreach ($ResultsValidarSeries as $resultado): ?>
-                                            <tr class="hover:bg-gray-50">
-                                                <td class="px-3 py-2 text-gray-900 text-center whitespace-nowrap"><?php echo $resultado['serie']; ?></td>
-                                                <td class="px-3 py-2 text-gray-900 text-center whitespace-nowrap"><?php echo $resultado['conteo']; ?></td>
-                                                <td class="px-3 py-2 text-gray-900 text-center whitespace-nowrap"><?php echo $resultado['cuadre']; ?></td>
-                                                <td class="px-3 py-2 text-gray-900 text-center whitespace-nowrap"><?php echo number_format($resultado['total'], 2); ?></td>
+                                            <tr class="hover:bg-gray-50 even:bg-gray-50">
+                                                <td class="border border-gray-300 px-3 py-2 text-gray-900 text-center whitespace-nowrap"><?php echo $resultado['serie']; ?></td>
+                                                <td class="border border-gray-300 px-3 py-2 text-gray-900 text-center whitespace-nowrap"><?php echo $resultado['conteo']; ?></td>
+                                                <td class="border border-gray-300 px-3 py-2 text-gray-900 text-center whitespace-nowrap"><?php echo $resultado['cuadre']; ?></td>
+                                                <td class="border border-gray-300 px-3 py-2 text-gray-900 text-center font-semibold whitespace-nowrap"><?php echo number_format($resultado['total'], 2); ?></td>
                                             </tr>
                                         <?php endforeach; ?>
                                     </tbody>

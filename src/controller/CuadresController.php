@@ -1,7 +1,5 @@
 <?php
 ini_set('memory_limit', '512M');
-ini_set('upload_max_filesize', '20M');
-ini_set('post_max_size', '20M');
 use Box\Spout\Reader\Common\Creator\ReaderEntityFactory;
 require __DIR__ . '/../../vendor/autoload.php'; 
 require_once __DIR__ . '/../model/Cuadre.php';
@@ -14,6 +12,7 @@ require_once __DIR__ . '/../model/VentaGlobal.php';
 class CuadresController {
     public $validarNubox = [];
     public $validarSire = [];
+    public $validarEDSuite = [];
 
     public $ResultsSIRE = [];
     public $ResultsEDSUITE = [];
@@ -103,9 +102,6 @@ class CuadresController {
                         $this->ResultsNUBOX = $NUBOX['ResultsNUBOX'];
                         $this->validarNubox = $NUBOX['ResultsNUBOX'];
                     }
-                    $validarSeries = $this->Validar_series();
-                    extract($validarSeries);
-                    $this->ResultsValidarSeries = $validarSeries['ResultsValidarSeries'];
 
                     try {
                         $edsuiteResponse = $this->cargar_archivo($_FILES['exe_edsuite'], 2);
@@ -119,11 +115,16 @@ class CuadresController {
                         extract($EDSUITE);
                         
                         $this->ResultsEDSUITE = $EDSUITE['ResultsEDSUITE'];
-        
+                        $this->validarEDSuite = $EDSUITE['ResultsEDSUITE'];
+
                         $this->resultsVentaGlobal = $edsuiteResponse['resultados_productos'];
                     } elseif (isset($edsuiteResponse['message'])) {
                         $ErrorEDSUITE = $edsuiteResponse['message'];
                     }
+
+                    $validarSeries = $this->Validar_series();
+                    extract($validarSeries);
+                    $this->ResultsValidarSeries = $validarSeries['ResultsValidarSeries'];
                 } else {
                     $ErrorNUBOX = "Los RUC de los archivos no  pertenece a la empresa.";
                 }
@@ -545,52 +546,55 @@ class CuadresController {
 
         $sire = $this->validarSire;
         $nubox = $this->validarNubox;
-
-        $series_sire = array_column($sire, 'serie');
-        $series_nubox = array_column($nubox, 'serie');
-
-        $solo_en_sire = array_diff($series_sire, $series_nubox);
-        $solo_en_nubox = array_diff($series_nubox, $series_sire);
-
-        $resultado_sire = [];
-        foreach ($sire as $item) {
-            if (in_array($item['serie'], $solo_en_sire)) {
-                $resultado_sire[] = [
-                    'origen' => 'SIRE',
-                    'serie' => $item['serie'],
-                    'conteo' => $item['conteo'],
-                    'total' => $item['total'],
-                    'fecha' => $item['fecha_registro']
-                ];
-            }
-        }
-
-        $resultado_nubox = [];
-        foreach ($nubox as $item) {
-            if (in_array($item['serie'], $solo_en_nubox)) {
-                $resultado_nubox[] = [
-                    'origen' => 'NUBOX',
-                    'serie' => $item['serie'],
-                    'conteo' => $item['conteo'],
-                    'total' => $item['total'],
-                    'fecha' => $item['fecha_registro']
-                ];
-            }
-        }
-
+        $edsuite = $this->validarEDSuite;
         
-        $resultado_final = array_merge($resultado_sire, $resultado_nubox);
-
-        foreach ($resultado_final as $item) {
-            $ResultsValidarSeries[] = [
-                'serie'          => $item['serie'],
-                'conteo'         => $item['conteo'],
-                'total'          => $item['total'],
-                'fecha'          => $item['fecha'],
-                'cuadre'         => $item['origen']
-            ];
+        // 1. Juntar todas las series con origen
+        $all_series_data = [];
+        
+        foreach ($sire as $item) {
+            $serie = $item['serie'];
+            $all_series_data[$serie]['origenes']['SIRE'] = $item;
         }
-    
+        
+        foreach ($nubox as $item) {
+            $serie = $item['serie'];
+            $all_series_data[$serie]['origenes']['NUBOX'] = $item;
+        }
+        
+        foreach ($edsuite as $item) {
+            $serie = $item['serie'];
+            $all_series_data[$serie]['origenes']['EDSUITE'] = $item;
+        }
+        
+        // 2. Filtrar las series que NO estén en los 3
+        foreach ($all_series_data as $serie => $data) {
+            $origenes = $data['origenes'];
+            if (count($origenes) < 3) {
+                if (isset($origenes['NUBOX'])) {
+                    // Si tiene NUBOX, solo NUBOX
+                    $item = $origenes['NUBOX'];
+                    $ResultsValidarSeries[] = [
+                        'serie'  => $item['serie'],
+                        'conteo' => $item['conteo'],
+                        'total'  => $item['total'],
+                        'fecha'  => $item['fecha_registro'],
+                        'cuadre' => 'NUBOX'
+                    ];
+                } else {
+                    // No tiene NUBOX → incluir todos los que estén
+                    foreach ($origenes as $origen => $item) {
+                        $ResultsValidarSeries[] = [
+                            'serie'  => $item['serie'],
+                            'conteo' => $item['conteo'],
+                            'total'  => $item['total'],
+                            'fecha'  => $item['fecha_registro'],
+                            'cuadre' => $origen
+                        ];
+                    }
+                }
+            }
+        }
+        
         return compact('ErrorValidarSeries', 'ResultsValidarSeries');
     }
 

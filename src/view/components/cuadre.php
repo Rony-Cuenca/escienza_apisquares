@@ -9,6 +9,17 @@
     </script>
 <?php endif; ?>
 
+<?php if (isset($sms) && $sms == 2) : ?>
+    <script>
+    Swal.fire({
+        icon: 'error',
+        title: 'Archivos ya Almacenados',
+        text: 'Los archivos ya se encuentran almacenados.',
+        confirmButtonColor: '#d33'
+    });
+    </script>
+<?php endif; ?>
+
 <?php if (isset($_GET['error'])): ?>
     <script>
     Swal.fire({
@@ -88,7 +99,7 @@
                             <button type="submit" id="btnSubirArchivos"
                                 class="py-2 px-6 border text-white rounded-lg bg-blue-600 hover:bg-blue-700 
                                 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                Subir Archivos
+                                Procesar Archivos
                             </button>
                         </div>
                     </form>
