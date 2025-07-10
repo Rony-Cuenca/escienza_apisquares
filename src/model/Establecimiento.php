@@ -51,6 +51,33 @@ class Establecimiento
         return $res->fetch_assoc();
     }
 
+    public static function obtenerEstablecimiento($id)
+    {
+        $conn = Conexion::conectar();
+        $sql = "SELECT * FROM establecimiento WHERE id = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        return $res->fetch_assoc();
+    }
+
+    public static function obtenerEstablecimientoPorCliente($id_cliente)
+    {
+        $conn = Conexion::conectar();
+        $sql = "SELECT id,etiqueta FROM establecimiento WHERE id_cliente = ? AND estado IN (1, 2, 3)";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i", $id_cliente);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        
+        $establecimientos = [];
+        while ($row = $res->fetch_assoc()) {
+            $establecimientos[] = $row;
+        }
+        return $establecimientos;
+    }
+
     public static function actualizarEtiquetaYDireccion($id, $etiqueta, $direccion, $id_cliente, $user_update)
     {
         $conn = Conexion::conectar();

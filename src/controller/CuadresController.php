@@ -6,6 +6,7 @@ require_once __DIR__ . '/../model/Cuadre.php';
 require_once __DIR__ . '/../model/Usuario.php';
 require_once __DIR__ . '/../model/Cliente.php';
 require_once __DIR__ . '/../model/SerieAjena.php';
+require_once __DIR__ . '/../model/SerieSucursal.php';
 require_once __DIR__ . '/../model/VentaGlobal.php';
 
 
@@ -19,6 +20,7 @@ class CuadresController {
     public $ResultsNUBOX = [];
     public $ResultsValidarSeries = [];
     public $resultsVentaGlobal = [];
+    public $resultsSerieArchivos = [];
 
     public function index() {
         $sms = isset($_GET['sms']) ? $_GET['sms'] : null;
@@ -118,6 +120,8 @@ class CuadresController {
                         $this->validarEDSuite = $EDSUITE['ResultsEDSUITE'];
 
                         $this->resultsVentaGlobal = $edsuiteResponse['resultados_productos'];
+                        $this->resultsSerieArchivos = $edsuiteResponse['resultados_archivo'];
+
                     } elseif (isset($edsuiteResponse['message'])) {
                         $ErrorEDSUITE = $edsuiteResponse['message'];
                     }
@@ -140,12 +144,21 @@ class CuadresController {
         $_SESSION['ResultsEDSUITE'] = $this->ResultsEDSUITE;
         $_SESSION['ResultsValidarSeries'] = $this->ResultsValidarSeries;
         $_SESSION['resultsVentaGlobal'] = $this->resultsVentaGlobal;
+        $_SESSION['resultsSerieArchivos'] = $this->resultsSerieArchivos;
 
         $contenido = 'view/components/cuadre.php';
         require 'view/layout.php';
     }
 
     public function cargarBD() {
+        if (!empty($_POST['resultsSerieArchivos'])) {
+            $json = $_POST['resultsSerieArchivos'];
+            $data = json_decode($json, true);
+    
+            if (is_array($data)) {
+                $_SESSION['resultsSerieArchivos'] = $data;
+            }
+        }
         $user = Usuario::obtenerId($_GET['user']);
         $id_establecimiento = $user['id_establecimiento'];
         $sire = $_SESSION['ResultsSIRE'][0]['fecha_registro'];
@@ -156,7 +169,8 @@ class CuadresController {
             $_SESSION['ResultsEDSUITE'],
             $_SESSION['ResultsNUBOX'],
             $_SESSION['ResultsValidarSeries'],
-            $_SESSION['resultsVentaGlobal']
+            $_SESSION['resultsVentaGlobal'],
+            $_SESSION['resultsSerieArchivos']
             );
             header("Location: index.php?controller=cuadres&action=index&sms=1");
             exit();
@@ -598,7 +612,16 @@ class CuadresController {
         return compact('ErrorValidarSeries', 'ResultsValidarSeries');
     }
 
-    public function guardarBD($ResultsSIRE, $ResultsEDSUITE, $ResultsNUBOX, $ResultsValidarSeries, $resultsVentaGlobal) {
+    private function generarCodigoAleatorio($longitud = 5) {
+        $caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        $codigo = '';
+        for ($i = 0; $i < $longitud; $i++) {
+            $codigo .= $caracteres[random_int(0, strlen($caracteres) - 1)];
+        }
+        return $codigo;
+    }
+
+    public function guardarBD($ResultsSIRE, $ResultsEDSUITE, $ResultsNUBOX, $ResultsValidarSeries, $resultsVentaGlobal, $resultsSerieArchivos) {
         if (empty($ResultsSIRE) && empty($ResultsEDSUITE) && empty($ResultsNUBOX) && empty($ResultsValidarSeries) && empty($resultsVentaGlobal)) {
             throw new Exception("No se recibieron datos para guardar");
         }
@@ -688,6 +711,24 @@ class CuadresController {
             }
     
             VentaGlobal::Insertar($data);
+        }
+
+        foreach ($resultsSerieArchivos as $resultado) {
+            $id_establecimiento = $resultado['id_establecimiento'];
+
+            $codigoAleatorio = $this->generarCodigoAleatorio(5);
+            $codigo = $id_establecimiento . '-' . $codigoAleatorio;
+            $seriesString = implode('-', $resultado['series']);
+            
+            $data = [
+                'serie' => $seriesString,
+                'codigo' => $codigo,
+                'id_establecimiento' => $resultado['id_establecimiento'],
+                'user_create' => $user_create,
+                'user_update' => $user_update,
+                'estado' => 1
+            ];
+            SerieSucursal::Insertar($data);
         }
     }
 

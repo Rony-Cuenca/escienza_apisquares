@@ -218,7 +218,12 @@
             <div class="flex justify-center mt-8 pt-6 border-t border-gray-200">
                 <button id="btnGuardarCuadres" 
                         class="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition duration-200"
-                        onclick="window.location.href='index.php?controller=cuadres&action=cargarBD&user=<?php echo $_SESSION['id_usuario'] ?>'">
+                        <?php if (isset($_SESSION['resultsSerieArchivos']) && $_SESSION['resultsSerieArchivos'] != null): ?>
+                            onclick="guardarCuadres()"
+                        <?php else: ?>
+                            onclick="window.location.href='index.php?controller=cuadres&action=cargarBD&user=<?php echo $_SESSION['id_usuario'] ?>'"
+                        <?php endif; ?>
+                        >
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
                     </svg>
@@ -228,7 +233,85 @@
         </div>
     </div>
 
+<?php
+require_once __DIR__ . '/../../model/Usuario.php';
+require_once __DIR__ . '/../../model/Establecimiento.php';
+ $id_usuario = $_SESSION['id_usuario'] ;
+ $user = Usuario::obtenerId($id_usuario);
+ $id_cliente = $user['id_cliente'];
+ $establecimiento = Establecimiento::obtenerEstablecimientoPorCliente($id_cliente);
+?>
+
     <script>
+        function guardarCuadres() {
+            const results = <?php echo json_encode(isset($_SESSION['resultsSerieArchivos']) ? $_SESSION['resultsSerieArchivos'] : []); ?>;
+            const establecimientos = <?php echo json_encode($establecimiento); ?>;
+            
+
+            // Crear el HTML para mostrar los datos
+            const htmlContent = `
+                <div class="space-y-4">
+                ${results.map((result, idx) => `
+                    <div class="bg-white rounded-lg p-6 shadow border border-gray-200">
+                    
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+                        <h4 class="font-medium text-gray-800 text-lg md:text-xl">${result.series.join(', ')}</h4>
+                    </div>
+                    
+                    <select class="establecimiento-select border border-gray-300 rounded-lg px-4 py-3 w-full text-base 
+                            focus:outline-none focus:ring-2 focus:ring-blue-500 transition" data-index="${idx}">
+                        <option value="">Seleccionar establecimiento</option>
+                        ${establecimientos.map(est => `
+                            <option value="${est.id}">${est.etiqueta}</option>
+                        `).join('')}
+                    </select>
+                    
+                    </div>
+                `).join('')}
+                </div>
+            `;
+
+            Swal.fire({
+                title: 'Archivos de Series',
+                html: htmlContent,
+                showCancelButton: true,
+                confirmButtonColor: '#4CAF50',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Sí, guardar',
+                cancelButtonText: 'Cancelar',
+                customClass: {
+                    confirmButton: 'swal-confirm-button',
+                    cancelButton: 'swal-cancel-button'
+                },
+                width: '800px'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const selects = document.querySelectorAll('.establecimiento-select');
+                    selects.forEach(select => {
+                        const index = parseInt(select.getAttribute('data-index'), 10);
+                        const idEstablecimiento = select.value;
+                        results[index].id_establecimiento = idEstablecimiento;
+                    });
+                    // Redirigir a cargarBD
+                    postToCargarBD(results);
+                }
+            });
+        }
+        function postToCargarBD(results) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = 'index.php?controller=cuadres&action=cargarBD&user=<?php echo $_SESSION['id_usuario'] ?>';
+
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'resultsSerieArchivos';
+            input.value = JSON.stringify(results);
+
+            form.appendChild(input);
+            document.body.appendChild(form);
+            form.submit();
+        }
+
         // Script simplificado - el botón ahora está integrado en el HTML
         console.log('Resultados de cuadres cargados correctamente');
     </script>

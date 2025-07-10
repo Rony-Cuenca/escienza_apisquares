@@ -32,8 +32,7 @@ class SerieAjena
         return true;
     }
 
-    public static function obtenerPorMes($mesSeleccionado)
-    {
+    public static function obtenerPorMes($mesSeleccionado){
         $conn = Conexion::conectar();
         $id_establecimiento = $_SESSION['id_establecimiento'] ?? null;
         if (empty($mesSeleccionado)) {
@@ -76,8 +75,7 @@ class SerieAjena
         return $datos;
     }
 
-    public static function obtenerTodos()
-    {
+    public static function obtenerTodos(){
         $conn = Conexion::conectar();
         $id_establecimiento = $_SESSION['id_establecimiento'] ?? null;
 

@@ -133,6 +133,11 @@ def procesar():
 
                 col_producto = header.index('Producto')
                 col_cantidad = header.index('Cantidad')
+
+                if 'Archivo_Origen' in header:
+                    col_archivo = header.index('Archivo_Origen')
+                else:
+                    col_archivo = None
             except ValueError as e:
                 return jsonify({'status': 'error', 'message': f'Missing columns: {str(e)}'}), 400
 
@@ -142,6 +147,8 @@ def procesar():
 
             data_cantidad = {}
             data_producto_total = {}
+            data_cantidad_archivo = {}
+            data_archivo_serie = {}
 
             primer_valor_fecha = df.iloc[2, col_fecha]  
 
@@ -152,6 +159,9 @@ def procesar():
                 try:
                     serie = str(row[col_serie]).strip()
                     producto = str(row[col_producto]).strip()
+
+                    if col_archivo is not None:
+                        archivo = str(row[col_archivo]).strip()
                     
                     if not serie:
                         continue
@@ -183,6 +193,13 @@ def procesar():
 
                     data_cantidad[producto] += cantidad
                     data_producto_total[producto] += total
+
+                    if col_archivo is not None:
+                        if archivo not in data_cantidad_archivo:
+                            data_cantidad_archivo[archivo] = 0.0
+                            data_archivo_serie[archivo] = set()
+                        data_cantidad_archivo[archivo] += 1
+                        data_archivo_serie[archivo].add(serie)
                 except Exception:
                     continue
 
@@ -213,11 +230,22 @@ def procesar():
                     'fecha': primer_valor_fecha
                 })
 
+            resultados_archivo = []
+            for archivo in sorted(data_cantidad_archivo.keys()):
+                cantidad = data_cantidad_archivo[archivo]
+                series = data_archivo_serie[archivo]
+                resultados_archivo.append({
+                    'archivo': archivo,
+                    'cantidad': cantidad,
+                    'series': list(series)
+                })
+
             return jsonify({
                 'status': 'success',
                 'estado': estado,
                 'resultados': resultados,
-                'resultados_productos': resultados_productos
+                'resultados_productos': resultados_productos,
+                'resultados_archivo': resultados_archivo
             })
         
         else:
