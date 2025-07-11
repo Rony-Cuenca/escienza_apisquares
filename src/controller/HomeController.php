@@ -1,22 +1,58 @@
 <?php
 require_once 'config/conexion.php';
 require_once 'model/Usuario.php';
+require_once 'helpers/sesion_helper.php';
 
 class HomeController
 {
+    // Función inline para verificar si es SuperAdmin (usa helper)
+    private function esSuperAdmin()
+    {
+        return SesionHelper::esSuperAdmin();
+    }
+
+    // Función inline para obtener contexto actual
+    private function obtenerContextoActual()
+    {
+        $es_modo_directo = SesionHelper::esModoSuperAdmin();
+        $es_superadmin = SesionHelper::esSuperAdmin();
+
+        return [
+            'es_modo_directo' => $es_modo_directo,
+            'es_superadmin' => $es_superadmin,
+            'establecimiento_id' => SesionHelper::obtenerEstablecimientoActual(),
+            'usuario_id' => SesionHelper::obtenerUsuarioActual(),
+            'cliente_id' => SesionHelper::obtenerClienteActual(),
+            'rol' => $_SESSION['rol'] ?? ''
+        ];
+    }
+
+    // Función inline para obtener establecimiento actual (usa helper)
+    private function obtenerEstablecimientoActual()
+    {
+        return SesionHelper::obtenerEstablecimientoActual();
+    }
+
+    // Función inline para obtener usuario actual (usa helper)
+    private function obtenerUsuarioActual()
+    {
+        return SesionHelper::obtenerUsuarioActual();
+    }
+
     public function index()
     {
         $conn = Conexion::conectar();
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
-        $id_cliente = $_SESSION['id_cliente'] ?? 1;
-        // echo "ID CLIENTE: $id_cliente";
 
-        // Obtener establecimientos usando el modelo Usuario
+        // Usar SesionHelper para obtener el cliente actual
+        $id_cliente = SesionHelper::obtenerClienteActual();
         $establecimientos = Usuario::obtenerEstablecimientosPorCliente($id_cliente);
 
-        // Obtener años disponibles filtrados por cliente
+        // Obtener información del contexto
+        $contexto = $this->obtenerContextoActual();
+
         $anios = [];
         $sqlAnio = "SELECT DISTINCT YEAR(rc.fecha_registro) as year 
                     FROM resumen_comprobante rc
@@ -35,19 +71,51 @@ class HomeController
         require 'view/layout.php';
     }
 
-    // Endpoint para AJAX
+    public function dashboard()
+    {
+        $conn = Conexion::conectar();
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        $contexto = $this->obtenerContextoActual();
+        
+        // Usar SesionHelper para obtener datos de manera consistente
+        $id_cliente = SesionHelper::obtenerClienteActual();
+        $establecimiento_id = SesionHelper::obtenerEstablecimientoActual();
+        $establecimientos = Usuario::obtenerEstablecimientosPorCliente($id_cliente);
+
+        $anios = [];
+        $sqlAnio = "SELECT DISTINCT YEAR(rc.fecha_registro) as year 
+                    FROM resumen_comprobante rc
+                    JOIN establecimiento e ON rc.id_establecimiento = e.id
+                    WHERE e.id_cliente = ?
+                    ORDER BY year DESC";
+        $stmt = $conn->prepare($sqlAnio);
+        $stmt->bind_param("i", $id_cliente);
+        $stmt->execute();
+        $result2 = $stmt->get_result();
+        while ($row = $result2->fetch_assoc()) {
+            $anios[] = $row['year'];
+        }
+
+        $contenido = 'view/components/home.php';
+        require 'view/layout.php';
+    }
+
     public function resumenVentas()
     {
         $conn = Conexion::conectar();
         $establecimiento = $_GET['establecimiento'] ?? '';
         $anio = $_GET['anio'] ?? date('Y');
-        $id_cliente = $_SESSION['id_cliente'] ?? null;
-
-        // Consulta con validación para detectar registros anómalos
+        
+        // Usar SesionHelper de manera consistente
+        $id_cliente = SesionHelper::obtenerClienteActual();
+        
         $sql = "SELECT DATE_FORMAT(rc.fecha_registro, '%m') AS mes, 
                        tr.descripcion AS tipo, 
                        SUM(CASE 
-                           WHEN rc.monto_total > 1000000 THEN 0  -- Filtrar montos excesivamente altos (>1M)
+                           WHEN rc.monto_total > 1000000 THEN 0  
                            ELSE rc.monto_total 
                        END) AS total,
                        COUNT(CASE WHEN rc.monto_total > 1000000 THEN 1 END) AS registros_anomalos
@@ -65,14 +133,13 @@ class HomeController
 
         $datos = [];
         while ($row = $result->fetch_assoc()) {
-            // Log si se detectan registros anómalos
             if ($row['registros_anomalos'] > 0) {
                 error_log("REGISTROS ANÓMALOS DETECTADOS: Cliente=$id_cliente, Mes={$row['mes']}, Tipo={$row['tipo']}, Cantidad={$row['registros_anomalos']}");
             }
-            
+
             $datos[] = [
                 'mes' => $row['mes'],
-                'tipo' => $row['tipo'], 
+                'tipo' => $row['tipo'],
                 'total' => $row['total']
             ];
         }
@@ -82,7 +149,6 @@ class HomeController
         exit;
     }
 
-    // Endpoint para AJAX - Series más vendidas por mes y establecimiento
     public function seriesMasVendidas()
     {
         $conn = Conexion::conectar();
@@ -90,7 +156,9 @@ class HomeController
         $anio = $_GET['anio'] ?? date('Y');
         $mes = $_GET['mes'] ?? date('m');
         $tipo = $_GET['tipo'] ?? 'NUBOX360';
-        $id_cliente = $_SESSION['id_cliente'] ?? null;
+        
+        // Usar SesionHelper de manera consistente
+        $id_cliente = SesionHelper::obtenerClienteActual();
 
         $sql = "SELECT rc.serie, SUM(rc.monto_total) AS total
                 FROM resumen_comprobante rc
@@ -115,10 +183,8 @@ class HomeController
         exit;
     }
 
-    // Endpoint para AJAX - Exoneración IGV por serie
     public function exoneracionIGV()
     {
-        // Limpia cualquier salida previa
         if (ob_get_length()) ob_clean();
 
         header('Content-Type: application/json; charset=utf-8');
@@ -127,7 +193,9 @@ class HomeController
             $conn = Conexion::conectar();
             $establecimiento = $_GET['establecimiento'] ?? '';
             $anio = $_GET['anio'] ?? date('Y');
-            $id_cliente = $_SESSION['id_cliente'] ?? null;
+            
+            // Usar SesionHelper de manera consistente
+            $id_cliente = SesionHelper::obtenerClienteActual();
 
             $sql = "SELECT rc.serie, 
                            SUM(rc.suma_exonerada) AS exonerado, 
@@ -158,16 +226,16 @@ class HomeController
         exit;
     }
 
-    // Endpoint para variación mensual de ventas
     public function variacionVentasMensual()
     {
         $conn = Conexion::conectar();
         $establecimiento = $_GET['establecimiento'] ?? '';
         $anio = $_GET['anio'] ?? date('Y');
         $tipovar = $_GET['tipo'] ?? 'NUBOX360';
-        $id_cliente = $_SESSION['id_cliente'] ?? null;
-
-        // Suma total de ventas por mes
+        
+        // Usar SesionHelper de manera consistente
+        $id_cliente = SesionHelper::obtenerClienteActual();
+        
         $sql = "SELECT DATE_FORMAT(rc.fecha_registro, '%m') AS mes, SUM(rc.monto_total) AS total
             FROM resumen_comprobante rc
             JOIN establecimiento e ON rc.id_establecimiento = e.id
@@ -185,20 +253,19 @@ class HomeController
             $ventas[$row['mes']] = floatval($row['total']);
         }
 
-        // Calcula % variación respecto al mes anterior
         $meses = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
         $data = [];
         $anterior = null;
         foreach ($meses as $mes) {
             $actual = $ventas[$mes] ?? 0;
             if ($anterior === null) {
-                $variacion = null; // Primer mes, sin comparación
+                $variacion = null;
             } else {
                 $variacion = $anterior == 0 ? null : round((($actual - $anterior) / abs($anterior)) * 100, 2);
             }
             $data[] = [
                 'mes' => $mes,
-                'total' => $actual,      // <-- AGREGADO
+                'total' => $actual,
                 'variacion' => $variacion
             ];
             $anterior = $actual;
@@ -209,7 +276,6 @@ class HomeController
         exit;
     }
 
-    // Endpoint para promedio de venta por comprobante (serie)
     public function promedioVentaPorSerie()
     {
         $conn = Conexion::conectar();
@@ -217,7 +283,9 @@ class HomeController
         $anio = $_GET['anio'] ?? date('Y');
         $mes = $_GET['mes'] ?? date('m');
         $tipo = $_GET['tipo'] ?? 'NUBOX360';
-        $id_cliente = $_SESSION['id_cliente'] ?? null;
+        
+        // Usar SesionHelper de manera consistente
+        $id_cliente = SesionHelper::obtenerClienteActual();
 
         $sql = "SELECT rc.serie, 
                        SUM(rc.monto_total) AS total_vendido, 

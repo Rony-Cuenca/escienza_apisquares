@@ -19,15 +19,14 @@ class Usuario
         return false;
     }
 
-    // Verificar si es Super Admin
     public static function esSuperAdmin($usuario_id = null)
     {
-        if ($usuario_id === null && isset($_SESSION['id_usuario'])) {
-            $usuario_id = $_SESSION['id_usuario'];
+        if ($usuario_id === null) {
+            $usuario_id = $_SESSION['id_usuario'] ?? $_SESSION['user_id'] ?? null;
         }
-        
+
         if (!$usuario_id) return false;
-        
+
         $conn = Conexion::conectar();
         $sql = "SELECT id FROM usuario WHERE id = ? AND (rol = 'SuperAdmin' OR (id_cliente = 9999 AND rol = 'SuperAdmin')) AND estado = 1";
         $stmt = $conn->prepare($sql);
@@ -37,18 +36,18 @@ class Usuario
         return $result->num_rows > 0;
     }
 
-    // Crear Super Admin (solo uso manual o migración)
+    // Crear Super Admin 
     public static function crearSuperAdmin($usuario, $correo, $contrasena)
     {
         $conn = Conexion::conectar();
         $date_create = date('Y-m-d H:i:s');
         $hashed_password = password_hash($contrasena, PASSWORD_BCRYPT);
-        
+
         $sql = "INSERT INTO usuario (usuario, correo, contraseña, rol, user_create, user_update, id_cliente, id_establecimiento, estado, date_create, date_update)
         VALUES (?, ?, ?, 'SuperAdmin', 'system', 'system', 0, 0, 1, ?, ?)";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("sssss", $usuario, $correo, $hashed_password, $date_create, $date_create);
-        
+
         try {
             return $stmt->execute();
         } catch (mysqli_sql_exception $e) {
@@ -232,7 +231,7 @@ class Usuario
         return $res->fetch_assoc() ? true : false;
     }
 
-    // Obtener todos los clientes (solo para Super Admin)
+    // Obtener todos los clientes
     public static function obtenerTodosLosClientes($limit = 10, $offset = 0, $sort = 'razon_social', $dir = 'ASC')
     {
         $conn = Conexion::conectar();
@@ -240,7 +239,7 @@ class Usuario
         if (!in_array($sort, $validSorts)) {
             $sort = 'razon_social';
         }
-        
+
         $sql = "SELECT * FROM cliente ORDER BY $sort $dir LIMIT ? OFFSET ?";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("ii", $limit, $offset);
@@ -257,5 +256,16 @@ class Usuario
         $result = $conn->query($sql);
         $row = $result->fetch_assoc();
         return $row['total'];
+    }
+
+    public static function obtenerUsuarioPorCliente($id_cliente)
+    {
+        $conn = Conexion::conectar();
+        $sql = "SELECT * FROM usuario WHERE id_cliente = ? AND estado = 1 LIMIT 1";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i", $id_cliente);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        return $res->fetch_assoc();
     }
 }

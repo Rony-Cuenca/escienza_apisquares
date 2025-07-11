@@ -4,6 +4,8 @@ require_once __DIR__ . '/../model/Cuadre.php';
 require_once __DIR__ . '/../model/Establecimiento.php';
 require_once __DIR__ . '/../model/SerieAjena.php';
 require_once __DIR__ . '/../model/VentaGlobal.php';
+require_once __DIR__ . '/../helpers/permisos_helper.php';
+require_once __DIR__ . '/../helpers/sesion_helper.php';
 
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -12,8 +14,59 @@ use PhpOffice\PhpSpreadsheet\Style\Border;
 
 class ReporteController
 {
+    // Función para verificar permisos completos (SuperAdmin o Administrador)
+    private function verificarPermisosCompletos()
+    {
+        if (!tieneAccesoCompleto()) {
+            $_SESSION['mensaje'] = "No tienes permisos para realizar esta acción.";
+            $_SESSION['tipo_mensaje'] = "error";
+            header("Location: index.php?controller=home&action=index");
+            exit();
+        }
+    }
+
+    // Función para verificar permisos de generación de reportes
+    private function verificarPermisosGeneracion()
+    {
+        if (!puedeGenerarReportes()) {
+            $_SESSION['mensaje'] = "No tienes permisos para generar reportes.";
+            $_SESSION['tipo_mensaje'] = "error";
+            header("Location: index.php?controller=home&action=index");
+            exit();
+        }
+    }
+
+    // Función para verificar permisos de visualización de reportes
+    private function verificarPermisosVisualizacion()
+    {
+        if (!puedeVerReportes()) {
+            $_SESSION['mensaje'] = "No tienes permisos para ver reportes.";
+            $_SESSION['tipo_mensaje'] = "error";
+            header("Location: index.php?controller=home&action=index");
+            exit();
+        }
+    }
+
+    // Función inline para obtener usuario actual seguro
+    private function obtenerUsuarioActualSeguro()
+    {
+        return SesionHelper::obtenerUsuarioActual();
+    }
+
+    // Función inline para verificar sesión y permisos
+    private function verificarSesion()
+    {
+        if (!SesionHelper::obtenerClienteActual()) {
+            header('Location: index.php?controller=auth&action=login');
+            exit;
+        }
+    }
+
     public function index()
     {
+        $this->verificarSesion();
+        $this->verificarPermisosVisualizacion();
+
         $mesesDisponibles = Cuadre::obtenerMesesDisponibles();
         $mesSeleccionado = $_GET['mes'] ?? '';
         $cuadresSIRE = $cuadresNUBOX = $cuadresEDSUITE = [];
@@ -122,18 +175,21 @@ class ReporteController
 
     public function exportarPDF()
     {
+        $this->verificarSesion();
+        $this->verificarPermisosGeneracion();
+
         $mesSeleccionado = $_GET['mes'] ?? '';
         $cuadresSIRE = $cuadresNUBOX = $cuadresEDSUITE = [];
         $totalesTipoDoc = $seriesTotales = $diferenciasSeries = [];
         $seriesAjenas = $ventasGlobales = [];
         $mesesDisponibles = Cuadre::obtenerMesesDisponibles();
-        $usuarioNombre = $_SESSION['usuario'] ?? 'Desconocido';
+        $usuarioNombre = SesionHelper::obtenerNombreUsuario();
 
-        $id_establecimiento = $_SESSION['id_establecimiento'] ?? null;
+        $id_establecimiento = SesionHelper::obtenerEstablecimientoActual();
         $rucEstablecimiento = '';
         $nombreEstablecimiento = '';
         if ($id_establecimiento) {
-            $id_cliente = $_SESSION['id_cliente'] ?? null;
+            $id_cliente = SesionHelper::obtenerClienteActual();
             $cliente = \Establecimiento::obtenerClientePorId($id_cliente);
             if ($cliente) {
                 $rucEstablecimiento = $cliente['ruc'] ?? '';
@@ -169,18 +225,21 @@ class ReporteController
 
     public function exportarExcel()
     {
+        $this->verificarSesion();
+        $this->verificarPermisosGeneracion();
+
         $mesSeleccionado = $_GET['mes'] ?? '';
         $cuadresSIRE = $cuadresNUBOX = $cuadresEDSUITE = [];
         $totalesTipoDoc = $seriesTotales = $diferenciasSeries = [];
         $seriesAjenas = $ventasGlobales = [];
         $mesesDisponibles = Cuadre::obtenerMesesDisponibles();
-        $id_establecimiento = $_SESSION['id_establecimiento'] ?? null;
+        $id_establecimiento = SesionHelper::obtenerEstablecimientoActual();
         $rucEstablecimiento = '';
         $nombreEstablecimiento = '';
-        $usuarioNombre = $_SESSION['usuario'] ?? 'Desconocido';
+        $usuarioNombre = SesionHelper::obtenerNombreUsuario();
 
         if ($id_establecimiento) {
-            $id_cliente = $_SESSION['id_cliente'] ?? null;
+            $id_cliente = SesionHelper::obtenerClienteActual();
             $cliente = \Establecimiento::obtenerClientePorId($id_cliente);
             if ($cliente) {
                 $rucEstablecimiento = $cliente['ruc'] ?? '';

@@ -2,14 +2,47 @@
 require_once 'model/Establecimiento.php';
 require_once 'config/conexion.php';
 require_once 'config/api_config.php';
+require_once 'helpers/sesion_helper.php';
+require_once __DIR__ . '/../helpers/permisos_helper.php'; // Agregar helpers de permisos
 
 class EstablecimientoController
 {
     private function verificarSesion()
     {
-        if (!isset($_SESSION['id_cliente'])) {
+        if (!SesionHelper::obtenerClienteActual()) {
             header('Location: index.php?controller=auth&action=login');
             exit;
+        }
+    }
+
+    private function verificarPermisosGestion()
+    {
+        if (!puedeGestionarEstablecimientos()) {
+            $_SESSION['mensaje'] = "No tienes permisos para gestionar establecimientos.";
+            $_SESSION['tipo_mensaje'] = "error";
+            header("Location: index.php?controller=home&action=index");
+            exit();
+        }
+    }
+
+    private function verificarPermisosCreacion()
+    {
+        if (!puedeCrearEstablecimientos()) {
+            $this->responseJson(['success' => false, 'error' => 'No tienes permisos para crear establecimientos.']);
+        }
+    }
+
+    private function verificarPermisosEdicion()
+    {
+        if (!puedeEditarEstablecimientos()) {
+            $this->responseJson(['success' => false, 'error' => 'No tienes permisos para editar establecimientos.']);
+        }
+    }
+
+    private function verificarPermisosSincronizacion()
+    {
+        if (!puedeSincronizarEstablecimientos()) {
+            $this->responseJson(['success' => false, 'error' => 'No tienes permisos para sincronizar establecimientos.']);
         }
     }
 
@@ -23,8 +56,9 @@ class EstablecimientoController
     public function index()
     {
         $this->verificarSesion();
+        $this->verificarPermisosGestion(); // Añadir verificación de permisos
 
-        $id_cliente = $_SESSION['id_cliente'];
+        $id_cliente = SesionHelper::obtenerClienteActual();
         $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
         $limit = isset($_GET['limit']) ? max(1, intval($_GET['limit'])) : 10;
         $offset = ($page - 1) * $limit;
@@ -65,8 +99,8 @@ class EstablecimientoController
                     'departamento' => $cliente['departamento'] ?? '',
                     'provincia' => $cliente['provincia'] ?? '',
                     'distrito' => $cliente['distrito'] ?? '',
-                    'user_create' => $_SESSION['usuario'] ?? 'sistema',
-                    'user_update' => $_SESSION['usuario'] ?? 'sistema',
+                    'user_create' => SesionHelper::obtenerNombreUsuario(),
+                    'user_update' => SesionHelper::obtenerNombreUsuario(),
                     'estado' => 1
                 ];
 
@@ -78,8 +112,9 @@ class EstablecimientoController
     public function sincronizarEstablecimientos()
     {
         $this->verificarSesion();
+        $this->verificarPermisosSincronizacion(); // Añadir verificación de permisos
 
-        $id_cliente = $_SESSION['id_cliente'];
+        $id_cliente = SesionHelper::obtenerClienteActual();
         $cliente = Establecimiento::obtenerClientePorId($id_cliente);
 
         if (!$cliente) {
@@ -167,8 +202,8 @@ class EstablecimientoController
             'departamento' => $departamento,
             'provincia' => $provincia,
             'distrito' => $distrito,
-            'user_create' => $_SESSION['usuario'],
-            'user_update' => $_SESSION['usuario'],
+            'user_create' => SesionHelper::obtenerNombreUsuario(),
+            'user_update' => SesionHelper::obtenerNombreUsuario(),
             'estado' => 1
         ];
 
@@ -183,7 +218,7 @@ class EstablecimientoController
                     $etiquetaPorDefecto,
                     $direccion,
                     $id_cliente,
-                    $_SESSION['usuario'] ?? 'sistema'
+                    SesionHelper::obtenerNombreUsuario()
                 );
             }
             
@@ -197,10 +232,15 @@ class EstablecimientoController
     public function cambiarEstado($id, $estado)
     {
         $this->verificarSesion();
+        
+        // Verificar permisos para cambiar estado
+        if (!puedeCambiarEstadoEstablecimientos()) {
+            $this->responseJson(['success' => false, 'error' => 'No tienes permisos para cambiar el estado de establecimientos.']);
+        }
 
         $id = intval($id);
         $estado = intval($estado);
-        $id_cliente = $_SESSION['id_cliente'];
+        $id_cliente = SesionHelper::obtenerClienteActual();
 
         if ($id <= 0 || !in_array($estado, [1, 2, 3])) {
             $this->responseJson(['success' => false, 'error' => 'Datos inválidos']);
@@ -481,12 +521,15 @@ class EstablecimientoController
     public function editarEstablecimiento()
     {
         $this->verificarSesion();
+        $this->verificarPermisosEdicion(); // Añadir verificación de permisos
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $id = intval($_POST['id'] ?? 0);
             $etiqueta = trim($_POST['etiqueta'] ?? '');
             $direccion = trim($_POST['direccion'] ?? '');
-            $id_cliente = $_SESSION['id_cliente'];
+            
+            // Usar SesionHelper de manera consistente
+            $id_cliente = SesionHelper::obtenerClienteActual();
 
             if ($id <= 0) {
                 $this->responseJson(['success' => false, 'error' => 'ID inválido']);
@@ -504,7 +547,7 @@ class EstablecimientoController
                 $etiqueta,
                 $direccion,
                 $id_cliente,
-                $_SESSION['usuario'] ?? 'sistema'
+                SesionHelper::obtenerNombreUsuario()
             );
 
             if ($resultado) {
@@ -539,9 +582,11 @@ class EstablecimientoController
     public function crearEstablecimiento()
     {
         $this->verificarSesion();
+        $this->verificarPermisosCreacion(); // Añadir verificación de permisos
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $id_cliente = $_SESSION['id_cliente'];
+            // Usar SesionHelper de manera consistente
+            $id_cliente = SesionHelper::obtenerClienteActual();
 
             $datos = [
                 'id_cliente' => $id_cliente,
@@ -556,8 +601,8 @@ class EstablecimientoController
                 'departamento' => trim($_POST['departamento'] ?? ''),
                 'provincia' => trim($_POST['provincia'] ?? ''),
                 'distrito' => trim($_POST['distrito'] ?? ''),
-                'user_create' => $_SESSION['usuario'] ?? 'sistema',
-                'user_update' => $_SESSION['usuario'] ?? 'sistema'
+                'user_create' => SesionHelper::obtenerNombreUsuario(),
+                'user_update' => SesionHelper::obtenerNombreUsuario()
             ];
 
             if (empty($datos['codigo_establecimiento'])) {
@@ -621,7 +666,7 @@ class EstablecimientoController
 
         $conn = Conexion::conectar();
         $date_update = date('Y-m-d H:i:s');
-        $user_update = $_SESSION['usuario'] ?? 'sistema';
+        $user_update = SesionHelper::obtenerNombreUsuario();
         
         // Actualizar todos los establecimientos sin etiqueta
         $sql = "UPDATE establecimiento SET 

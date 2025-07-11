@@ -61,7 +61,19 @@
                 Unir Excel
             </button>
         </div>
-                    <form action="index.php?controller=cuadres&action=cuadre&user=<?php echo $_SESSION['id_usuario'] ?>" method="post" enctype="multipart/form-data">
+                    <?php
+                    // Obtener el ID de usuario usando el helper unificado
+                    require_once __DIR__ . '/../../helpers/sesion_helper.php';
+                    $userId = SesionHelper::obtenerUsuarioActual();
+                    
+                    // Validar que tenemos un userId válido
+                    if (empty($userId)) {
+                        echo '<div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-4">
+                                <strong>Advertencia:</strong> No se pudo determinar el usuario para procesar el cuadre.
+                              </div>';
+                    }
+                    ?>
+                    <form action="index.php?controller=cuadres&action=cuadre" method="post" enctype="multipart/form-data">
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 mt-8">
                             <div class="w-full">
                                 <label class="block font-medium mb-1">Archivo SIRE</label>
@@ -159,8 +171,9 @@
 </script>
 
 <!-- Modal -->
-<div id="modalUnirExcel" class="fixed inset-0 z-50 bg-black/50 flex items-center justify-center hidden">
-    <div class="bg-white rounded-xl shadow-xl w-auto max-w-4xl p-6 relative">
+<div id="modalUnirExcel" class="fixed inset-0 z-50 bg-black/50 hidden">
+    <div class="flex items-center justify-center min-h-screen">
+        <div class="bg-white rounded-xl shadow-xl w-auto max-w-4xl p-6 relative">
         <button onclick="cerrarModal()" class="absolute top-3 right-3 text-gray-500 hover:text-gray-700">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none"
                  viewBox="0 0 24 24" stroke="currentColor">

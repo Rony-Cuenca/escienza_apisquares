@@ -1,6 +1,7 @@
 <?php
 require_once 'model/AccessToken.php';
 require_once __DIR__ . '/../model/Establecimiento.php';
+require_once __DIR__ . '/../helpers/sesion_helper.php';
 require_once __DIR__ . '/../../vendor/autoload.php';
 
 use Firebase\JWT\JWT;
@@ -8,10 +9,50 @@ use Firebase\JWT\Key;
 
 class AccessTokenController
 {
+    // Función para verificar si es SuperAdmin (usa helper)
+    private function esSuperAdmin()
+    {
+        return SesionHelper::esSuperAdmin();
+    }
+
+    // Función para verificar si es Administrador (usa helper)
+    private function esAdministrador()
+    {
+        $rol = SesionHelper::obtenerRolActual();
+        return $rol === 'Administrador';
+    }
+
+    // Función para verificar si puede generar tokens
+    private function puedeGenerarTokens()
+    {
+        return $this->esSuperAdmin() || $this->esAdministrador();
+    }
+
+    // Función para obtener usuario actual (usa helper)
+    private function obtenerUsuarioActualSeguro()
+    {
+        return SesionHelper::obtenerUsuarioActual();
+    }
+
+    // Función para verificar sesión y permisos (usa helper)
+    private function verificarSesionYPermisos()
+    {
+        if (!SesionHelper::obtenerClienteActual()) {
+            header('Location: index.php?controller=auth&action=login');
+            exit;
+        }
+
+        if (!$this->puedeGenerarTokens()) {
+            header('Location: index.php?controller=home&action=index&error=' . urlencode('No tienes permisos para generar códigos de acceso'));
+            exit;
+        }
+    }
+
     public function index()
     {
-        $this->verificarSesion();
-        $id_establecimiento = $_SESSION['id_establecimiento'];
+        $this->verificarSesionYPermisos();
+
+        $id_establecimiento = SesionHelper::obtenerEstablecimientoActual();
         $tokens = AccessToken::listar(['id_establecimiento' => $id_establecimiento]);
         $contenido = 'view/components/access_token.php';
         require 'view/layout.php';
@@ -19,7 +60,7 @@ class AccessTokenController
 
     public function generar()
     {
-        $this->verificarSesion();
+        $this->verificarSesionYPermisos();
 
         $input = json_decode(file_get_contents('php://input'), true) ?? $_POST;
         header('Content-Type: application/json');
@@ -30,7 +71,7 @@ class AccessTokenController
         }
 
         $payload = [
-            'id_establecimiento' => $_SESSION['id_establecimiento'],
+            'id_establecimiento' => SesionHelper::obtenerEstablecimientoActual(),
             'rol' => $input['rol'],
             'rand' => rand(1000, 9999)
         ];
@@ -40,14 +81,14 @@ class AccessTokenController
         $date_expired = date('Y-m-d H:i:s', strtotime('+24 hours'));
 
         $data = [
-            'id_cliente'      => $_SESSION['id_cliente'],
-            'id_establecimiento'     => $_SESSION['id_establecimiento'],
+            'id_cliente'      => SesionHelper::obtenerClienteActual(),
+            'id_establecimiento'     => SesionHelper::obtenerEstablecimientoActual(),
             'rol'             => $input['rol'],
             'estado'          => 1,
             'hashcode'        => $jwt,
-            'id_user_create'  => $_SESSION['id_usuario'],
-            'user_create'     => $_SESSION['usuario'],
-            'user_update'     => $_SESSION['usuario'],
+            'id_user_create'  => $this->obtenerUsuarioActualSeguro(),
+            'user_create'     => SesionHelper::obtenerNombreUsuario(),
+            'user_update'     => SesionHelper::obtenerNombreUsuario(),
             'date_expired'    => $date_expired,
             'comentario'      => ''
         ];
@@ -80,7 +121,7 @@ class AccessTokenController
     {
         $this->verificarSesion();
         $id_token = intval($_POST['id_token'] ?? 0);
-        $user_used = $_SESSION['usuario'] ?? 'desconocido';
+        $user_used = SesionHelper::obtenerNombreUsuario();
         $ip_used = $_SERVER['REMOTE_ADDR'] ?? '';
         header('Content-Type: application/json');
         if ($id_token > 0) {
@@ -151,7 +192,11 @@ class AccessTokenController
 
     private function verificarSesion()
     {
-        if (!isset($_SESSION['id_cliente']) || !isset($_SESSION['id_establecimiento']) || ($_SESSION['rol'] ?? '') !== 'Administrador') {
+        $clienteActual = SesionHelper::obtenerClienteActual();
+        $establecimientoActual = SesionHelper::obtenerEstablecimientoActual();
+        $rolActual = SesionHelper::obtenerRolActual();
+        
+        if (!$clienteActual || !$establecimientoActual || $rolActual !== 'Administrador') {
             header('Location: index.php?controller=auth&action=login&error=No autorizado');
             exit;
         }

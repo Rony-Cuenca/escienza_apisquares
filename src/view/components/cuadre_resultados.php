@@ -221,7 +221,7 @@
                         <?php if (isset($_SESSION['resultsSerieArchivos']) && $_SESSION['resultsSerieArchivos'] != null): ?>
                             onclick="guardarCuadres()"
                         <?php else: ?>
-                            onclick="window.location.href='index.php?controller=cuadres&action=cargarBD&user=<?php echo $_SESSION['id_usuario'] ?>'"
+                            onclick="window.location.href='index.php?controller=cuadres&action=cargarBD&user=<?php echo $id_usuario ?? '' ?>'"
                         <?php endif; ?>
                         >
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -236,10 +236,19 @@
 <?php
 require_once __DIR__ . '/../../model/Usuario.php';
 require_once __DIR__ . '/../../model/Establecimiento.php';
- $id_usuario = $_SESSION['id_usuario'] ;
- $user = Usuario::obtenerId($id_usuario);
- $id_cliente = $user['id_cliente'];
- $establecimiento = Establecimiento::obtenerEstablecimientoPorCliente($id_cliente);
+require_once __DIR__ . '/../../helpers/sesion_helper.php';
+
+// Usar el helper para obtener información del usuario de manera unificada
+$id_usuario = SesionHelper::obtenerUsuarioActual();
+$id_cliente = SesionHelper::obtenerClienteActual();
+
+if ($id_usuario) {
+    $user = Usuario::obtenerId($id_usuario);
+    $establecimiento = Establecimiento::obtenerEstablecimientoPorCliente($id_cliente);
+} else {
+    $user = null;
+    $establecimiento = null;
+}
 ?>
 
     <script>
@@ -300,7 +309,7 @@ require_once __DIR__ . '/../../model/Establecimiento.php';
         function postToCargarBD(results) {
             const form = document.createElement('form');
             form.method = 'POST';
-            form.action = 'index.php?controller=cuadres&action=cargarBD&user=<?php echo $_SESSION['id_usuario'] ?>';
+            form.action = 'index.php?controller=cuadres&action=cargarBD&user=<?php echo $id_usuario ?? '' ?>';
 
             const input = document.createElement('input');
             input.type = 'hidden';

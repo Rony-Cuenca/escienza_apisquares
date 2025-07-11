@@ -1,4 +1,25 @@
+<?php
+if (!function_exists('obtenerContextoActual')) {
+  function obtenerContextoActual()
+  {
+    require_once __DIR__ . '/../../helpers/sesion_helper.php';
+    $es_modo_directo = SesionHelper::esModoSuperAdmin();
+    $es_superadmin = SesionHelper::esSuperAdmin();
+
+    return [
+      'es_modo_directo' => $es_modo_directo,
+      'es_superadmin' => $es_superadmin,
+      'establecimiento_id' => SesionHelper::obtenerEstablecimientoActual(),
+      'usuario_id' => SesionHelper::obtenerUsuarioActual(),
+      'cliente_id' => SesionHelper::obtenerClienteActual(),
+      'rol' => $_SESSION['rol'] ?? ''
+    ];
+  }
+}
+?>
+
 <div class="w-full px-2 md:px-10 py-10 bg-gray-200 flex-1 flex flex-col">
+
   <div class="w-full bg-white rounded-xl shadow-2xl shadow-gray-300/40 p-2 md:p-8">
     <!-- Cabecera con filtros -->
     <div class="flex flex-col items-center pt-6 pb-6 px-6 border-b border-gray-200 mb-8">
@@ -24,10 +45,10 @@
     </div>
 
     <!-- Layout principal de gráficos -->
-    <div class="flex flex-col md:flex-row gap-8"> <!-- Cambiado a flex-row en md+ -->
+    <div class="flex flex-col md:flex-row gap-8">
 
       <!-- Fila 1: Resumen de ventas -->
-      <div class="w-full md:w-1/2"> <!-- Ocupa la mitad en md+ -->
+      <div class="w-full md:w-1/2">
         <div class="bg-gradient-to-br from-white to-gray-50 rounded-xl border border-gray-200 shadow-lg overflow-hidden">
           <div class="px-6 py-4 bg-gradient-to-r from-blue-50 to-blue-100 border-b border-gray-200">
             <h1 class="text-lg md:text-xl font-semibold text-gray-800 text-center">RESUMEN DE VENTAS</h1>
@@ -55,7 +76,7 @@
       </div>
 
       <!-- Fila 2: Variación mensual -->
-      <div class="w-full md:w-1/2"> <!-- Ocupa la mitad en md+ -->
+      <div class="w-full md:w-1/2">
         <div class="bg-gradient-to-br from-white to-gray-50 rounded-xl border border-gray-200 shadow-lg overflow-hidden">
           <div class="px-6 py-4 bg-gradient-to-r from-green-50 to-green-100 border-b border-gray-200">
             <h2 class="text-lg md:text-xl font-semibold text-gray-800 text-center">VARIACIÓN MENSUAL</h2>
@@ -66,85 +87,93 @@
         </div>
       </div>
     </div>
-    <!--filtros -->
     <div class="flex flex-col items-center pt-6 pb-6 px-6 border-b border-gray-200 mb-8">
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-center gap-6 w-full">
-    
-            <div class="flex flex-col w-full sm:w-auto">
-      <label class="block text-sm font-medium text-gray-600 mb-1">Tipo</label>
-      <select id="select-tipo" class="border border-gray-300 rounded-md px-6 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400 bg-white">
-        <option value="NUBOX360">NUBOX360</option>
-        <option value="SIRE">SIRE</option>
-        <option value="EDSUITE">EDSUITE</option>
-      </select>
-    </div>
-    <div class="flex flex-col w-full sm:w-auto">
-      <label class="block text-sm font-medium text-gray-600 mb-1">Mes</label>
-      <select id="select-mes" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400 bg-white">
-      <?php
-        $meses = [
-          '01' => 'Enero', '02' => 'Febrero', '03' => 'Marzo', '04' => 'Abril',
-          '05' => 'Mayo', '06' => 'Junio', '07' => 'Julio', '08' => 'Agosto',
-          '09' => 'Septiembre', '10' => 'Octubre', '11' => 'Noviembre', '12' => 'Diciembre'
-        ];
-        // Calcular el mes anterior
-        $mesActual = date('n'); // 1-12
-        $mesAnterior = $mesActual - 1;
-        if ($mesAnterior == 0) {
-          $mesAnterior = 12;
-        }
-        $mesAnteriorStr = str_pad($mesAnterior, 2, '0', STR_PAD_LEFT);
 
-        foreach ($meses as $num => $nombre) {
-          $selected = ($num == $mesAnteriorStr) ? 'selected' : '';
-          echo "<option value=\"$num\" $selected>$nombre</option>";
-        }
-      ?>
-      </select>
-    </div>
+        <div class="flex flex-col w-full sm:w-auto">
+          <label class="block text-sm font-medium text-gray-600 mb-1">Tipo</label>
+          <select id="select-tipo" class="border border-gray-300 rounded-md px-6 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400 bg-white">
+            <option value="NUBOX360">NUBOX360</option>
+            <option value="SIRE">SIRE</option>
+            <option value="EDSUITE">EDSUITE</option>
+          </select>
+        </div>
+        <div class="flex flex-col w-full sm:w-auto">
+          <label class="block text-sm font-medium text-gray-600 mb-1">Mes</label>
+          <select id="select-mes" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400 bg-white">
+            <?php
+            $meses = [
+              '01' => 'Enero',
+              '02' => 'Febrero',
+              '03' => 'Marzo',
+              '04' => 'Abril',
+              '05' => 'Mayo',
+              '06' => 'Junio',
+              '07' => 'Julio',
+              '08' => 'Agosto',
+              '09' => 'Septiembre',
+              '10' => 'Octubre',
+              '11' => 'Noviembre',
+              '12' => 'Diciembre'
+            ];
+            $mesActual = date('n');
+            $mesAnterior = $mesActual - 1;
+            if ($mesAnterior == 0) {
+              $mesAnterior = 12;
+            }
+            $mesAnteriorStr = str_pad($mesAnterior, 2, '0', STR_PAD_LEFT);
+
+            foreach ($meses as $num => $nombre) {
+              $selected = ($num == $mesAnteriorStr) ? 'selected' : '';
+              echo "<option value=\"$num\" $selected>$nombre</option>";
+            }
+            ?>
+          </select>
+        </div>
       </div>
 
-  </div>
-      <!-- Fila 3: Gráficos secundarios en columnas responsivas -->
-      <div class="w-full grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="w-full min-h-[400px] max-h-[500px] bg-gradient-to-br from-white to-gray-50 rounded-xl border border-gray-200 shadow-lg overflow-hidden">
-          <div class="px-6 py-4 bg-gradient-to-r from-purple-50 to-purple-100 border-b border-gray-200">
-            <h3 class="text-base font-semibold text-gray-800 text-center">ANÁLISIS POR CATEGORÍAS</h3>
-          </div>
-          <div class="p-6 h-[calc(100%-4rem)] overflow-hidden">
-            <?php require_once "graficos/pastel.php" ?>
-          </div>
+    </div>
+    <!-- Fila 3: Gráficos secundarios en columnas responsivas -->
+    <div class="w-full grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="w-full min-h-[400px] max-h-[500px] bg-gradient-to-br from-white to-gray-50 rounded-xl border border-gray-200 shadow-lg overflow-hidden">
+        <div class="px-6 py-4 bg-gradient-to-r from-purple-50 to-purple-100 border-b border-gray-200">
+          <h3 class="text-base font-semibold text-gray-800 text-center">ANÁLISIS POR CATEGORÍAS</h3>
         </div>
-        <div class="w-full min-h-[400px] max-h-[500px] bg-gradient-to-br from-white to-gray-50 rounded-xl border border-gray-200 shadow-lg overflow-hidden">
-          <div class="px-6 py-4 bg-gradient-to-r from-orange-50 to-orange-100 border-b border-gray-200">
-            <h3 class="text-base font-semibold text-gray-800 text-center">EXONERACIONES</h3>
-          </div>
-          <div class="p-6 h-[calc(100%-4rem)] overflow-hidden">
-            <?php require_once "graficos/exoneracion.php" ?>
-          </div>
+        <div class="p-6 h-[calc(100%-4rem)] overflow-hidden">
+          <?php require_once "graficos/pastel.php" ?>
         </div>
-        <div class="w-full min-h-[400px] max-h-[500px] bg-gradient-to-br from-white to-gray-50 rounded-xl border border-gray-200 shadow-lg overflow-hidden">
-          <div class="px-6 py-4 bg-gradient-to-r from-teal-50 to-teal-100 border-b border-gray-200">
-            <h3 class="text-base font-semibold text-gray-800 text-center">PROMEDIO MENSUAL</h3>
-          </div>
-          <div class="p-6 h-[calc(100%-4rem)] overflow-hidden">
-            <?php require_once "graficos/promedio.php" ?>
-          </div>
+      </div>
+      <div class="w-full min-h-[400px] max-h-[500px] bg-gradient-to-br from-white to-gray-50 rounded-xl border border-gray-200 shadow-lg overflow-hidden">
+        <div class="px-6 py-4 bg-gradient-to-r from-orange-50 to-orange-100 border-b border-gray-200">
+          <h3 class="text-base font-semibold text-gray-800 text-center">EXONERACIONES</h3>
+        </div>
+        <div class="p-6 h-[calc(100%-4rem)] overflow-hidden">
+          <?php require_once "graficos/exoneracion.php" ?>
+        </div>
+      </div>
+      <div class="w-full min-h-[400px] max-h-[500px] bg-gradient-to-br from-white to-gray-50 rounded-xl border border-gray-200 shadow-lg overflow-hidden">
+        <div class="px-6 py-4 bg-gradient-to-r from-teal-50 to-teal-100 border-b border-gray-200">
+          <h3 class="text-base font-semibold text-gray-800 text-center">PROMEDIO MENSUAL</h3>
+        </div>
+        <div class="p-6 h-[calc(100%-4rem)] overflow-hidden">
+          <?php require_once "graficos/promedio.php" ?>
         </div>
       </div>
     </div>
   </div>
+</div>
 </div>
 
 <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-  // Esperar a que Google Charts se cargue completamente
   function initializeGoogleCharts() {
     if (typeof google !== 'undefined' && google.charts) {
       console.log('Google Charts disponible, inicializando...');
-      google.charts.load('current', {'packages': ['bar', 'corechart']});
+      google.charts.load('current', {
+        'packages': ['bar', 'corechart']
+      });
       google.charts.setOnLoadCallback(function() {
         console.log('Google Charts cargado completamente');
         drawChart();
@@ -155,7 +184,6 @@
     }
   }
 
-  // Inicializar cuando el DOM esté listo
   document.addEventListener('DOMContentLoaded', function() {
     initializeGoogleCharts();
   });
@@ -169,9 +197,9 @@
 
     let anio = document.getElementById('select-anio').value;
     let establecimiento = document.getElementById('select-establecimiento').value;
-    
+
     console.log('Cargando datos del resumen de ventas...');
-    
+
     fetch(`index.php?controller=home&action=resumenVentas&establecimiento=${establecimiento}&anio=${anio}`)
       .then(r => {
         if (!r.ok) {
@@ -181,7 +209,7 @@
       })
       .then(datos => {
         console.log('Datos resumen ventas recibidos:', datos);
-        
+
         let meses = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
         let tipos = ['NUBOX360', 'EDSUITE', 'SIRE'];
         let data = [
@@ -219,23 +247,18 @@
   }
 
   document.addEventListener('DOMContentLoaded', function() {
-    // Event listeners para los filtros principales
     document.getElementById('select-anio').addEventListener('change', drawChart);
     document.getElementById('select-establecimiento').addEventListener('change', drawChart);
   });
 
-  // Inicializar otros gráficos después de un pequeño delay
   document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded, iniciando gráficos...');
-    
-    // Dar tiempo para que se carguen las librerías
+
     setTimeout(function() {
-      // Gráfico de pastel (análisis por categorías)
       if (typeof drawPieChart === 'function') {
         console.log('Ejecutando drawPieChart');
         try {
           drawPieChart();
-          // Event listeners para el gráfico de pastel
           document.getElementById('select-tipo').addEventListener('change', function() {
             drawPieChart();
             if (typeof drawPromedioVentaChart === 'function') drawPromedioVentaChart();
@@ -287,8 +310,7 @@
       } else {
         console.log('drawVariacionVentasChart no está disponible');
       }
-    }, 1000); // Esperar 1 segundo
-
+    }, 1000);
     // Event listeners para filtros principales
     document.getElementById('select-anio').addEventListener('change', function() {
       console.log('Cambió año, actualizando gráficos...');

@@ -1,16 +1,19 @@
 <?php
 ini_set('memory_limit', '512M');
+
 use Box\Spout\Reader\Common\Creator\ReaderEntityFactory;
-require __DIR__ . '/../../vendor/autoload.php'; 
+
+require __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/../model/Cuadre.php';
 require_once __DIR__ . '/../model/Usuario.php';
 require_once __DIR__ . '/../model/Cliente.php';
 require_once __DIR__ . '/../model/SerieAjena.php';
 require_once __DIR__ . '/../model/SerieSucursal.php';
 require_once __DIR__ . '/../model/VentaGlobal.php';
+require_once __DIR__ . '/../helpers/sesion_helper.php';
 
-
-class CuadresController {
+class CuadresController
+{
     public $validarNubox = [];
     public $validarSire = [];
     public $validarEDSuite = [];
@@ -22,13 +25,15 @@ class CuadresController {
     public $resultsVentaGlobal = [];
     public $resultsSerieArchivos = [];
 
-    public function index() {
+    public function index()
+    {
         $sms = isset($_GET['sms']) ? $_GET['sms'] : null;
         $contenido = 'view/components/cuadre.php';
         require 'view/layout.php';
     }
 
-    public function cuadre() {
+    public function cuadre()
+    {
         if (isset($_FILES['exe_sire']) && $_FILES['exe_sire']['error'] === UPLOAD_ERR_OK) {
             $nombTemp = $_FILES['exe_sire']['tmp_name'];
             if (($handle = fopen($nombTemp, "r")) !== false) {
@@ -39,8 +44,16 @@ class CuadresController {
                     }
                 }
                 $colRUC = array_search('Ruc', $header);
-                $dataRow = fgetcsv($handle);
-                $RUCSIRE = trim($dataRow[$colRUC]);
+                if ($colRUC !== false) {
+                    $dataRow = fgetcsv($handle);
+                    if ($dataRow !== false && isset($dataRow[$colRUC])) {
+                        $RUCSIRE = trim($dataRow[$colRUC]);
+                    } else {
+                        $ErrorSIRE = "No se pudo obtener el RUC del archivo SIRE.";
+                    }
+                } else {
+                    $ErrorSIRE = "No se encontró la columna 'Ruc' en el archivo SIRE.";
+                }
                 fclose($handle);
             } else {
                 $ErrorSIRE = "No se pudo abrir el archivo SIRE.";
@@ -50,22 +63,34 @@ class CuadresController {
         }
 
         if (isset($_FILES['exe_nubox']) && $_FILES['exe_nubox']['error'] === UPLOAD_ERR_OK) {
-            $nombTemp = $_FILES['exe_nubox']['tmp_name'];
-            $reader = ReaderEntityFactory::createXLSXReader();
-            $reader->open($nombTemp);
-            $fila = 1;
-            $RUCNUBOX = null;
-            foreach ($reader->getSheetIterator() as $sheet) {
-                foreach ($sheet->getRowIterator() as $row) {
-                    if ($fila == 3) {
-                        $cells = $row->toArray();
-                        $RUCNUBOX = $cells[1];
-                        break 2; // ya no necesitamos seguir
+            try {
+                $nombTemp = $_FILES['exe_nubox']['tmp_name'];
+                $reader = ReaderEntityFactory::createXLSXReader();
+                $reader->open($nombTemp);
+                $fila = 1;
+                $RUCNUBOX = null;
+                foreach ($reader->getSheetIterator() as $sheet) {
+                    foreach ($sheet->getRowIterator() as $row) {
+                        if ($fila == 3) {
+                            $cells = $row->toArray();
+                            if (isset($cells[1]) && !empty($cells[1])) {
+                                $RUCNUBOX = $cells[1];
+                            } else {
+                                $ErrorNUBOX = "No se pudo obtener el RUC del archivo NUBOX en la posición esperada.";
+                            }
+                            break 2; // ya no necesitamos seguir
+                        }
+                        $fila++;
                     }
-                    $fila++;
                 }
+                $reader->close();
+
+                if ($RUCNUBOX === null) {
+                    $ErrorNUBOX = "No se pudo obtener el RUC del archivo NUBOX.";
+                }
+            } catch (Exception $e) {
+                $ErrorNUBOX = "Error al procesar el archivo NUBOX: " . $e->getMessage();
             }
-            $reader->close();
         } else {
             $ErrorNUBOX = "No se subió ningún archivo válido.";
         }
@@ -74,10 +99,61 @@ class CuadresController {
             $ErrorEDSUITE = "No se selecciono EDSUITE.";
         }
 
-        $user = Usuario::obtenerId($_GET['user']);
-        $id_cliente = $user['id_cliente'];
+        // Verificar si hubo errores en el procesamiento de archivos
+        if (isset($ErrorSIRE) || isset($ErrorNUBOX) || isset($ErrorEDSUITE)) {
+            $errores = [];
+            if (isset($ErrorSIRE)) $errores[] = "SIRE: " . $ErrorSIRE;
+            if (isset($ErrorNUBOX)) $errores[] = "NUBOX: " . $ErrorNUBOX;
+            if (isset($ErrorEDSUITE)) $errores[] = "EDSUITE: " . $ErrorEDSUITE;
+
+            header("Location: index.php?controller=cuadres&error=" . urlencode(implode(". ", $errores)));
+            exit();
+        }
+
+        // Usar el helper para obtener el usuario de manera unificada
+        require_once __DIR__ . '/../helpers/sesion_helper.php';
+        $userId = SesionHelper::obtenerUsuarioActual();
+
+        if (!$userId) {
+            header("Location: index.php?controller=cuadres&error=" . urlencode("No se pudo determinar el usuario"));
+            exit();
+        }
+
+        $user = Usuario::obtenerId($userId);
+
+        // Validación simple: el usuario debe existir
+        if (!$user) {
+            header("Location: index.php?controller=cuadres&error=" . urlencode("Usuario no encontrado"));
+            exit();
+        }
+
+        // Obtener el cliente según el contexto (normal o superadmin directo)
+        if (SesionHelper::esModoSuperAdmin()) {
+            $id_cliente = SesionHelper::obtenerClienteActual();
+        } else {
+            $id_cliente = $user['id_cliente'];
+        }
+
         $cliente = Cliente::obtenerCliente($id_cliente);
         $rol = $user['rol'];
+
+        // Validar que se haya obtenido el cliente
+        if (!$cliente) {
+            header("Location: index.php?controller=cuadres&error=" . urlencode("Cliente no encontrado"));
+            exit();
+        }
+
+        // Validar que se hayan obtenido los RUCs
+        if (!isset($RUCSIRE) || empty($RUCSIRE)) {
+            header("Location: index.php?controller=cuadres&error=" . urlencode("No se pudo obtener el RUC del archivo SIRE"));
+            exit();
+        }
+
+        if (!isset($RUCNUBOX) || empty($RUCNUBOX)) {
+            header("Location: index.php?controller=cuadres&error=" . urlencode("No se pudo obtener el RUC del archivo NUBOX"));
+            exit();
+        }
+
         if ($rol == 'Administrador') {
             $RUCCLiente = $RUCSIRE;
         } else {
@@ -87,7 +163,7 @@ class CuadresController {
         if ($RUCSIRE && $RUCNUBOX) {
             if ($RUCSIRE == $RUCNUBOX) {
                 if ($RUCSIRE == $RUCCLiente) {
-                    $SIRE = $this->sire($_FILES['exe_sire'], $_GET['user']);
+                    $SIRE = $this->sire();
                     extract($SIRE);
                     $this->ResultsSIRE = $SIRE['ResultsSIRE'];
                     $this->validarSire = $SIRE['ResultsSIRE'];
@@ -115,13 +191,12 @@ class CuadresController {
                     if (isset($edsuiteResponse['resultados']) && $edsuiteResponse['estado'] == 2) {
                         $EDSUITE = $this->procesarDatosEDSuite($edsuiteResponse['resultados']);
                         extract($EDSUITE);
-                        
+
                         $this->ResultsEDSUITE = $EDSUITE['ResultsEDSUITE'];
                         $this->validarEDSuite = $EDSUITE['ResultsEDSUITE'];
 
                         $this->resultsVentaGlobal = $edsuiteResponse['resultados_productos'];
                         $this->resultsSerieArchivos = $edsuiteResponse['resultados_archivo'];
-
                     } elseif (isset($edsuiteResponse['message'])) {
                         $ErrorEDSUITE = $edsuiteResponse['message'];
                     }
@@ -150,27 +225,36 @@ class CuadresController {
         require 'view/layout.php';
     }
 
-    public function cargarBD() {
+    public function cargarBD()
+    {
         if (!empty($_POST['resultsSerieArchivos'])) {
             $json = $_POST['resultsSerieArchivos'];
             $data = json_decode($json, true);
-    
+
             if (is_array($data)) {
                 $_SESSION['resultsSerieArchivos'] = $data;
             }
         }
-        $user = Usuario::obtenerId($_GET['user']);
-        $id_establecimiento = $user['id_establecimiento'];
+
+        // Obtener información del usuario actual usando SesionHelper
+        $userId = SesionHelper::obtenerUsuarioActual();
+        $user = Usuario::obtenerId($userId);
+
+        if (!$user) {
+            throw new Exception("No se pudo obtener información del usuario");
+        }
+
+        $id_establecimiento = SesionHelper::obtenerEstablecimientoActual();
         $sire = $_SESSION['ResultsSIRE'][0]['fecha_registro'];
         $existeFecha = Cuadre::existeFecha($sire, $id_establecimiento);
         if (!$existeFecha) {
             $this->guardarBD(
-            $_SESSION['ResultsSIRE'],
-            $_SESSION['ResultsEDSUITE'],
-            $_SESSION['ResultsNUBOX'],
-            $_SESSION['ResultsValidarSeries'],
-            $_SESSION['resultsVentaGlobal'],
-            $_SESSION['resultsSerieArchivos']
+                $_SESSION['ResultsSIRE'],
+                $_SESSION['ResultsEDSUITE'],
+                $_SESSION['ResultsNUBOX'],
+                $_SESSION['ResultsValidarSeries'],
+                $_SESSION['resultsVentaGlobal'],
+                $_SESSION['resultsSerieArchivos']
             );
             header("Location: index.php?controller=cuadres&action=index&sms=1");
             exit();
@@ -178,17 +262,17 @@ class CuadresController {
             header("Location: index.php?controller=cuadres&action=index&sms=2");
             exit();
         }
-
     }
 
-    public function unirExcel() {
+    public function unirExcel()
+    {
         try {
             if (!isset($_FILES['archivos_excel'])) {
                 throw new Exception("No se recibieron archivos");
             }
-        
+
             $archivos = $_FILES['archivos_excel'];
-        
+
             // Preparar CURL para enviar archivos
             $curl = curl_init();
             $cfileArray = [];
@@ -202,7 +286,7 @@ class CuadresController {
                 );
                 $cfileArray["archivos[$idx]"] = $cfile;
             }
-        
+
             curl_setopt_array($curl, [
                 CURLOPT_URL => "http://localhost:5000/unificar",
                 CURLOPT_RETURNTRANSFER => true,
@@ -210,10 +294,10 @@ class CuadresController {
                 CURLOPT_POSTFIELDS => $cfileArray,
                 CURLOPT_TIMEOUT => 30
             ]);
-        
+
 
             $response = curl_exec($curl);
-            
+
             if ($response === false) {
                 $curlError = curl_error($curl);
                 curl_close($curl);
@@ -221,21 +305,21 @@ class CuadresController {
             }
             $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
             curl_close($curl);
-        
+
             $respuesta = json_decode($response, true);
-        
+
             if ($respuesta === null) {
                 throw new Exception("La API devolvió una respuesta no válida: $response");
             }
-    
+
             if (isset($respuesta['error'])) {
                 throw new Exception("API: " . $respuesta['error']);
             }
-    
+
             if ($httpCode !== 200 || !isset($respuesta['status']) || $respuesta['status'] !== 'success') {
                 throw new Exception("Error inesperado de la API");
             }
-    
+
             // Si todo está bien
             $archivo = $respuesta['archivo'];
             header("Location: index.php?controller=cuadres&modal=unificacionExitosa&archivo=" . urlencode($archivo));
@@ -247,7 +331,8 @@ class CuadresController {
         }
     }
 
-    public function sire() {
+    public function sire()
+    {
         $ErrorSIRE = null;
         $ResultsSIRE = [];
         $reporte = 2;
@@ -260,10 +345,10 @@ class CuadresController {
         $DataSerieDscBISIRE = [];
         $DataSerieDscIGVSIRE = [];
         $conteoSeriesSIRE = [];
-            
+
         if (($handle = fopen($nombTemp, "r")) != false) {
             $header = fgetcsv($handle);
-            
+
             $colSerie = array_search('Serie del CDP', $header);
             $colGrav = array_search('BI Gravada', $header);
             $colExo = array_search('Mto Exonerado', $header);
@@ -273,8 +358,10 @@ class CuadresController {
             $colDscIGV = array_search('Dscto IGV / IPM', $header);
             $colFecha = array_search('Fecha de emisión', $header);
 
-            if ($colSerie != false && $colGrav != false && $colExo != false && 
-                $colIna != false && $colIGV != false && $colDscBI != false && $colDscIGV != false && $colFecha != false) {
+            if (
+                $colSerie != false && $colGrav != false && $colExo != false &&
+                $colIna != false && $colIGV != false && $colDscBI != false && $colDscIGV != false && $colFecha != false
+            ) {
 
                 $filas = [];
                 while (($fila = fgetcsv($handle)) !== false) {
@@ -294,7 +381,7 @@ class CuadresController {
                     $IGVSIRE = $fila[$colIGV];
                     $DscBISIRE = $fila[$colDscBI];
                     $DscIGVSIRE = $fila[$colDscIGV];
-    
+
                     if (!isset($DataSerieGraSIRE[$serieSIRE])) {
                         $DataSerieGraSIRE[$serieSIRE] = 0;
                         $DataSerieExoSIRE[$serieSIRE] = 0;
@@ -304,7 +391,7 @@ class CuadresController {
                         $DataSerieDscIGVSIRE[$serieSIRE] = 0;
                         $conteoSeriesSIRE[$serieSIRE] = 0;
                     }
-    
+
                     $DataSerieGraSIRE[$serieSIRE] += floatval($GravSIRE);
                     $DataSerieExoSIRE[$serieSIRE] += floatval($ExoSIRE);
                     $DataSerieInaSIRE[$serieSIRE] += floatval($InaSIRE);
@@ -313,9 +400,9 @@ class CuadresController {
                     $DataSerieDscIGVSIRE[$serieSIRE] += floatval($DscIGVSIRE);
                     $conteoSeriesSIRE[$serieSIRE]++;
                 }
-    
+
                 ksort($DataSerieGraSIRE);
-                
+
                 foreach ($DataSerieGraSIRE as $serie => $totalBI) {
                     $TExoSIRE = $DataSerieExoSIRE[$serie];
                     $TInaSIRE = $DataSerieInaSIRE[$serie];
@@ -324,7 +411,7 @@ class CuadresController {
                     $TDscIGVSIRE = $DataSerieDscIGVSIRE[$serie];
                     $TTotalSIRE = $totalBI + $TExoSIRE + $TInaSIRE + $TIGVSIRE + $TDscBISIRE + $TDscIGVSIRE;
 
-                    if ($TDscBISIRE == 0 && $TDscIGVSIRE == 0){
+                    if ($TDscBISIRE == 0 && $TDscIGVSIRE == 0) {
                         $BI_Gravada = $totalBI;
                         $IGV = $TIGVSIRE;
                     } else {
@@ -342,7 +429,7 @@ class CuadresController {
                             $tipo_comprobante = 2;
                         }
                     }
-  
+
                     $ResultsSIRE[] = [
                         'serie' => $serie,
                         'conteo' => $conteoSeriesSIRE[$serie],
@@ -366,7 +453,8 @@ class CuadresController {
         return compact('ErrorSIRE', 'ResultsSIRE');
     }
 
-    public function cargar_archivo($archivo,$estado) {
+    public function cargar_archivo($archivo, $estado)
+    {
         $uploadDir = __DIR__ . '/../../uploads/';
         //Sirve para cargar la carpeta por si no existe
         if (!file_exists($uploadDir)) {
@@ -374,31 +462,31 @@ class CuadresController {
         }
 
         $archivoPath = $uploadDir . uniqid('archivo_') . '.xlsx';
-        
+
         if (!move_uploaded_file($archivo['tmp_name'], $archivoPath)) {
             throw new Exception('No se pudo guardar el archivo en el servidor');
         }
 
         try {
             $respuesta = $this->llamarApiPython($archivoPath, $estado);
-    
+
             return $respuesta;
-    
         } finally {
             if (file_exists($archivoPath)) {
                 unlink($archivoPath);
             }
-    
+
             $this->limpiarCarpeta($uploadDir);
         }
     }
 
-    private function llamarApiPython($archivoPath, $estado) {
-        $url = 'http://localhost:5000/procesar?estado='.$estado;
+    private function llamarApiPython($archivoPath, $estado)
+    {
+        $url = 'http://localhost:5000/procesar?estado=' . $estado;
 
         $cfile = new CURLFile(
-            $archivoPath, 
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 
+            $archivoPath,
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             'nubox.xlsx'
         );
 
@@ -416,7 +504,7 @@ class CuadresController {
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $curlError = curl_error($ch);
         curl_close($ch);
-        
+
         if ($response === false) {
             throw new Exception("Error al conectar con la API: $curlError");
         }
@@ -435,14 +523,13 @@ class CuadresController {
 
         return $json;
     }
-    
-    public function guardarCuadre($serie,$conteo,$Gravada,$Exonerada,$Inafecto,$IGV,$Total,$tipo_comprobante,$reporte,$fecha_registro) {
-        $user = Usuario::obtenerId($_GET['user']);
-        
-        $user_create = $user['usuario'];
-        $user_update = $user['usuario'];
-        $id_establecimiento = $user['id_establecimiento'];
-        
+
+    public function guardarCuadre($serie, $conteo, $Gravada, $Exonerada, $Inafecto, $IGV, $Total, $tipo_comprobante, $reporte, $fecha_registro)
+    {
+        $user_create = SesionHelper::obtenerNombreUsuario();
+        $user_update = SesionHelper::obtenerNombreUsuario();
+        $id_establecimiento = SesionHelper::obtenerEstablecimientoActual();
+
         $data = [
             'serie' => $serie,
             'cantidad_compr' => $conteo,
@@ -469,7 +556,8 @@ class CuadresController {
         Cuadre::Insertar($data);
     }
 
-    private function procesarDatosNubox($datosNubox) {
+    private function procesarDatosNubox($datosNubox)
+    {
         $ErrorNUBOX = null;
         $ResultsNUBOX = [];
         $reporte = 1;
@@ -504,21 +592,22 @@ class CuadresController {
         } catch (Exception $e) {
             throw $e;
         }
-    
+
         return compact('ErrorNUBOX', 'ResultsNUBOX');
     }
 
-    private function procesarDatosEDSuite($datosEDSuite) {
+    private function procesarDatosEDSuite($datosEDSuite)
+    {
         $ErrorEDSUITE = null;
         $ResultsEDSUITE = [];
         $reporte = 3;
-        
+
         // Verificar si hay datos recibidos
         if (empty($datosEDSuite)) {
             $ErrorEDSUITE = "No se recibieron datos para procesar";
             return compact('ErrorEDSUITE', 'ResultsEDSUITE');
         }
-        
+
         foreach ($datosEDSuite as $resultado) {
             // Validar estructura de cada resultado
             if (!isset($resultado['serie'], $resultado['conteo'], $resultado['igv'], $resultado['total'])) {
@@ -526,7 +615,7 @@ class CuadresController {
                 return compact('ErrorEDSUITE', 'ResultsEDSUITE');
             }
             $fecha = isset($resultado['fecha']) ? date('Y-d-01', strtotime($resultado['fecha'])) : date('Y-d-01');
-            
+
             if ($resultado['total'] < 0) {
                 $tipo_comprobante = 3;
             } else {
@@ -554,32 +643,33 @@ class CuadresController {
         return compact('ErrorEDSUITE', 'ResultsEDSUITE');
     }
 
-    private function Validar_series() {
+    private function Validar_series()
+    {
         $ErrorValidarSeries = null;
         $ResultsValidarSeries = [];
 
         $sire = $this->validarSire;
         $nubox = $this->validarNubox;
         $edsuite = $this->validarEDSuite;
-        
+
         // 1. Juntar todas las series con origen
         $all_series_data = [];
-        
+
         foreach ($sire as $item) {
             $serie = $item['serie'];
             $all_series_data[$serie]['origenes']['SIRE'] = $item;
         }
-        
+
         foreach ($nubox as $item) {
             $serie = $item['serie'];
             $all_series_data[$serie]['origenes']['NUBOX'] = $item;
         }
-        
+
         foreach ($edsuite as $item) {
             $serie = $item['serie'];
             $all_series_data[$serie]['origenes']['EDSUITE'] = $item;
         }
-        
+
         // 2. Filtrar las series que NO estén en los 3
         foreach ($all_series_data as $serie => $data) {
             $origenes = $data['origenes'];
@@ -608,11 +698,12 @@ class CuadresController {
                 }
             }
         }
-        
+
         return compact('ErrorValidarSeries', 'ResultsValidarSeries');
     }
 
-    private function generarCodigoAleatorio($longitud = 5) {
+    private function generarCodigoAleatorio($longitud = 5)
+    {
         $caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
         $codigo = '';
         for ($i = 0; $i < $longitud; $i++) {
@@ -621,16 +712,15 @@ class CuadresController {
         return $codigo;
     }
 
-    public function guardarBD($ResultsSIRE, $ResultsEDSUITE, $ResultsNUBOX, $ResultsValidarSeries, $resultsVentaGlobal, $resultsSerieArchivos) {
+    public function guardarBD($ResultsSIRE, $ResultsEDSUITE, $ResultsNUBOX, $ResultsValidarSeries, $resultsVentaGlobal, $resultsSerieArchivos)
+    {
         if (empty($ResultsSIRE) && empty($ResultsEDSUITE) && empty($ResultsNUBOX) && empty($ResultsValidarSeries) && empty($resultsVentaGlobal)) {
             throw new Exception("No se recibieron datos para guardar");
         }
 
-        $user = Usuario::obtenerId($_GET['user']);
-        
-        $user_create = $user['usuario'];
-        $user_update = $user['usuario'];
-        $id_establecimiento = $user['id_establecimiento'];
+        $user_create = SesionHelper::obtenerNombreUsuario();
+        $user_update = SesionHelper::obtenerNombreUsuario();
+        $id_establecimiento = SesionHelper::obtenerEstablecimientoActual();
 
         foreach ($ResultsSIRE as $resultado) {
             $this->guardarCuadre(
@@ -702,14 +792,14 @@ class CuadresController {
                 'id_establecimiento' => $id_establecimiento,
                 'fecha_registro' => $fecha,
                 'estado' => 1
-            ];  
+            ];
 
             foreach ($data as $key => $value) {
                 if ($value = false) {
                     throw new Exception("Dato inválido en campo $key");
                 }
             }
-    
+
             VentaGlobal::Insertar($data);
         }
 
@@ -719,7 +809,7 @@ class CuadresController {
             $codigoAleatorio = $this->generarCodigoAleatorio(5);
             $codigo = $id_establecimiento . '-' . $codigoAleatorio;
             $seriesString = implode('-', $resultado['series']);
-            
+
             $data = [
                 'serie' => $seriesString,
                 'codigo' => $codigo,
@@ -732,7 +822,8 @@ class CuadresController {
         }
     }
 
-    private function limpiarCarpeta($ruta) {
+    private function limpiarCarpeta($ruta)
+    {
         if (!is_dir($ruta)) {
             return;
         }

@@ -19,7 +19,6 @@ class ModalCrudController {
         this.camposContrasena = document.getElementById(config.camposContrasenaId);
         this.establecimientoOriginal = null;
         this._bindEvents(config);
-        this.verificarAdmin();
     }
 
     _crearErrorDiv(input, id) {
@@ -237,25 +236,6 @@ class ModalCrudController {
         return true;
     }
 
-    verificarAdmin() {
-        if (window.ROL_USUARIO_LOGUEADO !== 'Administrador') {
-            const btnNuevo = document.getElementById('btnNuevoUsuario');
-            if (btnNuevo) btnNuevo.style.display = 'none';
-            document.querySelectorAll('[data-action="toggleMenu"]').forEach(btn => {
-                btn.style.pointerEvents = 'none';
-                btn.style.opacity = '0.5';
-                btn.setAttribute('aria-disabled', 'true');
-                btn.title = 'Sin permisos';
-            });
-            document.querySelectorAll('[data-action="cambiarEstado"]').forEach(btn => {
-                btn.style.pointerEvents = 'none';
-                btn.style.opacity = '0.5';
-                btn.setAttribute('aria-disabled', 'true');
-                btn.title = 'Sin permisos';
-            });
-        }
-    }
-
     _bindEvents(config) {
         this.btnNuevo.addEventListener('click', () => {
             this.abrirModal({
@@ -465,6 +445,16 @@ class ModalCrudController {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('🔍 DEBUGGING: DOMContentLoaded fired');
+    console.log('🔍 DEBUGGING: ROL_USUARIO_LOGUEADO =', window.ROL_USUARIO_LOGUEADO);
+    
+    const btnNuevo = document.getElementById('btnNuevoUsuario');
+    console.log('🔍 DEBUGGING: btnNuevoUsuario found =', !!btnNuevo);
+    if (btnNuevo) {
+        console.log('🔍 DEBUGGING: btnNuevo display =', btnNuevo.style.display);
+        console.log('🔍 DEBUGGING: btnNuevo visible =', btnNuevo.offsetParent !== null);
+    }
+    
     new ModalCrudController({
         modalId: 'modalUsuario',
         tituloId: 'modalTitulo',

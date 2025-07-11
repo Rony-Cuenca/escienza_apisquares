@@ -1,24 +1,38 @@
+<?php
+require_once __DIR__ . '/../../helpers/permisos_helper.php';
+?>
 <div class="w-full px-2 md:px-10 py-10 bg-gray-200 flex-1 flex flex-col">
     <div class="w-full bg-white rounded-lg shadow-2xl shadow-gray-300/40 p-2 md:p-8">
         <!-- Cabecera con título y botones -->
         <div class="flex items-center justify-between w-full pb-6 px-6 border-b border-gray-200 mb-8">
             <span class="text-xl text-gray-800 font-semibold" style="font-family: 'Montserrat', sans-serif;">LISTA DE USUARIOS</span>
-            <?php if ($_SESSION['rol'] === 'Administrador'): ?>
+            <?php if (puedeGestionarUsuarios()): ?>
                 <div class="flex gap-2">
-                    <button id="btnNuevoUsuario"
-                        class="flex items-center gap-2 bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-normal py-1.5 px-3 md:py-2 md:px-4 rounded-lg shadow text-sm md:text-base"
-                        data-correo-cliente="<?= htmlspecialchars($correo_cliente) ?>">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                        </svg>
-                        Nuevo
-                    </button>
-                    <button id="btnGenerarCodigo" class="bg-green-600 hover:bg-green-700 text-white font-normal py-1.5 px-3 md:py-2 md:px-4 rounded-lg shadow flex items-center gap-2 text-sm md:text-base">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 010 5.656l-3.535 3.535a4 4 0 01-5.657-5.657l2.121-2.121m6.364-6.364a4 4 0 015.657 5.657l-2.121 2.121" />
-                        </svg>
-                        Generar Código de Acceso
-                    </button>
+                    <?php
+                    // DEBUGGING TEMPORAL
+                    error_log("🔍 DEBUGGING Usuario: SuperAdmin=" . (esSuperAdmin() ? 'true' : 'false'));
+                    error_log("🔍 DEBUGGING Usuario: Administrador=" . (esAdministrador() ? 'true' : 'false'));
+                    error_log("🔍 DEBUGGING Usuario: puedeCrearUsuarios=" . (puedeCrearUsuarios() ? 'true' : 'false'));
+                    error_log("🔍 DEBUGGING Usuario: ROL=" . ($_SESSION['rol'] ?? 'none'));
+                    ?>
+                    <?php if (puedeCrearUsuarios()): ?>
+                        <button id="btnNuevoUsuario"
+                            class="flex items-center gap-2 bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-normal py-1.5 px-3 md:py-2 md:px-4 rounded-lg shadow text-sm md:text-base"
+                            data-correo-cliente="<?= htmlspecialchars($correo_cliente) ?>">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                            </svg>
+                            Nuevo
+                        </button>
+                    <?php endif; ?>
+                    <?php if (puedeGenerarCodigosAcceso()): ?>
+                        <button id="btnGenerarCodigo" class="bg-green-600 hover:bg-green-700 text-white font-normal py-1.5 px-3 md:py-2 md:px-4 rounded-lg shadow flex items-center gap-2 text-sm md:text-base">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 010 5.656l-3.535 3.535a4 4 0 01-5.657-5.657l2.121-2.121m6.364-6.364a4 4 0 015.657 5.657l-2.121 2.121" />
+                            </svg>
+                            Generar Código de Acceso
+                        </button>
+                    <?php endif; ?>
                 </div>
             <?php endif; ?>
         </div>
@@ -57,7 +71,7 @@
                                 <td class="py-2 px-1"><?= htmlspecialchars($row['rol']) ?></td>
                                 <td class="py-2 px-1"><?= htmlspecialchars($row['establecimiento']) ?></td>
                                 <td class="py-2 px-1">
-                                    <?php if ($_SESSION['rol'] === 'Administrador'): ?>
+                                    <?php if (puedeCambiarEstadoUsuarios()): ?>
                                         <?php if ($row['estado'] == 1): ?>
                                             <span
                                                 class="inline-flex items-center justify-center w-28 px-3 py-1 rounded-full bg-green-200 text-green-800 text-sm font-medium cursor-pointer transition hover:bg-green-300"
@@ -104,7 +118,7 @@
                                     <?php endif; ?>
                                 </td>
                                 <td class="py-2 px-1 text-center relative">
-                                    <?php if ($_SESSION['rol'] === 'Administrador'): ?>
+                                    <?php if (puedeEditarUsuarios()): ?>
                                         <div class="relative inline-block text-left">
                                             <button data-action="toggleMenu" type="button" class="focus:outline-none" aria-label="Abrir menú de usuario">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24">
@@ -125,7 +139,7 @@
                                                     class="block w-full text-left px-4 py-2 hover:bg-gray-100 text-black">
                                                     Editar
                                                 </a>
-                                                <?php if ($row['id'] != $_SESSION['id_usuario']): ?>
+                                                <?php if ($row['id'] != obtenerUsuarioActualSeguro() && puedeCambiarEstadoUsuarios()): ?>
                                                     <?php if ($row['estado'] != 3): ?>
                                                         <a href="javascript:void(0);" data-action="cambiarEstado" data-id="<?= $row['id'] ?>" data-estado="3"
                                                             class="block w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100">Deshabilitar</a>
@@ -198,12 +212,13 @@
                     <label class="block mb-1 font-semibold text-sm text-gray-700">Rol</label>
                     <select name="rol" id="modalUsuarioRol" required class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400">
                         <option value="">Selecciona un rol</option>
-                        <?php if (isset($_SESSION['is_super_admin']) && $_SESSION['is_super_admin']): ?>
+                        <?php if (esSuperAdmin()): ?>
                             <option value="SuperAdmin">Super Administrador</option>
                         <?php endif; ?>
-                        <option value="Administrador">Administrador</option>
-                        <option value="Contador">Contador</option>
-                        <option value="Vendedor">Vendedor</option>
+                        <?php if (tieneAccesoCompleto()): ?>
+                            <option value="Administrador">Administrador</option>
+                            <option value="Contador">Contador</option>
+                        <?php endif; ?>
                     </select>
                 </div>
                 <div>
@@ -264,7 +279,6 @@
                     <option value="">Selecciona un rol</option>
                     <option value="Administrador">Administrador</option>
                     <option value="Contador">Contador</option>
-                    <option value="Vendedor">Vendedor</option>
                 </select>
             </div>
             <div class="mt-4">
@@ -292,7 +306,7 @@
 </div>
 
 <script>
-    window.ID_USUARIO_LOGUEADO = <?= json_encode($_SESSION['id_usuario']) ?>;
+    window.ID_USUARIO_LOGUEADO = <?= json_encode(obtenerUsuarioActualSeguro()) ?>;
     window.ROL_USUARIO_LOGUEADO = <?= json_encode($_SESSION['rol']) ?>;
     window.ID_ESTABLECIMIENTO_LOGUEADO = <?= json_encode($_SESSION['id_establecimiento']) ?>;
     window.NOMBRE_ESTABLECIMIENTO_LOGUEADO = <?= json_encode($nombre_establecimiento_logueado) ?>;
