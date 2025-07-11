@@ -184,7 +184,11 @@ class ClienteController
                 $id_cliente = Cliente::crearCompleto($ruc, $razon_social, $email, $telefono, $direccion, $departamento, $provincia, $distrito);
 
                 if ($id_cliente) {
+                    $user_create = isset($_SESSION['usuario']) ? $_SESSION['usuario'] : 'sistema';
+                    $user_update = $user_create;
+
                     $establecimiento_principal = [
+                        'id_cliente' => $id_cliente,
                         'codigo_establecimiento' => '0000',
                         'tipo_establecimiento' => 'MATRIZ',
                         'etiqueta' => $razon_social,
@@ -194,12 +198,13 @@ class ClienteController
                         'provincia' => $provincia,
                         'distrito' => $distrito,
                         'estado' => 1,
-                        'origen' => 'MANUAL'
+                        'origen' => 'MANUAL',
+                        'user_create' => $user_create,
+                        'user_update' => $user_update
                     ];
 
-                    Establecimiento::crear($id_cliente, $establecimiento_principal);
+                    Establecimiento::insertar($establecimiento_principal);
 
-                    $_SESSION['mensaje'] = "Cliente creado exitosamente con su establecimiento principal";
                     header('Location: ?controller=superadmin&action=clientes');
                 } else {
                     $_SESSION['errores'] = ['Error al crear el cliente'];
@@ -274,7 +279,6 @@ class ClienteController
                 $resultado = Cliente::actualizar($id, $ruc, $razon_social, $email, $telefono, $direccion, $departamento, $provincia, $distrito);
 
                 if ($resultado) {
-                    $_SESSION['mensaje'] = "Cliente actualizado exitosamente";
                 } else {
                     $_SESSION['errores'] = ['Error al actualizar el cliente'];
                 }
@@ -306,15 +310,67 @@ class ClienteController
 
         try {
             $resultado = Cliente::cambiarEstado($id, $estado);
+            // Cambiar estado de todos los establecimientos del cliente
+            require_once 'model/Establecimiento.php';
+            $resEstablecimientos = Establecimiento::cambiarEstadoPorCliente($id, $estado);
 
             if ($resultado) {
                 $estadoTexto = $estado == 1 ? 'activado' : 'desactivado';
                 echo json_encode([
                     'success' => true,
-                    'message' => "Cliente $estadoTexto exitosamente"
+                    'message' => "Cliente $estadoTexto exitosamente, establecimientos actualizados"
                 ]);
             } else {
                 echo json_encode(['success' => false, 'error' => 'No se pudo cambiar el estado']);
+            }
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'error' => 'Error interno: ' . $e->getMessage()]);
+        }
+        exit;
+    }
+
+    // Nuevo endpoint para cambiar el estado de un establecimiento desde la tabla de clientes
+    public function cambiarEstadoEstablecimiento()
+    {
+        header('Content-Type: application/json');
+
+        $id = intval($_GET['id'] ?? 0);
+        $estado = intval($_GET['estado'] ?? 1);
+
+        if ($id <= 0) {
+            echo json_encode(['success' => false, 'error' => 'ID inválido']);
+            exit;
+        }
+
+        if (!in_array($estado, [1, 2])) {
+            echo json_encode(['success' => false, 'error' => 'Estado inválido']);
+            exit;
+        }
+
+        try {
+            require_once 'model/Establecimiento.php';
+            // Se requiere el id_cliente, pero para simplificar, se puede buscar el id_cliente por id de establecimiento
+            $conn = \Conexion::conectar();
+            $sql = "SELECT id_cliente FROM establecimiento WHERE id = ? LIMIT 1";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("i", $id);
+            $stmt->execute();
+            $res = $stmt->get_result();
+            $row = $res->fetch_assoc();
+            if (!$row) {
+                echo json_encode(['success' => false, 'error' => 'Establecimiento no encontrado']);
+                exit;
+            }
+            $id_cliente = $row['id_cliente'];
+            $resultado = Establecimiento::cambiarEstado($id, $estado, $id_cliente);
+            if ($resultado) {
+                $estadoTexto = $estado == 1 ? 'activado' : 'desactivado';
+                echo json_encode([
+                    'success' => true,
+                    'message' => "Establecimiento $estadoTexto exitosamente"
+                ]);
+            } else {
+                echo json_encode(['success' => false, 'error' => 'No se pudo cambiar el estado del establecimiento']);
             }
         } catch (Exception $e) {
             echo json_encode(['success' => false, 'error' => 'Error interno: ' . $e->getMessage()]);

@@ -3,6 +3,26 @@ require_once 'config/conexion.php';
 
 class Establecimiento
 {
+    // Cambia el estado de todos los establecimientos de un cliente
+    public static function cambiarEstadoPorCliente($id_cliente, $estado)
+    {
+        $conn = Conexion::conectar();
+        $user_update = $_SESSION['usuario'] ?? 'desconocido';
+        $date_update = date('Y-m-d H:i:s');
+        $sql = "UPDATE establecimiento SET estado = ?, user_update = ?, date_update = ? WHERE id_cliente = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("issi", $estado, $user_update, $date_update, $id_cliente);
+        $result = $stmt->execute();
+
+        // Opcional: también desactivar usuarios de esos establecimientos
+        if ($result) {
+            $sqlUsuarios = "UPDATE usuario SET estado = ?, user_update = ?, date_update = ? WHERE id_cliente = ?";
+            $stmtUsuarios = $conn->prepare($sqlUsuarios);
+            $stmtUsuarios->bind_param("issi", $estado, $user_update, $date_update, $id_cliente);
+            $stmtUsuarios->execute();
+        }
+        return $result;
+    }
     public static function obtenerPorCliente($id_cliente, $limit = 10, $offset = 0, $sort = 'codigo_establecimiento', $dir = 'ASC')
     {
         $conn = Conexion::conectar();

@@ -12,19 +12,33 @@ require_once __DIR__ . '/../../helpers/permisos_helper.php';
         <form method="GET" action="index.php" class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-6">
             <input type="hidden" name="controller" value="reporte">
             <input type="hidden" name="action" value="index">
-            <div class="flex-1">
-                <label class="block text-sm font-medium mb-1">Seleccionar Mes de Cuadre</label>
-                <input
-                    type="text"
-                    id="mesPicker"
-                    name="mes"
-                    class="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                    placeholder="Seleccione un mes"
-                    value="<?= isset($_GET['mes']) ? htmlspecialchars($_GET['mes']) : '' ?>"
-                    readonly
-                    required
-                    onchange="this.form.submit()"
-                    autocomplete="off" />
+            <div class="flex flex-row gap-4 flex-1 items-end">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Meses</label>
+                    <input
+                        type="text"
+                        id="mesPicker"
+                        name="mes"
+                        class="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 max-w-[180px] md:max-w-[160px]"
+                        placeholder="Seleccione un mes"
+                        value="<?= isset($_GET['mes']) ? htmlspecialchars($_GET['mes']) : '' ?>"
+                        readonly
+                        required
+                        onchange="this.form.submit()"
+                        autocomplete="off" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Establecimientos</label>
+                    <select name="id_establecimiento" id="establecimientoPicker" class="border rounded px-3 py-2 w-64 focus:outline-none focus:ring-2 focus:ring-blue-400 truncate overflow-hidden whitespace-nowrap text-ellipsis" onchange="this.form.submit()">
+                        <option value="">Todos</option>
+                        <?php if (!empty($establecimientos)): ?>
+                            <?php $selectedEst = isset($_GET['id_establecimiento']) ? $_GET['id_establecimiento'] : (SesionHelper::obtenerEstablecimientoActual() ?? ''); ?>
+                            <?php foreach ($establecimientos as $est): ?>
+                                <option value="<?= $est['id'] ?>" <?= ($selectedEst == $est['id']) ? 'selected' : '' ?> class="truncate"><?= htmlspecialchars($est['etiqueta']) ?></option>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </select>
+                </div>
             </div>
             <?php if (puedeExportarReportes()): ?>
                 <div class="flex gap-2 justify-end">

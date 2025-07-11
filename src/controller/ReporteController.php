@@ -14,7 +14,6 @@ use PhpOffice\PhpSpreadsheet\Style\Border;
 
 class ReporteController
 {
-    // Función para verificar permisos completos (SuperAdmin o Administrador)
     private function verificarPermisosCompletos()
     {
         if (!tieneAccesoCompleto()) {
@@ -25,7 +24,6 @@ class ReporteController
         }
     }
 
-    // Función para verificar permisos de generación de reportes
     private function verificarPermisosGeneracion()
     {
         if (!puedeGenerarReportes()) {
@@ -36,7 +34,6 @@ class ReporteController
         }
     }
 
-    // Función para verificar permisos de visualización de reportes
     private function verificarPermisosVisualizacion()
     {
         if (!puedeVerReportes()) {
@@ -47,13 +44,11 @@ class ReporteController
         }
     }
 
-    // Función inline para obtener usuario actual seguro
     private function obtenerUsuarioActualSeguro()
     {
         return SesionHelper::obtenerUsuarioActual();
     }
 
-    // Función inline para verificar sesión y permisos
     private function verificarSesion()
     {
         if (!SesionHelper::obtenerClienteActual()) {
@@ -73,6 +68,13 @@ class ReporteController
         $totalesTipoDoc = $seriesTotales = $diferenciasSeries = [];
         $seriesAjenas = $ventasGlobales = [];
 
+        // Obtener el cliente actual y los establecimientos
+        $id_cliente = SesionHelper::obtenerClienteActual();
+        $establecimientos = [];
+        if ($id_cliente) {
+            $establecimientos = Establecimiento::obtenerEstablecimientoPorCliente($id_cliente);
+        }
+
         if ($mesSeleccionado) {
             $cuadres = Cuadre::obtenerCuadresPorMes($mesSeleccionado);
             list($cuadresSIRE, $cuadresNUBOX, $cuadresEDSUITE) = $this->separarCuadresPorSistemaExcluyendoAjenas($cuadres, $mesSeleccionado);
@@ -85,6 +87,7 @@ class ReporteController
         }
 
         $contenido = 'view/components/reporte.php';
+        // Pasar $establecimientos a la vista
         require 'view/layout.php';
     }
 
@@ -353,16 +356,25 @@ class ReporteController
         $row = 6;
 
         $this->SeccionSeparador($sheet, $row, "ANÁLISIS COMPARATIVO POR SISTEMA DE FACTURACIÓN", $separadorStyle);
+
+        $row += 2;
+
         $this->SeccionResumenSoftware($sheet, $row, $cuadresNUBOX, $cuadresEDSUITE, $cuadresSIRE, $yellowHeaderStyle, $blueHeaderStyle, $greenTotalStyle, $borderStyle, $redStyle, $warningStyle);
 
-        $row += 2;
+        $row += 1;
 
         $this->SeccionSeparador($sheet, $row, "RESUMEN DE COMPROBANTES", $separadorStyle);
-        $this->SeccionResumenComprobante($sheet, $row, $totalesTipoDoc, $yellowHeaderStyle, $greenTotalStyle, $redStyle, $borderStyle, $infoStyle);
 
         $row += 2;
 
+        $this->SeccionResumenComprobante($sheet, $row, $totalesTipoDoc, $yellowHeaderStyle, $greenTotalStyle, $redStyle, $borderStyle, $infoStyle);
+
+        $row += 1;
+
         $this->SeccionSeparador($sheet, $row, "REPORTES GLOBALES Y SERIES AJENAS", $separadorStyle);
+
+        $row += 2;
+
         $this->SeccionReportesGlobales($sheet, $row, $cuadresNUBOX, $seriesAjenas, $ventasGlobales, $mesSeleccionado, $yellowHeaderStyle, $blueHeaderStyle, $greenTotalStyle, $borderStyle, $redStyle, $warningStyle, $infoStyle);
 
         $sheet->getColumnDimension('A')->setWidth(20);

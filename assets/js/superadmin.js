@@ -1,3 +1,64 @@
+// Confirmación SweetAlert para entrar a un establecimiento
+function entrarEstablecimientoSweet(idCliente, idEstablecimiento) {
+    Swal.fire({
+        title: '¿Entrar al establecimiento?',
+        text: '¿Desea acceder a este establecimiento? Esta acción cambiará el contexto de trabajo.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#7c3aed',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Sí, entrar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.href = `index.php?controller=superadmin&action=accesoDirectoEstablecimiento&id_cliente=${idCliente}&id_establecimiento=${idEstablecimiento}`;
+        }
+    });
+}
+// Cambiar estado de un establecimiento desde la tabla de clientes
+async function cambiarEstadoEstablecimiento(id, nuevoEstado) {
+    const accion = nuevoEstado == 1 ? 'activar' : 'desactivar';
+    try {
+        const result = await Swal.fire({
+            title: '¿Está seguro?',
+            text: `¿Desea ${accion} este establecimiento?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: nuevoEstado == 1 ? '#16a34a' : '#dc2626',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: `Sí, ${accion}`,
+            cancelButtonText: 'Cancelar'
+        });
+        if (result.isConfirmed) {
+            const response = await fetch(`index.php?controller=cliente&action=cambiarEstadoEstablecimiento&id=${id}&estado=${nuevoEstado}`);
+            const data = await response.json();
+            if (data.success) {
+                await Swal.fire({
+                    title: '¡Éxito!',
+                    text: data.message,
+                    icon: 'success',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+                location.reload();
+            } else {
+                Swal.fire({
+                    title: 'Error',
+                    text: data.error || 'Error al cambiar el estado',
+                    icon: 'error',
+                    confirmButtonColor: '#dc2626'
+                });
+            }
+        }
+    } catch (error) {
+        Swal.fire({
+            title: 'Error',
+            text: 'Error al cambiar el estado del establecimiento',
+            icon: 'error',
+            confirmButtonColor: '#dc2626'
+        });
+    }
+}
 class SuperAdminController {
     constructor() {
         this.modals = {

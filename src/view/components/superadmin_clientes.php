@@ -224,25 +224,29 @@ unset($_SESSION['errores'], $_SESSION['form_data']);
                                                 </td>
                                                 <td class="py-3 px-6">
                                                     <?php if ($establecimiento['estado'] == 1): ?>
-                                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 border border-green-200">
-                                                            <span class="w-1.5 h-1.5 bg-green-500 rounded-full mr-1"></span>Activo
-                                                        </span>
+                                                        <button onclick="cambiarEstadoEstablecimiento(<?= $establecimiento['id'] ?>, 2)"
+                                                            class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-green-100 to-emerald-200 text-green-800 border border-green-300 hover:from-green-200 hover:to-emerald-300 transition-all duration-200 cursor-pointer"
+                                                            title="Hacer clic para desactivar">
+                                                            <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>Activo
+                                                        </button>
                                                     <?php else: ?>
-                                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 border border-red-200">
-                                                            <span class="w-1.5 h-1.5 bg-red-500 rounded-full mr-1"></span>Inactivo
-                                                        </span>
+                                                        <button onclick="cambiarEstadoEstablecimiento(<?= $establecimiento['id'] ?>, 1)"
+                                                            class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-red-100 to-pink-200 text-red-800 border border-red-300 hover:from-red-200 hover:to-pink-300 transition-all duration-200 cursor-pointer"
+                                                            title="Hacer clic para activar">
+                                                            <span class="w-2 h-2 bg-red-500 rounded-full mr-2"></span>Inactivo
+                                                        </button>
                                                     <?php endif; ?>
                                                 </td>
                                                 <td class="py-3 px-6">
-                                                    <a href="index.php?controller=superadmin&action=accesoDirectoEstablecimiento&id_cliente=<?= $cliente['id'] ?>&id_establecimiento=<?= $establecimiento['id'] ?>"
+                                                    <button type="button"
                                                         class="inline-flex items-center gap-1 px-3 py-1.5 bg-purple-500 hover:bg-purple-600 text-white text-xs font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
                                                         title="Acceso a este establecimiento"
-                                                        onclick="return confirm('¿Entrar al establecimiento?')">>
+                                                        onclick="entrarEstablecimientoSweet(<?= $cliente['id'] ?>, <?= $establecimiento['id'] ?>)">
                                                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                                             <path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                                                         </svg>
                                                         Entrar
-                                                    </a>
+                                                    </button>
                                                 </td>
                                             </tr>
                                         <?php endif; ?>

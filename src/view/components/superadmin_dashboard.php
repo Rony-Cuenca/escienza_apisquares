@@ -72,7 +72,7 @@
                         </div>
                         <div class="text-right">
                             <p class="text-slate-600 text-sm font-medium">Sistema</p>
-                            <p class="text-xl font-bold text-black">ESCIENZA API</p>
+                            <p class="text-xl font-bold text-black">GESTION DE CUADRES</p>
                         </div>
                     </div>
                     <div class="pt-2 border-t border-purple-200">
