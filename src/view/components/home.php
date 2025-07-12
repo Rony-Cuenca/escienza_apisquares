@@ -18,9 +18,8 @@ if (!function_exists('obtenerContextoActual')) {
 }
 ?>
 
-<div class="w-full px-2 md:px-10 py-10 bg-gray-200 flex-1 flex flex-col">
-
-  <div class="w-full bg-white rounded-xl shadow-2xl shadow-gray-300/40 p-2 md:p-8">
+<div class="w-full bg-gray-200 flex-1 flex flex-col">
+  <div class="max-w-screen-xl mx-auto w-full bg-white rounded-xl shadow-2xl shadow-gray-300/40 p-2 md:p-8">
     <!-- Cabecera con filtros -->
     <div class="flex flex-col items-center pt-6 pb-6 px-6 border-b border-gray-200 mb-8">
       <span class="text-center text-xl md:text-2xl text-gray-800 font-semibold mb-6" style="font-family: 'Montserrat', sans-serif;">DASHBOARD DE VENTAS</span>
@@ -45,43 +44,43 @@ if (!function_exists('obtenerContextoActual')) {
     </div>
 
     <!-- Layout principal de gráficos -->
-    <div class="flex flex-col md:flex-row gap-8">
+    <div class="flex flex-col md:flex-row gap-8 w-full">
 
       <!-- Fila 1: Resumen de ventas -->
-      <div class="w-full md:w-1/2">
-        <div class="bg-gradient-to-br from-white to-gray-50 rounded-xl border border-gray-200 shadow-lg overflow-hidden">
-          <div class="px-6 py-4 bg-gradient-to-r from-blue-50 to-blue-100 border-b border-gray-200">
+      <div class="w-full md:w-1/2 min-w-0">
+        <div class="bg-gradient-to-br from-white to-gray-50 rounded-xl border border-gray-200 shadow-lg overflow-hidden h-full flex flex-col">
+          <div class="px-4 py-3 bg-gradient-to-r from-blue-50 to-blue-100 border-b border-gray-200">
             <h1 class="text-lg md:text-xl font-semibold text-gray-800 text-center">RESUMEN DE VENTAS</h1>
           </div>
-          <div class="p-6">
-            <div class="flex flex-wrap items-center justify-center gap-6 mb-6">
-              <div class="flex items-center space-x-3 bg-white px-4 py-2 rounded-lg shadow-sm">
+          <div class="p-4 flex-1 flex flex-col justify-center">
+            <div class="flex flex-wrap items-center justify-center gap-4 mb-4">
+              <div class="flex items-center space-x-2 bg-white px-3 py-1 rounded-lg shadow-sm">
                 <span class="inline-block w-4 h-4 rounded-full bg-blue-600 shadow-sm"></span>
                 <span class="text-sm font-medium text-gray-700">NUBOX360</span>
               </div>
-              <div class="flex items-center space-x-3 bg-white px-4 py-2 rounded-lg shadow-sm">
+              <div class="flex items-center space-x-2 bg-white px-3 py-1 rounded-lg shadow-sm">
                 <span class="inline-block w-4 h-4 rounded-full bg-pink-500 shadow-sm"></span>
                 <span class="text-sm font-medium text-gray-700">EDSUITE</span>
               </div>
-              <div class="flex items-center space-x-3 bg-white px-4 py-2 rounded-lg shadow-sm">
+              <div class="flex items-center space-x-2 bg-white px-3 py-1 rounded-lg shadow-sm">
                 <span class="inline-block w-4 h-4 rounded-full bg-green-500 shadow-sm"></span>
                 <span class="text-sm font-medium text-gray-700">SIRE</span>
               </div>
             </div>
-            <div class="bg-white rounded-lg border border-gray-100 p-4 overflow-x-auto">
-              <div id="columnchart_material" class="min-w-[300px] md:min-w-[900px] h-[400px] md:h-[380px]" style="overflow-x: auto; white-space: nowrap;"></div>
+            <div class="bg-white rounded-lg border border-gray-100 p-2 overflow-x-auto w-full">
+              <div id="columnchart_material" class="w-full min-w-0 h-[380px]" style="overflow-x: auto; white-space: nowrap;"></div>
             </div>
           </div>
         </div>
       </div>
 
       <!-- Fila 2: Variación mensual -->
-      <div class="w-full md:w-1/2">
-        <div class="bg-gradient-to-br from-white to-gray-50 rounded-xl border border-gray-200 shadow-lg overflow-hidden">
-          <div class="px-6 py-4 bg-gradient-to-r from-green-50 to-green-100 border-b border-gray-200">
+      <div class="w-full md:w-1/2 min-w-0">
+        <div class="bg-gradient-to-br from-white to-gray-50 rounded-xl border border-gray-200 shadow-lg overflow-hidden h-full flex flex-col">
+          <div class="px-4 py-3 bg-gradient-to-r from-green-50 to-green-100 border-b border-gray-200">
             <h2 class="text-lg md:text-xl font-semibold text-gray-800 text-center">VARIACIÓN MENSUAL</h2>
           </div>
-          <div class="p-6">
+          <div class="p-4 flex-1 flex flex-col justify-center">
             <?php require_once "graficos/variacion.php" ?>
           </div>
         </div>

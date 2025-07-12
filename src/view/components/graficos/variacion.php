@@ -1,17 +1,17 @@
 <div class="w-full">
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <div class="flex flex-row items-center gap-2"> <!-- Cambiado a fila -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+        <div class="flex flex-row items-center gap-2">
             <label class="block text-sm font-medium text-gray-700 mb-0">Tipo de Reporte</label>
-            <select id="select-tipo-vari" class="border border-gray-300 rounded-lg  px-6  py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white">
+            <select id="select-tipo-vari" class="border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white">
                 <option value="NUBOX360">NUBOX360</option>
                 <option value="SIRE">SIRE</option>
                 <option value="EDSUITE">EDSUITE</option>
             </select>
         </div>
     </div>
-    <div class="bg-white rounded-lg border border-gray-100 p-4 overflow-x-auto">
-        <div style="width:100%; min-width:600px; max-width:100%; margin:auto; height: 400px;">
-            <canvas id="variacionVentasChart" style="width:100%; min-width:600px; max-width:100%; height: 100%;"></canvas>
+    <div class="bg-white rounded-lg border border-gray-100 p-2 overflow-x-auto w-full">
+        <div class="w-full min-w-0 h-[380px] flex items-center justify-center">
+            <canvas id="variacionVentasChart" class="w-full h-full"></canvas>
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
