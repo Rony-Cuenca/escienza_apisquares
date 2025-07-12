@@ -29,4 +29,14 @@ class SerieSucursal
         ]);
         return true;
     }
+
+    public static function obtenerSeriesPorEstablecimiento($id_establecimiento) {
+        $conn = Conexion::conectar();
+        $sql = "SELECT * FROM series_sucursales WHERE id_establecimiento = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i", $id_establecimiento);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        return $res->fetch_assoc();
+    }
 }

@@ -11,6 +11,7 @@ require_once __DIR__ . '/../model/SerieAjena.php';
 require_once __DIR__ . '/../model/SerieSucursal.php';
 require_once __DIR__ . '/../model/VentaGlobal.php';
 require_once __DIR__ . '/../helpers/sesion_helper.php';
+require_once __DIR__ . '/../model/Establecimiento.php';
 
 class CuadresController
 {
@@ -135,6 +136,7 @@ class CuadresController
         }
 
         $cliente = Cliente::obtenerCliente($id_cliente);
+        $establecimientos = Establecimiento::obtenerEstablecimientoPorCliente($id_cliente);
         $rol = $user['rol'];
 
         // Validar que se haya obtenido el cliente
@@ -214,12 +216,41 @@ class CuadresController
             $ErrorSIRE = "No se subieron archivos válidos.";
         }
 
+        foreach ($establecimientos as &$establecimiento) {
+            $series = SerieSucursal::obtenerSeriesPorEstablecimiento($establecimiento['id']);
+            if ($series && isset($series['serie'])) {
+                $establecimiento['serie'] = $series['serie'];
+            } else {
+                $establecimiento['serie'] = null;
+            }
+        }
+        unset($establecimiento);
+
+        $serieArchivos = $this->resultsSerieArchivos;
+        foreach ($serieArchivos as $archivo) {
+            $seriesString[] = implode('-', $archivo['series']);
+        }
+        unset($serieArchivos);
+
+        $coincidentes = [];
+
+        foreach ($establecimientos as $e) {
+            if ($e['serie'] !== null && in_array($e['serie'], $seriesString)) {
+                $coincidentes[] = $e['serie'];
+            }
+        }
+        unset($establecimientos);
+
         $_SESSION['ResultsSIRE'] = $this->ResultsSIRE;
         $_SESSION['ResultsNUBOX'] = $this->ResultsNUBOX;
         $_SESSION['ResultsEDSUITE'] = $this->ResultsEDSUITE;
         $_SESSION['ResultsValidarSeries'] = $this->ResultsValidarSeries;
         $_SESSION['resultsVentaGlobal'] = $this->resultsVentaGlobal;
-        $_SESSION['resultsSerieArchivos'] = $this->resultsSerieArchivos;
+        if (empty($coincidentes)) {
+            $_SESSION['resultsSerieArchivos'] = $this->resultsSerieArchivos;
+        } else {
+            $_SESSION['resultsSerieArchivos'] = null;
+        }
 
         $contenido = 'view/components/cuadre.php';
         require 'view/layout.php';
