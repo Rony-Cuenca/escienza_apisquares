@@ -3,7 +3,7 @@ require_once 'model/Establecimiento.php';
 require_once 'config/conexion.php';
 require_once 'config/api_config.php';
 require_once 'helpers/sesion_helper.php';
-require_once __DIR__ . '/../helpers/permisos_helper.php'; // Agregar helpers de permisos
+require_once __DIR__ . '/../helpers/permisos_helper.php';
 
 class EstablecimientoController
 {

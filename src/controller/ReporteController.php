@@ -200,6 +200,7 @@ class ReporteController
             }
         }
 
+        $productosGlobales = [];
         if ($mesSeleccionado) {
             $cuadres = Cuadre::obtenerCuadresPorMes($mesSeleccionado);
             list($cuadresSIRE, $cuadresNUBOX, $cuadresEDSUITE) = $this->separarCuadresPorSistemaExcluyendoAjenas($cuadres, $mesSeleccionado);
@@ -208,7 +209,36 @@ class ReporteController
             $seriesTotales = Cuadre::obtenerTotalesPorSerieExcluyendoAjenas($mesSeleccionado);
             $diferenciasSeries = $this->calcularDiferenciasSeries($seriesTotales);
             $seriesAjenas = SerieAjena::obtenerPorMes($mesSeleccionado);
-            $ventasGlobales = VentaGlobal::obtenerPorMes($mesSeleccionado);
+
+            // --- Construcción de ventasGlobales para el PDF (series EDSuite vs NUBOX) ---
+            $ventasGlobales = [];
+            $nuboxPorSerie = [];
+            if (!empty($cuadresNUBOX)) {
+                foreach ($cuadresNUBOX as $c) {
+                    $serie = $c['serie'] ?? '';
+                    $nuboxPorSerie[$serie] = isset($c['monto_total']) ? (float)$c['monto_total'] : 0;
+                }
+            }
+            if (!empty($cuadresEDSUITE)) {
+                foreach ($cuadresEDSUITE as $c) {
+                    $serie = $c['serie'] ?? '';
+                    $combustibles = isset($c['monto_total']) ? (float)$c['monto_total'] : 0;
+                    $extras = 0;
+                    $notas_credito = 0;
+                    $diferencia = $combustibles - ($nuboxPorSerie[$serie] ?? 0);
+                    $ventasGlobales[] = [
+                        'serie' => $serie,
+                        'combustibles' => $combustibles,
+                        'extras' => $extras,
+                        'notas_credito' => $notas_credito,
+                        'diferencia' => $diferencia
+                    ];
+                }
+            }
+            // --- Fin construcción ventasGlobales ---
+
+            // Obtener productos globales para la tabla de productos (igual que en la vista web)
+            $productosGlobales = \VentaGlobal::obtenerPorMes($mesSeleccionado);
         }
 
         $nombreMes = $this->obtenerNombreMes($mesSeleccionado, $mesesDisponibles);

@@ -431,7 +431,7 @@ require_once __DIR__ . '/../../helpers/permisos_helper.php';
                         $totalDif += $row['diferencia'];
                         $rowClass = ($row['diferencia'] != 0) ? 'bg-[#dc3545] text-white font-bold' : '';
                     ?>
-                        <tr class="border-b border-[#2563EB] hover:bg-blue-50 transition <?= $rowClass ?>">
+                        <tr class="border-b border-[#2563EB] transition <?= $rowClass ?>">
                             <td class="py-2 px-3 text-left font-semibold"><?= htmlspecialchars($row['serie']) ?></td>
                             <td class="py-2 px-3 text-right"><?= number_format($row['total_sire'], 2) ?></td>
                             <td class="py-2 px-3 text-right"><?= number_format($row['total_nubox'], 2) ?></td>
