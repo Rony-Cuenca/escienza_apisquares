@@ -9,9 +9,9 @@
             </select>
         </div>
     </div>
-    <div class="bg-white rounded-lg border border-gray-100 p-2 overflow-x-auto w-full">
-        <div class="w-full min-w-0 h-[380px] flex items-center justify-center">
-            <canvas id="variacionVentasChart" class="w-full h-full"></canvas>
+    <div class="bg-white rounded-lg p-2 w-full">
+        <div style="height: 380px">
+            <canvas id="variacionVentasChart"></canvas>
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -71,6 +71,14 @@ function drawVariacionVentasChart() {
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    layout: {
+                        padding: {
+                            left: 20,
+                            right: 20,
+                            top: 20,
+                            bottom: 20
+                        }
+                    },
                     plugins: {
                         legend: { display: true },
                         tooltip: {

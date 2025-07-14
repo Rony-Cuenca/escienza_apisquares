@@ -69,7 +69,7 @@ if (!function_exists('obtenerContextoActual')) {
             </div>
             <div class="bg-white rounded-lg border border-gray-100 p-2 overflow-hidden w-full">
               <div class="overflow-x-auto" style="width: 100%;">
-                <div id="columnchart_material" class="w-[1200px] h-[380px]"></div>
+                <div id="columnchart_material" class="w-[800px] h-[380px]"></div>
               </div>
             </div>
           </div>
@@ -83,7 +83,13 @@ if (!function_exists('obtenerContextoActual')) {
             <h2 class="text-lg md:text-xl font-semibold text-gray-800 text-center">VARIACIÓN MENSUAL</h2>
           </div>
           <div class="p-4 flex-1 flex flex-col justify-center">
-            <?php require_once "graficos/variacion.php" ?>
+            <div class="bg-white rounded-lg border border-gray-100 p-2 overflow-hidden w-full">
+              <div class="overflow-x-auto" style="width: 100%;">
+                <div class="mx-auto" style="width: 800px;">
+                  <?php require_once "graficos/variacion.php" ?>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -238,7 +244,7 @@ if (!function_exists('obtenerContextoActual')) {
           legend: {
             position: 'none'
           },
-          width: 1200,
+          width: 800,
           height: 380,
           bars: 'vertical',
           bar: { groupWidth: '70%' },
@@ -258,7 +264,7 @@ if (!function_exists('obtenerContextoActual')) {
         console.error('Error al cargar datos del resumen de ventas:', error);
       });
   }
-
+ñ
   document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('select-anio').addEventListener('change', drawChart);
     document.getElementById('select-establecimiento').addEventListener('change', drawChart);
