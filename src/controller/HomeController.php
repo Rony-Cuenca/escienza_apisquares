@@ -122,7 +122,9 @@ class HomeController
                 FROM resumen_comprobante rc
                 JOIN establecimiento e ON rc.id_establecimiento = e.id
                 JOIN tipo_reportedoc tr ON rc.id_reporte = tr.id
-                WHERE e.id_cliente = ? AND YEAR(rc.fecha_registro) = ?
+                WHERE e.id_cliente = ? 
+                  AND YEAR(rc.fecha_registro) = ?
+                  AND rc.estado = 1
                 GROUP BY mes, tipo
                 ORDER BY mes, tipo";
 
@@ -164,7 +166,11 @@ class HomeController
                 FROM resumen_comprobante rc
                 JOIN establecimiento e ON rc.id_establecimiento = e.id
                 JOIN tipo_reportedoc tr ON rc.id_reporte = tr.id
-                WHERE e.id_cliente = ? AND YEAR(rc.fecha_registro) = ? AND MONTH(rc.fecha_registro) = ? AND tr.descripcion = ?
+                WHERE e.id_cliente = ? 
+                  AND YEAR(rc.fecha_registro) = ? 
+                  AND MONTH(rc.fecha_registro) = ? 
+                  AND tr.descripcion = ?
+                  AND rc.estado = 1
                 GROUP BY rc.serie
                 HAVING total > 0
                 ORDER BY total DESC";
@@ -202,7 +208,9 @@ class HomeController
                            SUM(rc.monto_total) AS total
                     FROM resumen_comprobante rc
                     JOIN establecimiento e ON rc.id_establecimiento = e.id
-                    WHERE e.id_cliente = ? AND YEAR(rc.fecha_registro) = ?
+                    WHERE e.id_cliente = ? 
+                      AND YEAR(rc.fecha_registro) = ?
+                      AND rc.estado = 1
                     GROUP BY rc.serie
                     HAVING total > 0";
             $stmt = $conn->prepare($sql);
@@ -290,7 +298,11 @@ class HomeController
         $sql = "SELECT rc.serie, 
                        SUM(rc.monto_total) AS total_vendido, 
                        SUM(rc.cantidad_compr) AS total_comprobantes,
-                       CASE WHEN SUM(rc.cantidad_compr) > 0 THEN ROUND(SUM(rc.monto_total)/SUM(rc.cantidad_compr),2) ELSE 0 END AS promedio
+                       CASE 
+                           WHEN SUM(rc.cantidad_compr) > 0 
+                           THEN ROUND(SUM(rc.monto_total)/SUM(rc.cantidad_compr),2) 
+                           ELSE 0 
+                       END AS promedio
                 FROM resumen_comprobante rc
                 JOIN establecimiento e ON rc.id_establecimiento = e.id
                 JOIN tipo_reportedoc tr ON rc.id_reporte = tr.id
@@ -298,6 +310,7 @@ class HomeController
                   AND YEAR(rc.fecha_registro) = ? 
                   AND MONTH(rc.fecha_registro) = ? 
                   AND tr.descripcion = ?
+                  AND rc.estado = 1
                 GROUP BY rc.serie
                 HAVING total_comprobantes > 0
                 ORDER BY promedio DESC";

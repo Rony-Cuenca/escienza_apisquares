@@ -67,8 +67,10 @@ if (!function_exists('obtenerContextoActual')) {
                 <span class="text-sm font-medium text-gray-700">SIRE</span>
               </div>
             </div>
-            <div class="bg-white rounded-lg border border-gray-100 p-2 overflow-x-auto w-full">
-              <div id="columnchart_material" class="w-full min-w-0 h-[380px]" style="overflow-x: auto; white-space: nowrap;"></div>
+            <div class="bg-white rounded-lg border border-gray-100 p-2 overflow-hidden w-full">
+              <div class="overflow-x-auto" style="width: 100%;">
+                <div id="columnchart_material" class="w-[1200px] h-[380px]"></div>
+              </div>
             </div>
           </div>
         </div>
@@ -235,6 +237,18 @@ if (!function_exists('obtenerContextoActual')) {
           colors: ['#2563eb', '#ec4899', '#22c55e'],
           legend: {
             position: 'none'
+          },
+          width: 1200,
+          height: 380,
+          bars: 'vertical',
+          bar: { groupWidth: '70%' },
+          chartArea: {
+            left: 50,
+            right: 50,
+            top: 20,
+            bottom: 50,
+            width: '100%',
+            height: '80%'
           }
         };
         var chart = new google.charts.Bar(document.getElementById('columnchart_material'));
