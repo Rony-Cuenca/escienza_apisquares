@@ -207,7 +207,7 @@ class CuadresController
                     extract($validarSeries);
                     $this->ResultsValidarSeries = $validarSeries['ResultsValidarSeries'];
                 } else {
-                    $ErrorNUBOX = "Los RUC de los archivos no  pertenece a la empresa.";
+                    $ErrorNUBOX = "Los RUC de los archivos no pertenece a la empresa.";
                 }
             } else {
                 $ErrorSIRE = "Los RUC de los archivos no coinciden.";
@@ -683,7 +683,7 @@ class CuadresController
         $nubox = $this->validarNubox;
         $edsuite = $this->validarEDSuite;
 
-        // 1. Juntar todas las series con origen
+        // Juntar todas las series con origen
         $all_series_data = [];
 
         foreach ($sire as $item) {
@@ -701,12 +701,12 @@ class CuadresController
             $all_series_data[$serie]['origenes']['EDSUITE'] = $item;
         }
 
-        // 2. Filtrar las series que NO estén en los 3
+        //Filtrar las series que NO estén en los 3
         foreach ($all_series_data as $serie => $data) {
             $origenes = $data['origenes'];
             if (count($origenes) < 3) {
                 if (isset($origenes['NUBOX'])) {
-                    // Si tiene NUBOX, solo NUBOX
+                    
                     $item = $origenes['NUBOX'];
                     $ResultsValidarSeries[] = [
                         'serie'  => $item['serie'],
@@ -716,7 +716,7 @@ class CuadresController
                         'cuadre' => 'NUBOX'
                     ];
                 } else {
-                    // No tiene NUBOX → incluir todos los que estén
+                    
                     foreach ($origenes as $origen => $item) {
                         $ResultsValidarSeries[] = [
                             'serie'  => $item['serie'],
@@ -729,6 +729,16 @@ class CuadresController
                 }
             }
         }
+
+        $ResultsValidarSeriesDepurados = [];
+
+        foreach ($ResultsValidarSeries as $registro) {
+            if ($registro['total'] >= 0) {
+                $ResultsValidarSeriesDepurados[] = $registro;
+            }
+        }
+
+        $ResultsValidarSeries = $ResultsValidarSeriesDepurados;
 
         return compact('ErrorValidarSeries', 'ResultsValidarSeries');
     }
