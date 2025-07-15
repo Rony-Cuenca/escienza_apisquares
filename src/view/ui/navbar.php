@@ -225,14 +225,12 @@ $contexto = obtenerContextoActual();
             Establecimiento
           </a>
         </li>
-        <?php if (!$contexto['es_modo_directo'] || $contexto['es_superadmin']): ?>
-          <li>
-            <a href="index.php?controller=configuracion&action=index"
-              class="block py-2 px-3 rounded-sm transition-colors <?= $controller === 'configuracion' ? 'text-blue-700 font-bold' : 'hover:text-blue-700' ?>">
-              Configuración
-            </a>
-          </li>
-        <?php endif; ?>
+        <li>
+          <a href="index.php?controller=reporte&action=index"
+            class="block py-2 px-3 rounded-sm transition-colors <?= $controller === 'establecimiento' ? 'text-blue-700 font-bold' : 'hover:text-blue-700' ?>">
+            Reportes
+          </a>
+        </li>
       <?php endif; ?>
       <li>
         <a href="index.php?controller=auth&action=logout"

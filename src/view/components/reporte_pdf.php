@@ -349,29 +349,34 @@ date_default_timezone_set('America/Lima');
                                 <tbody>
                                     <?php
                                     $totalNubox = 0;
+                                    $totalNotaNubox = 0;
                                     if (!empty($cuadresNUBOX)) {
                                         foreach ($cuadresNUBOX as $cuadre) {
                                             $serie = $cuadre['serie'] ?? '';
-                                            $total = isset($cuadre['monto_total']) ? (float)$cuadre['monto_total'] : 0;
-                                            $nota = 0;
+                                            $monto = isset($cuadre['monto_total']) ? (float)$cuadre['monto_total'] : 0;
+                                            $total = $monto >= 0 ? $monto : 0;
+                                            $nota = $monto < 0 ? abs($monto) : 0;
                                             $totalNubox += $total;
+                                            $totalNotaNubox += $nota;
                                     ?>
                                             <tr>
                                                 <td class="col-series"><?= htmlspecialchars($serie) ?></td>
                                                 <td class="col-total text-right">S/. <?= number_format($total, 2) ?></td>
-                                                <td class="col-nota text-right">S/. 0.00</td>
+                                                <td class="col-nota text-right">S/. <?= number_format($nota, 2) ?></td>
                                             </tr>
                                     <?php }
                                     }
+                                    $totalGeneralNubox = $totalNubox - $totalNotaNubox;
+                                    $totalGeneralNuboxStyle = ($totalGeneralNubox < 0) ? 'background:#E54B4B !important; color:#fff; font-weight:bold;' : 'background:#3F7D20 !important; color:#fff !important;';
                                     ?>
                                     <tr class="nubox-total-row">
                                         <td class="nubox-total-label" rowspan="2" style="background:#3F7D20 !important; color:#fff !important;">TOTAL</td>
                                         <td class="col-total text-right" style="background:#3F7D20 !important; color:#fff !important;">S/. <?= number_format($totalNubox, 2) ?></td>
-                                        <td class="col-nota text-right" style="background:#3F7D20 !important; color:#fff !important;">S/. 0.00</td>
+                                        <td class="col-nota text-right" style="background:#3F7D20 !important; color:#fff !important;">S/. <?= number_format($totalNotaNubox, 2) ?></td>
                                     </tr>
                                     <tr class="nubox-total-row">
-                                        <td class="text-center fw-bold" colspan="2" style="background:#3F7D20 !important; color:#fff !important;">
-                                            S/. <?= number_format($totalNubox, 2) ?>
+                                        <td class="text-center fw-bold" colspan="2" style="<?= $totalGeneralNuboxStyle ?>">
+                                            S/. <?= number_format($totalGeneralNubox, 2) ?>
                                         </td>
                                     </tr>
                                 </tbody>
@@ -394,6 +399,7 @@ date_default_timezone_set('America/Lima');
                                 <tbody>
                                     <?php
                                     $totalEdsuite = 0;
+                                    $totalNotaEdsuite = 0;
                                     $totalDiferenciaEdsuite = 0;
                                     $nuboxPorSerie = [];
                                     if (!empty($cuadresNUBOX)) {
@@ -404,16 +410,18 @@ date_default_timezone_set('America/Lima');
                                     if (!empty($cuadresEDSUITE)) {
                                         foreach ($cuadresEDSUITE as $cuadre) {
                                             $serie = $cuadre['serie'] ?? '';
-                                            $total = isset($cuadre['monto_total']) ? (float)$cuadre['monto_total'] : 0;
-                                            $nota = 0;
+                                            $monto = isset($cuadre['monto_total']) ? (float)$cuadre['monto_total'] : 0;
+                                            $total = $monto >= 0 ? $monto : 0;
+                                            $nota = $monto < 0 ? abs($monto) : 0;
                                             $totalEdsuite += $total;
-                                            $diferencia = $total - ($nuboxPorSerie[$serie] ?? 0);
+                                            $totalNotaEdsuite += $nota;
+                                            $diferencia = ($total + $nota) - ($nuboxPorSerie[$serie] ?? 0);
                                             $totalDiferenciaEdsuite += $diferencia;
                                     ?>
                                             <tr>
                                                 <td class="col-series"><?= htmlspecialchars($serie) ?></td>
-                                                <td class="col-total text-right">S/. <?= number_format($total, 2) ?></td>
-                                                <td class="col-nota text-right">S/.0.00</td>
+                                                <td class="col-total text-right" <?= $monto < 0 ? ' style="background:#E54B4B !important; color:#fff; font-weight:bold;"' : '' ?>>S/. <?= number_format($total, 2) ?></td>
+                                                <td class="col-nota text-right" <?= $nota > 0 ? ' style="background:#E54B4B !important; color:#fff; font-weight:bold;"' : '' ?>>S/. <?= number_format($nota, 2) ?></td>
                                                 <td class="col-diferencia text-right" <?= ($diferencia != 0 ? ' style="background:#E54B4B !important; color:#fff; font-weight:bold;"' : '') ?>>S/. <?= number_format($diferencia, 2) ?></td>
                                             </tr>
                                     <?php }
@@ -422,12 +430,12 @@ date_default_timezone_set('America/Lima');
                                     <tr class="nubox-total-row">
                                         <td class="nubox-total-label" rowspan="2" style="background:#3F7D20 !important; color:#fff !important;">TOTAL</td>
                                         <td class="col-total text-right" style="background:#3F7D20 !important; color:#fff !important;">S/. <?= number_format($totalEdsuite, 2) ?></td>
-                                        <td class="col-nota text-right" style="background:#3F7D20 !important; color:#fff !important;">S/. 0.00</td>
+                                        <td class="col-nota text-right" style="background:#3F7D20 !important; color:#fff !important;">S/. <?= number_format($totalNotaEdsuite, 2) ?></td>
                                         <td class="col-diferencia text-right" rowspan="2" style="<?= ($totalDiferenciaEdsuite != 0 ? 'background:#E54B4B !important; color:#fff; font-weight:bold;' : 'background:#3F7D20 !important; color:#fff !important;') ?>">S/. <?= number_format($totalDiferenciaEdsuite, 2) ?></td>
                                     </tr>
                                     <tr class="nubox-total-row">
                                         <td class="text-center fw-bold" colspan="2" style="background:#3F7D20 !important; color:#fff !important;">
-                                            S/. <?= number_format($totalEdsuite, 2) ?>
+                                            S/. <?= number_format($totalEdsuite + $totalNotaEdsuite, 2) ?>
                                         </td>
                                     </tr>
                                 </tbody>
@@ -450,8 +458,10 @@ date_default_timezone_set('America/Lima');
                                 <tbody>
                                     <?php
                                     $totalSire = 0;
+                                    $totalNotaSire = 0;
                                     $totalDiferenciaSire = 0;
                                     $nuboxPorSerie = [];
+                                    $totalGeneralSire = 0;
                                     if (!empty($cuadresNUBOX)) {
                                         foreach ($cuadresNUBOX as $c) {
                                             $nuboxPorSerie[$c['serie']] = isset($c['monto_total']) ? (float)$c['monto_total'] : 0;
@@ -460,30 +470,37 @@ date_default_timezone_set('America/Lima');
                                     if (!empty($cuadresSIRE)) {
                                         foreach ($cuadresSIRE as $cuadre) {
                                             $serie = $cuadre['serie'] ?? '';
-                                            $total = isset($cuadre['monto_total']) ? (float)$cuadre['monto_total'] : 0;
-                                            $nota = 0; 
+                                            $monto = isset($cuadre['monto_total']) ? (float)$cuadre['monto_total'] : 0;
+                                            $total = $monto >= 0 ? $monto : 0;
+                                            $nota = $monto < 0 ? abs($monto) : 0;
                                             $totalSire += $total;
-                                            $diferencia = $total - ($nuboxPorSerie[$serie] ?? 0);
+                                            $totalNotaSire += $nota;
+                                            $montoNubox = $nuboxPorSerie[$serie] ?? 0;
+                                            $montoNuboxTotal = $montoNubox >= 0 ? $montoNubox : 0;
+                                            $montoNuboxNota = $montoNubox < 0 ? abs($montoNubox) : 0;
+                                            $diferencia = ($total - $nota) - ($montoNuboxTotal - $montoNuboxNota);
                                             $totalDiferenciaSire += $diferencia;
                                     ?>
                                             <tr>
                                                 <td class="col-series"><?= htmlspecialchars($serie) ?></td>
                                                 <td class="col-total text-right">S/. <?= number_format($total, 2) ?></td>
-                                                <td class="col-nota text-right">S/. 0.00</td>
+                                                <td class="col-nota text-right">S/. <?= number_format($nota, 2) ?></td>
                                                 <td class="col-diferencia text-right" <?= ($diferencia != 0 ? ' style="background:#E54B4B !important; color:#fff; font-weight:bold;"' : '') ?>>S/. <?= number_format($diferencia, 2) ?></td>
                                             </tr>
                                     <?php }
                                     }
+                                    $totalGeneralSire = $totalSire - $totalNotaSire;
+                                    $totalDiferenciaSireStyle = ($totalDiferenciaSire != 0) ? 'background:#E54B4B !important; color:#fff; font-weight:bold;' : 'background:#3F7D20 !important; color:#fff !important;';
                                     ?>
                                     <tr class="nubox-total-row">
                                         <td class="nubox-total-label" rowspan="2" style="background:#3F7D20 !important; color:#fff !important;">TOTAL</td>
                                         <td class="col-total text-right" style="background:#3F7D20 !important; color:#fff !important;">S/. <?= number_format($totalSire, 2) ?></td>
-                                        <td class="col-nota text-right" style="background:#3F7D20 !important; color:#fff !important;">S/. 0.00</td>
-                                        <td class="col-diferencia text-right" rowspan="2" style="<?= ($totalDiferenciaSire != 0 ? 'background:#E54B4B !important; color:#fff; font-weight:bold;' : 'background:#3F7D20 !important; color:#fff !important;') ?>">S/. <?= number_format($totalDiferenciaSire, 2) ?></td>
+                                        <td class="col-nota text-right" style="background:#3F7D20 !important; color:#fff !important;">S/. <?= number_format($totalNotaSire, 2) ?></td>
+                                        <td class="col-diferencia text-right" rowspan="2" style="<?= $totalDiferenciaSireStyle ?>">S/. <?= number_format($totalDiferenciaSire, 2) ?></td>
                                     </tr>
                                     <tr class="nubox-total-row">
                                         <td class="text-center fw-bold" colspan="2" style="background:#3F7D20 !important; color:#fff !important;">
-                                            S/. <?= number_format($totalSire, 2) ?>
+                                            S/. <?= number_format($totalGeneralSire, 2) ?>
                                         </td>
                                     </tr>
                                 </tbody>
@@ -616,12 +633,12 @@ date_default_timezone_set('America/Lima');
                                     $totalExtras = 0;
                                     $totalNotas = 0;
                                     $totalDiferencia = 0;
-                                    if (!empty($ventasGlobales)) {
-                                        foreach ($ventasGlobales as $row) {
+                                    if (!empty($seriesEdSuite)) {
+                                        foreach ($seriesEdSuite as $row) {
                                             $serie = $row['serie'] ?? '';
-                                            $combustibles = isset($row['combustibles']) ? (float)$row['combustibles'] : 0;
+                                            $combustibles = isset($row['combustible']) ? (float)$row['combustible'] : 0;
                                             $extras = isset($row['extras']) ? (float)$row['extras'] : 0;
-                                            $notas = isset($row['notas_credito']) ? (float)$row['notas_credito'] : 0;
+                                            $notas = isset($row['nota_credito']) ? (float)$row['nota_credito'] : 0;
                                             $diferencia = isset($row['diferencia']) ? (float)$row['diferencia'] : 0;
                                             $totalCombustibles += $combustibles;
                                             $totalExtras += $extras;
@@ -676,8 +693,8 @@ date_default_timezone_set('America/Lima');
                                     <?php
                                     $totalCantidad = 0;
                                     $totalImporte = 0;
-                                    if (!empty($productosGlobales)) {
-                                        foreach ($productosGlobales as $venta) {
+                                    if (!empty($ventasGlobales)) {
+                                        foreach ($ventasGlobales as $venta) {
                                             $producto = $venta['producto'] ?? '';
                                             $cantidad = 0;
                                             if (isset($venta['total_cantidad'])) {
@@ -729,33 +746,30 @@ date_default_timezone_set('America/Lima');
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php
-                                    $totalConteo = 0;
-                                    $totalImporteAjenas = 0;
-                                    if (!empty($seriesAjenas)) {
-                                        foreach ($seriesAjenas as $serie) {
-                                            $serieNombre = $serie['serie'] ?? '';
-                                            $conteo = isset($serie['conteo_total']) ? (float)$serie['conteo_total'] : 0;
-                                            $importe = isset($serie['total_importe']) ? (float)$serie['total_importe'] : 0;
-                                            $totalConteo += $conteo;
-                                            $totalImporteAjenas += $importe;
-                                    ?>
+                                    <?php if (!empty($seriesAjenas)): ?>
+                                        <?php
+                                        $totalConteo = 0;
+                                        $totalImporte = 0;
+                                        foreach ($seriesAjenas as $serie):
+                                            $totalConteo += $serie['total_conteo'];
+                                            $totalImporte += $serie['total_importe'];
+                                        ?>
                                             <tr>
-                                                <td><?= htmlspecialchars($serieNombre) ?></td>
-                                                <td style="text-align:right;"><?= number_format($conteo, 2) ?></td>
-                                                <td style="text-align:right;">S/. <?= number_format($importe, 2) ?></td>
+                                                <td><?= htmlspecialchars($serie['serie']) ?></td>
+                                                <td style="text-align:right;"><?= number_format($serie['total_conteo'], 0) ?></td>
+                                                <td style="text-align:right;">S/. <?= number_format($serie['total_importe'], 2) ?></td>
                                             </tr>
-                                        <?php }
-                                    } else { ?>
+                                        <?php endforeach; ?>
+                                        <tr class="nubox-total-row">
+                                            <td style="font-weight:bold; background:#3F7D20 !important; color:#fff !important;">TOTAL</td>
+                                            <td style="text-align:right; background:#3F7D20 !important; color:#fff !important; font-weight:bold;"><?= number_format($totalConteo, 0) ?></td>
+                                            <td style="text-align:right; background:#3F7D20 !important; color:#fff !important; font-weight:bold;">S/. <?= number_format($totalImporte, 2) ?></td>
+                                        </tr>
+                                    <?php else: ?>
                                         <tr>
                                             <td colspan="3" style="text-align:center; color:#888;">No hay datos de series ajenas.</td>
                                         </tr>
-                                    <?php } ?>
-                                    <tr class="nubox-total-row">
-                                        <td style="font-weight:bold; background:#3F7D20 !important; color:#fff !important;">TOTAL</td>
-                                        <td style="text-align:right; background:#3F7D20 !important; color:#fff !important; font-weight:bold;"><?= number_format($totalConteo, 2) ?></td>
-                                        <td style="text-align:right; background:#3F7D20 !important; color:#fff !important; font-weight:bold;">S/. <?= number_format($totalImporteAjenas, 2) ?></td>
-                                    </tr>
+                                    <?php endif; ?>
                                 </tbody>
                             </table>
                         </div>

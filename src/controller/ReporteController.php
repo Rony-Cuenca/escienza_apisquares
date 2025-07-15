@@ -57,6 +57,9 @@ class ReporteController
         }
     }
 
+    /**
+     * Vista principal del reporte de cuadres.
+     */
     public function index()
     {
         $this->verificarSesion();
@@ -64,84 +67,170 @@ class ReporteController
 
         $mesesDisponibles = Cuadre::obtenerMesesDisponibles();
         $mesSeleccionado = $_GET['mes'] ?? '';
-        $cuadresSIRE = $cuadresNUBOX = $cuadresEDSUITE = [];
-        $totalesTipoDoc = $seriesTotales = $diferenciasSeries = [];
-        $seriesAjenas = $ventasGlobales = [];
 
-        // Obtener el cliente actual y los establecimientos
-        $id_cliente = SesionHelper::obtenerClienteActual();
-        $establecimientos = [];
-        if ($id_cliente) {
-            $establecimientos = Establecimiento::obtenerEstablecimientoPorCliente($id_cliente);
+        list($id_cliente, $establecimientos) = $this->getClienteYEstablecimientos();
+
+        $datosReporte = $this->obtenerDatosReporte($mesSeleccionado);
+        extract($datosReporte);
+
+        $contenido = 'view/components/reporte.php';
+        require 'view/layout.php';
+    }
+
+    /**
+     * Procesa las series para separar montos negativos en nota de crédito y positivos en total.
+     */
+    private function procesarSeriesConNotasCredito($cuadres)
+    {
+        $resultado = [];
+        foreach ($cuadres as $c) {
+            $monto = isset($c['monto_total']) ? (float)$c['monto_total'] : 0;
+            $nuevo = $c;
+            $nuevo['total'] = $monto < 0 ? 0 : $monto;
+            $nuevo['nota_credito'] = $monto < 0 ? $monto : 0;
+            $resultado[] = $nuevo;
         }
+        return $resultado;
+    }
+
+    /**
+     * Obtiene el cliente actual y sus establecimientos.
+     */
+    private function getClienteYEstablecimientos()
+    {
+        $id_cliente = SesionHelper::obtenerClienteActual();
+        $establecimientos = $id_cliente ? Establecimiento::obtenerEstablecimientoPorCliente($id_cliente) : [];
+        return [$id_cliente, $establecimientos];
+    }
+
+    /**
+     * Centraliza la obtención y procesamiento de todos los datos necesarios para el reporte.
+     */
+    private function obtenerDatosReporte($mesSeleccionado)
+    {
+        $cuadresSIRE = [];
+        $cuadresNUBOX = [];
+        $cuadresEDSUITE = [];
+        $totalesTipoDoc = [];
+        $seriesTotales = [];
+        $seriesAjenas = [];
+        $ventasGlobales = [];
+        $diferenciasNuboxSire = [];
+        $diferenciasTipoDocNuboxSire = [];
+        $seriesEdSuite = [];
 
         if ($mesSeleccionado) {
             $cuadres = Cuadre::obtenerCuadresPorMes($mesSeleccionado);
             list($cuadresSIRE, $cuadresNUBOX, $cuadresEDSUITE) = $this->separarCuadresPorSistemaExcluyendoAjenas($cuadres, $mesSeleccionado);
 
+            $cuadresNUBOX = $this->procesarSeriesConNotasCredito($cuadresNUBOX);
+            $cuadresEDSUITE = $this->procesarSeriesConNotasCredito($cuadresEDSUITE);
+            $cuadresSIRE = $this->procesarSeriesConNotasCredito($cuadresSIRE);
             $totalesTipoDoc = Cuadre::obtenerTotalesPorTipoComprobanteExcluyendoAjenas($mesSeleccionado);
             $seriesTotales = Cuadre::obtenerTotalesPorSerieExcluyendoAjenas($mesSeleccionado);
-            $diferenciasSeries = $this->calcularDiferenciasSeries($seriesTotales);
             $seriesAjenas = SerieAjena::obtenerPorMes($mesSeleccionado);
             $ventasGlobales = VentaGlobal::obtenerPorMes($mesSeleccionado);
+            $diferencias = $this->calcularDiferenciasNuboxSire($seriesTotales, $totalesTipoDoc);
+            $diferenciasNuboxSire = $diferencias['diferenciasNuboxSire'];
+            $diferenciasTipoDocNuboxSire = $diferencias['diferenciasTipoDocNuboxSire'];
+            $seriesEdSuite = $this->calcularDiferenciasNuboxEdSuite($cuadresEDSUITE, $seriesTotales);
         }
 
-        $contenido = 'view/components/reporte.php';
-        // Pasar $establecimientos a la vista
-        require 'view/layout.php';
+        return compact(
+            'cuadresSIRE',
+            'cuadresNUBOX',
+            'cuadresEDSUITE',
+            'totalesTipoDoc',
+            'seriesTotales',
+            'diferenciasNuboxSire',
+            'diferenciasTipoDocNuboxSire',
+            'seriesAjenas',
+            'ventasGlobales',
+            'seriesEdSuite'
+        );
     }
 
-    private function separarCuadresPorSistema($cuadres)
+    /**
+     * Calcula la diferencia NUBOX vs EDSUITE.
+     */
+    private function calcularDiferenciasNuboxEdSuite($cuadresEDSUITE, $seriesTotales)
     {
-        $cuadresSIRE = $cuadresNUBOX = $cuadresEDSUITE = [];
-        foreach ($cuadres as $cuadre) {
-            if ($cuadre['id_reporte'] == 2) {
-                $cuadresSIRE[] = $cuadre;
-            } elseif ($cuadre['id_reporte'] == 1) {
-                $cuadresNUBOX[] = $cuadre;
-            } elseif ($cuadre['id_reporte'] == 3) {
-                $cuadresEDSUITE[] = $cuadre;
-            }
+        $resultado = [];
+        foreach ($cuadresEDSUITE as $c) {
+            $serie = $c['serie'] ?? '';
+            $totalNubox = $seriesTotales[$serie][1] ?? 0;
+            $totalEdSuite = $seriesTotales[$serie][3] ?? 0;
+            $notaCredito = $c['nota_credito'] ?? 0;
+            $resultado[] = [
+                'serie' => $serie,
+                'combustible' => $totalEdSuite,
+                'extras' => 0,
+                'nota_credito' => $notaCredito,
+                'diferencia' => $totalNubox - $totalEdSuite
+            ];
         }
+        return $resultado;
     }
 
+
+    /**
+     * Separa los cuadres por sistema, excluyendo series ajenas.
+     */
     private function separarCuadresPorSistemaExcluyendoAjenas($cuadres, $mesSeleccionado)
     {
         $seriesAjenasArray = SerieAjena::obtenerPorMes($mesSeleccionado);
         $seriesAjenasLista = array_column($seriesAjenasArray, 'serie');
 
-        $cuadresSIRE = $cuadresNUBOX = $cuadresEDSUITE = [];
+        $sire = [];
+        $nubox = [];
+        $edsuite = [];
         foreach ($cuadres as $cuadre) {
             if (in_array($cuadre['serie'], $seriesAjenasLista)) {
                 continue;
             }
-
             if ($cuadre['id_reporte'] == 2) {
-                $cuadresSIRE[] = $cuadre;
+                $sire[] = $cuadre;
             } elseif ($cuadre['id_reporte'] == 1) {
-                $cuadresNUBOX[] = $cuadre;
+                $nubox[] = $cuadre;
             } elseif ($cuadre['id_reporte'] == 3) {
-                $cuadresEDSUITE[] = $cuadre;
+                $edsuite[] = $cuadre;
             }
         }
-        return [$cuadresSIRE, $cuadresNUBOX, $cuadresEDSUITE];
+        return [$sire, $nubox, $edsuite];
     }
 
-    private function calcularDiferenciasSeries($seriesTotales)
+    /**
+     * Calcula las diferencias NUBOX vs SIRE por serie y por tipo de documento.
+     */
+    private function calcularDiferenciasNuboxSire($seriesTotales, $totalesTipoDoc)
     {
-        $diferenciasSeries = [];
-        $todasSeries = array_unique(array_keys($seriesTotales));
-        foreach ($todasSeries as $serie) {
-            $totalSIRE = $seriesTotales[$serie][2] ?? 0;
+        $diferenciasNuboxSire = [];
+        foreach (array_unique(array_keys($seriesTotales)) as $serie) {
             $totalNUBOX = $seriesTotales[$serie][1] ?? 0;
-            $diferenciasSeries[$serie] = [
+            $totalSIRE = $seriesTotales[$serie][2] ?? 0;
+            $diferenciasNuboxSire[$serie] = [
                 'serie' => $serie,
-                'total_sire' => $totalSIRE,
                 'total_nubox' => $totalNUBOX,
-                'diferencia' => $totalSIRE - $totalNUBOX
+                'total_sire' => $totalSIRE,
+                'diferencia' => $totalNUBOX - $totalSIRE
             ];
         }
-        return $diferenciasSeries;
+
+        $diferenciasTipoDocNuboxSire = [];
+        foreach (array_unique(array_keys($totalesTipoDoc)) as $tipo) {
+            $totalNUBOX = $totalesTipoDoc[$tipo][1] ?? 0;
+            $totalSIRE = $totalesTipoDoc[$tipo][2] ?? 0;
+            $diferenciasTipoDocNuboxSire[$tipo] = [
+                'tipo' => $tipo,
+                'total_nubox' => $totalNUBOX,
+                'total_sire' => $totalSIRE,
+                'diferencia' => $totalNUBOX - $totalSIRE
+            ];
+        }
+        return [
+            'diferenciasNuboxSire' => $diferenciasNuboxSire,
+            'diferenciasTipoDocNuboxSire' => $diferenciasTipoDocNuboxSire
+        ];
     }
 
     private function obtenerNombreMes($mesSeleccionado, $mesesDisponibles)
@@ -182,17 +271,12 @@ class ReporteController
         $this->verificarPermisosGeneracion();
 
         $mesSeleccionado = $_GET['mes'] ?? '';
-        $cuadresSIRE = $cuadresNUBOX = $cuadresEDSUITE = [];
-        $totalesTipoDoc = $seriesTotales = $diferenciasSeries = [];
-        $seriesAjenas = $ventasGlobales = [];
         $mesesDisponibles = Cuadre::obtenerMesesDisponibles();
         $usuarioNombre = SesionHelper::obtenerNombreUsuario();
-
-        $id_establecimiento = SesionHelper::obtenerEstablecimientoActual();
+        list($id_cliente, $establecimientos) = $this->getClienteYEstablecimientos();
         $rucEstablecimiento = '';
         $nombreEstablecimiento = '';
-        if ($id_establecimiento) {
-            $id_cliente = SesionHelper::obtenerClienteActual();
+        if ($id_cliente) {
             $cliente = \Establecimiento::obtenerClientePorId($id_cliente);
             if ($cliente) {
                 $rucEstablecimiento = $cliente['ruc'] ?? '';
@@ -200,47 +284,17 @@ class ReporteController
             }
         }
 
-        $productosGlobales = [];
-        if ($mesSeleccionado) {
-            $cuadres = Cuadre::obtenerCuadresPorMes($mesSeleccionado);
-            list($cuadresSIRE, $cuadresNUBOX, $cuadresEDSUITE) = $this->separarCuadresPorSistemaExcluyendoAjenas($cuadres, $mesSeleccionado);
-
-            $totalesTipoDoc = Cuadre::obtenerTotalesPorTipoComprobanteExcluyendoAjenas($mesSeleccionado);
-            $seriesTotales = Cuadre::obtenerTotalesPorSerieExcluyendoAjenas($mesSeleccionado);
-            $diferenciasSeries = $this->calcularDiferenciasSeries($seriesTotales);
-            $seriesAjenas = SerieAjena::obtenerPorMes($mesSeleccionado);
-
-            // --- Construcción de ventasGlobales para el PDF (series EDSuite vs NUBOX) ---
-            $ventasGlobales = [];
-            $nuboxPorSerie = [];
-            if (!empty($cuadresNUBOX)) {
-                foreach ($cuadresNUBOX as $c) {
-                    $serie = $c['serie'] ?? '';
-                    $nuboxPorSerie[$serie] = isset($c['monto_total']) ? (float)$c['monto_total'] : 0;
-                }
-            }
-            if (!empty($cuadresEDSUITE)) {
-                foreach ($cuadresEDSUITE as $c) {
-                    $serie = $c['serie'] ?? '';
-                    $combustibles = isset($c['monto_total']) ? (float)$c['monto_total'] : 0;
-                    $extras = 0;
-                    $notas_credito = 0;
-                    $diferencia = $combustibles - ($nuboxPorSerie[$serie] ?? 0);
-                    $ventasGlobales[] = [
-                        'serie' => $serie,
-                        'combustibles' => $combustibles,
-                        'extras' => $extras,
-                        'notas_credito' => $notas_credito,
-                        'diferencia' => $diferencia
-                    ];
-                }
-            }
-            // --- Fin construcción ventasGlobales ---
-
-            // Obtener productos globales para la tabla de productos (igual que en la vista web)
-            $productosGlobales = \VentaGlobal::obtenerPorMes($mesSeleccionado);
-        }
-
+        $datosReporte = $this->obtenerDatosReporte($mesSeleccionado);
+        $cuadresSIRE = $datosReporte['cuadresSIRE'];
+        $cuadresNUBOX = $datosReporte['cuadresNUBOX'];
+        $cuadresEDSUITE = $datosReporte['cuadresEDSUITE'];
+        $totalesTipoDoc = $datosReporte['totalesTipoDoc'];
+        $seriesTotales = $datosReporte['seriesTotales'];
+        $diferenciasNuboxSire = $datosReporte['diferenciasNuboxSire'];
+        $diferenciasTipoDocNuboxSire = $datosReporte['diferenciasTipoDocNuboxSire'];
+        $seriesEdSuite = $datosReporte['seriesEdSuite'];
+        $seriesAjenas = $datosReporte['seriesAjenas'];
+        $ventasGlobales = $datosReporte['ventasGlobales'];
         $nombreMes = $this->obtenerNombreMes($mesSeleccionado, $mesesDisponibles);
 
         ob_start();
@@ -280,14 +334,21 @@ class ReporteController
             }
         }
 
+        $seriesEdSuite = [];
         if ($mesSeleccionado) {
             $cuadres = Cuadre::obtenerCuadresPorMes($mesSeleccionado);
             list($cuadresSIRE, $cuadresNUBOX, $cuadresEDSUITE) = $this->separarCuadresPorSistemaExcluyendoAjenas($cuadres, $mesSeleccionado);
             $totalesTipoDoc = Cuadre::obtenerTotalesPorTipoComprobanteExcluyendoAjenas($mesSeleccionado);
             $seriesTotales = Cuadre::obtenerTotalesPorSerieExcluyendoAjenas($mesSeleccionado);
-            $diferenciasSeries = $this->calcularDiferenciasSeries($seriesTotales);
+            $diferenciasSeries = $this->calcularDiferenciasNuboxSire($seriesTotales, $totalesTipoDoc);
             $seriesAjenas = SerieAjena::obtenerPorMes($mesSeleccionado);
             $ventasGlobales = VentaGlobal::obtenerPorMes($mesSeleccionado);
+            // Obtener las series EDSUITE igual que en el controlador y vistas
+            foreach ($cuadresEDSUITE as $c) {
+                if (!in_array($c['serie'], $seriesEdSuite)) {
+                    $seriesEdSuite[] = $c['serie'];
+                }
+            }
         }
 
         $nombreMes = $this->obtenerNombreMes($mesSeleccionado, $mesesDisponibles);
@@ -405,7 +466,7 @@ class ReporteController
 
         $row += 2;
 
-        $this->SeccionReportesGlobales($sheet, $row, $cuadresNUBOX, $seriesAjenas, $ventasGlobales, $mesSeleccionado, $yellowHeaderStyle, $blueHeaderStyle, $greenTotalStyle, $borderStyle, $redStyle, $warningStyle, $infoStyle);
+        $this->SeccionReportesGlobales($sheet, $row, $cuadresNUBOX, $seriesAjenas, $ventasGlobales, $mesSeleccionado, $seriesEdSuite, $yellowHeaderStyle, $blueHeaderStyle, $greenTotalStyle, $borderStyle, $redStyle);
 
         $sheet->getColumnDimension('A')->setWidth(20);
         $sheet->getColumnDimension('B')->setWidth(12);
@@ -881,7 +942,7 @@ class ReporteController
         $row = $startRow + 4;
     }
 
-    private function SeccionReportesGlobales($sheet, &$row, $cuadresNUBOX, $seriesAjenas, $ventasGlobales, $mesSeleccionado, $yellowHeaderStyle, $blueHeaderStyle, $greenTotalStyle, $borderStyle, $redStyle)
+    private function SeccionReportesGlobales($sheet, &$row, $cuadresNUBOX, $seriesAjenas, $ventasGlobales, $mesSeleccionado, $seriesEdSuite, $yellowHeaderStyle, $blueHeaderStyle, $greenTotalStyle, $borderStyle, $redStyle)
     {
         $startRow = $row;
 
@@ -904,7 +965,14 @@ class ReporteController
         $totalDiferencias = 0;
         $reportesEDSuite = [];
         try {
-            $reportesEDSuite = Cuadre::obtenerResumenComprobantes($mesSeleccionado);
+            $todosReportes = Cuadre::obtenerResumenComprobantes($mesSeleccionado);
+            // Filtrar solo las series EDSUITE
+            $seriesEdSuiteLookup = array_flip($seriesEdSuite);
+            foreach ($todosReportes as $reporte) {
+                if (isset($seriesEdSuiteLookup[$reporte['serie']])) {
+                    $reportesEDSuite[] = $reporte;
+                }
+            }
         } catch (Exception $e) {
             error_log("Error al obtener reportes EDSuite: " . $e->getMessage());
             $reportesEDSuite = [];
@@ -935,7 +1003,10 @@ class ReporteController
                 }
             }
 
-            foreach ($reportesPorSerie as $serie => $datos) {
+            // Solo mostrar las series en $seriesEdSuite (mantener el orden)
+            foreach ($seriesEdSuite as $serie) {
+                if (!isset($reportesPorSerie[$serie])) continue;
+                $datos = $reportesPorSerie[$serie];
                 $totalNuboxSerie = isset($nuboxPorSerie[$serie]) ? $nuboxPorSerie[$serie] : 0;
                 $totalEdsuiteSerie = $datos['combustibles'];
                 $diferenciaSerie = $totalNuboxSerie - $totalEdsuiteSerie;

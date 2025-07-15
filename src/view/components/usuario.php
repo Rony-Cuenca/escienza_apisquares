@@ -8,13 +8,6 @@ require_once __DIR__ . '/../../helpers/permisos_helper.php';
             <span class="text-xl text-gray-800 font-semibold" style="font-family: 'Montserrat', sans-serif;">LISTA DE USUARIOS</span>
             <?php if (puedeGestionarUsuarios()): ?>
                 <div class="flex gap-2">
-                    <?php
-                    // DEBUGGING TEMPORAL
-                    error_log("🔍 DEBUGGING Usuario: SuperAdmin=" . (esSuperAdmin() ? 'true' : 'false'));
-                    error_log("🔍 DEBUGGING Usuario: Administrador=" . (esAdministrador() ? 'true' : 'false'));
-                    error_log("🔍 DEBUGGING Usuario: puedeCrearUsuarios=" . (puedeCrearUsuarios() ? 'true' : 'false'));
-                    error_log("🔍 DEBUGGING Usuario: ROL=" . ($_SESSION['rol'] ?? 'none'));
-                    ?>
                     <?php if (puedeCrearUsuarios()): ?>
                         <button id="btnNuevoUsuario"
                             class="flex items-center gap-2 bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-normal py-1.5 px-3 md:py-2 md:px-4 rounded-lg shadow text-sm md:text-base"
