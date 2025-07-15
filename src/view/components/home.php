@@ -175,6 +175,13 @@ if (!function_exists('obtenerContextoActual')) {
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
+  function mostrarMensajeNoData(elementId, mensaje = 'No hay datos disponibles') {
+    const container = document.getElementById(elementId);
+    if (container) {
+      container.innerHTML = `<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #666; font-size: 16px;">${mensaje}</div>`;
+    }
+  }
+
   function initializeGoogleCharts() {
     if (typeof google !== 'undefined' && google.charts) {
       console.log('Google Charts disponible, inicializando...');
@@ -199,6 +206,7 @@ if (!function_exists('obtenerContextoActual')) {
   function drawChart() {
     if (typeof google === 'undefined' || !google.charts) {
       console.log('Google Charts no está disponible aún');
+      mostrarMensajeNoData('columnchart_material', 'Cargando gráfico...');
       return;
     }
 
@@ -206,6 +214,7 @@ if (!function_exists('obtenerContextoActual')) {
     let establecimiento = document.getElementById('select-establecimiento').value;
 
     console.log('Cargando datos del resumen de ventas...');
+    mostrarMensajeNoData('columnchart_material', 'Cargando datos...');
 
     fetch(`index.php?controller=home&action=resumenVentas&establecimiento=${establecimiento}&anio=${anio}`)
       .then(r => {
@@ -216,6 +225,11 @@ if (!function_exists('obtenerContextoActual')) {
       })
       .then(datos => {
         console.log('Datos resumen ventas recibidos:', datos);
+
+        if (!datos || datos.length === 0) {
+          mostrarMensajeNoData('columnchart_material');
+          return;
+        }
 
         let meses = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
         let tipos = ['NUBOX360', 'EDSUITE', 'SIRE'];
@@ -262,91 +276,98 @@ if (!function_exists('obtenerContextoActual')) {
       })
       .catch(error => {
         console.error('Error al cargar datos del resumen de ventas:', error);
+        mostrarMensajeNoData('columnchart_material', 'Error al cargar datos');
       });
   }
-ñ
-  document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('select-anio').addEventListener('change', drawChart);
-    document.getElementById('select-establecimiento').addEventListener('change', drawChart);
-  });
 
   document.addEventListener('DOMContentLoaded', function() {
+    // Event listeners para filtros principales
+    const selectAnio = document.getElementById('select-anio');
+    const selectEstablecimiento = document.getElementById('select-establecimiento');
+    const selectTipo = document.getElementById('select-tipo');
+    const selectMes = document.getElementById('select-mes');
+    const selectTipoVari = document.getElementById('select-tipo-vari');
+
+    if (selectAnio) selectAnio.addEventListener('change', function() {
+      console.log('Cambió año, actualizando gráficos...');
+      drawChart();
+      if (typeof drawExoneracionChart === 'function') drawExoneracionChart();
+      if (typeof drawPromedioVentaChart === 'function') drawPromedioVentaChart();
+      if (typeof drawVariacionVentasChart === 'function') drawVariacionVentasChart();
+      if (typeof drawPieChart === 'function') drawPieChart();
+    });
+
+    if (selectEstablecimiento) selectEstablecimiento.addEventListener('change', function() {
+      console.log('Cambió establecimiento, actualizando gráficos...');
+      drawChart();
+      if (typeof drawExoneracionChart === 'function') drawExoneracionChart();
+      if (typeof drawPromedioVentaChart === 'function') drawPromedioVentaChart();
+      if (typeof drawVariacionVentasChart === 'function') drawVariacionVentasChart();
+      if (typeof drawPieChart === 'function') drawPieChart();
+    });
+
+    if (selectTipo) selectTipo.addEventListener('change', function() {
+      console.log('Cambió tipo, actualizando gráficos...');
+      if (typeof drawPieChart === 'function') drawPieChart();
+      if (typeof drawPromedioVentaChart === 'function') drawPromedioVentaChart();
+    });
+
+    if (selectMes) selectMes.addEventListener('change', function() {
+      console.log('Cambió mes, actualizando gráficos...');
+      if (typeof drawPieChart === 'function') drawPieChart();
+      if (typeof drawPromedioVentaChart === 'function') drawPromedioVentaChart();
+    });
+
+    if (selectTipoVari) selectTipoVari.addEventListener('change', function() {
+      console.log('Cambió tipo variación, actualizando gráfico...');
+      if (typeof drawVariacionVentasChart === 'function') drawVariacionVentasChart();
+    });
+
+    // Inicializar todos los gráficos
     console.log('DOM loaded, iniciando gráficos...');
-
     setTimeout(function() {
+      drawChart();
       if (typeof drawPieChart === 'function') {
         console.log('Ejecutando drawPieChart');
         try {
           drawPieChart();
-          document.getElementById('select-tipo').addEventListener('change', function() {
-            drawPieChart();
-            if (typeof drawPromedioVentaChart === 'function') drawPromedioVentaChart();
-          });
-          document.getElementById('select-mes').addEventListener('change', function() {
-            drawPieChart();
-            if (typeof drawPromedioVentaChart === 'function') drawPromedioVentaChart();
-          });
         } catch (error) {
           console.error('Error al ejecutar drawPieChart:', error);
+          mostrarMensajeNoData('piechart', 'Error al cargar el gráfico');
         }
-      } else {
-        console.log('drawPieChart no está disponible');
       }
 
-      // Gráfico de exoneración
       if (typeof drawExoneracionChart === 'function') {
         console.log('Ejecutando drawExoneracionChart');
         try {
           drawExoneracionChart();
         } catch (error) {
           console.error('Error al ejecutar drawExoneracionChart:', error);
+          mostrarMensajeNoData('exoneracionChart', 'Error al cargar el gráfico');
         }
-      } else {
-        console.log('drawExoneracionChart no está disponible');
       }
 
-      // Gráfico de promedio
       if (typeof drawPromedioVentaChart === 'function') {
         console.log('Ejecutando drawPromedioVentaChart');
         try {
           drawPromedioVentaChart();
         } catch (error) {
           console.error('Error al ejecutar drawPromedioVentaChart:', error);
+          mostrarMensajeNoData('promedioVentaChart', 'Error al cargar el gráfico');
         }
-      } else {
-        console.log('drawPromedioVentaChart no está disponible');
       }
 
-      // Gráfico de variación
       if (typeof drawVariacionVentasChart === 'function') {
         console.log('Ejecutando drawVariacionVentasChart');
         try {
           drawVariacionVentasChart();
-          document.getElementById('select-tipo-vari').addEventListener('change', drawVariacionVentasChart);
         } catch (error) {
           console.error('Error al ejecutar drawVariacionVentasChart:', error);
+          mostrarMensajeNoData('variacionVentasChart', 'Error al cargar el gráfico');
         }
-      } else {
-        console.log('drawVariacionVentasChart no está disponible');
       }
     }, 1000);
-    // Event listeners para filtros principales
-    document.getElementById('select-anio').addEventListener('change', function() {
-      console.log('Cambió año, actualizando gráficos...');
-      setTimeout(function() {
-        if (typeof drawExoneracionChart === 'function') drawExoneracionChart();
-        if (typeof drawPromedioVentaChart === 'function') drawPromedioVentaChart();
-        if (typeof drawVariacionVentasChart === 'function') drawVariacionVentasChart();
-      }, 100);
-    });
-
-    document.getElementById('select-establecimiento').addEventListener('change', function() {
-      console.log('Cambió establecimiento, actualizando gráficos...');
-      setTimeout(function() {
-        if (typeof drawExoneracionChart === 'function') drawExoneracionChart();
-        if (typeof drawPromedioVentaChart === 'function') drawPromedioVentaChart();
-        if (typeof drawVariacionVentasChart === 'function') drawVariacionVentasChart();
-      }, 100);
-    });
   });
 </script>
+</div>
+</div>
