@@ -118,6 +118,27 @@ class ReporteController
         $diferenciasNuboxSire = [];
         $diferenciasTipoDocNuboxSire = [];
         $seriesEdSuite = [];
+        $id_establecimiento = $_GET['id_establecimiento'] ?? '';
+        $seriesEstablecimiento = [];
+
+        if ($id_establecimiento) {
+            require_once __DIR__ . '/../model/SerieSucursal.php';
+            $seriesEstablecimiento = SerieSucursal::obtenerTodasLasSeriesPorEstablecimiento($id_establecimiento);
+            if ($id_establecimiento && empty($seriesEstablecimiento)) {
+                return [
+                    'cuadresSIRE' => [],
+                    'cuadresNUBOX' => [],
+                    'cuadresEDSUITE' => [],
+                    'totalesTipoDoc' => [],
+                    'seriesTotales' => [],
+                    'diferenciasNuboxSire' => [],
+                    'diferenciasTipoDocNuboxSire' => [],
+                    'seriesAjenas' => [],
+                    'ventasGlobales' => [],
+                    'seriesEdSuite' => []
+                ];
+            }
+        }
 
         if ($mesSeleccionado) {
             $cuadres = Cuadre::obtenerCuadresPorMes($mesSeleccionado);
@@ -134,6 +155,19 @@ class ReporteController
             $diferenciasNuboxSire = $diferencias['diferenciasNuboxSire'];
             $diferenciasTipoDocNuboxSire = $diferencias['diferenciasTipoDocNuboxSire'];
             $seriesEdSuite = $this->calcularDiferenciasNuboxEdSuite($cuadresEDSUITE, $seriesTotales);
+
+            // FILTRADO POR ESTABLECIMIENTO
+            if ($id_establecimiento && !empty($seriesEstablecimiento)) {
+                $cuadresNUBOX = array_filter($cuadresNUBOX, fn($c) => in_array($c['serie'], $seriesEstablecimiento));
+                $cuadresEDSUITE = array_filter($cuadresEDSUITE, fn($c) => in_array($c['serie'], $seriesEstablecimiento));
+                $cuadresSIRE = array_filter($cuadresSIRE, fn($c) => in_array($c['serie'], $seriesEstablecimiento));
+                $seriesEdSuite = array_filter($seriesEdSuite, fn($c) => in_array($c['serie'], $seriesEstablecimiento));
+                $seriesTotales = array_filter($seriesTotales, fn($k) => in_array($k, $seriesEstablecimiento), ARRAY_FILTER_USE_KEY);
+                $diferenciasNuboxSire = array_filter($diferenciasNuboxSire, fn($row) => in_array($row['serie'], $seriesEstablecimiento));
+                if (!empty($ventasGlobales) && isset($ventasGlobales[0]['serie'])) {
+                    $ventasGlobales = array_filter($ventasGlobales, fn($v) => in_array($v['serie'], $seriesEstablecimiento));
+                }
+            }
         }
 
         return compact(
@@ -306,7 +340,19 @@ class ReporteController
         $dompdf->set_option('isRemoteEnabled', true);
         $dompdf->render();
         $fechaActual = date('Y-m-d');
-        $dompdf->stream("Reporte de Cuadres - {$nombreMes} - {$fechaActual}.pdf");
+        $id_establecimiento = $_GET['id_establecimiento'] ?? '';
+        $nombreArchivo = '';
+        if ($id_establecimiento) {
+            $etiqueta = '';
+            $establecimiento = \Establecimiento::obtenerEstablecimiento($id_establecimiento);
+            if ($establecimiento && !empty($establecimiento['etiqueta'])) {
+                $etiqueta = $establecimiento['etiqueta'];
+            }
+            $nombreArchivo = "Reporte {$etiqueta} - {$nombreMes} - {$fechaActual}.pdf";
+        } else {
+            $nombreArchivo = "Reporte General {$nombreEstablecimiento} - {$nombreMes} - {$fechaActual}.pdf";
+        }
+        $dompdf->stream($nombreArchivo);
         exit;
     }
 
@@ -320,12 +366,18 @@ class ReporteController
         $totalesTipoDoc = $seriesTotales = $diferenciasSeries = [];
         $seriesAjenas = $ventasGlobales = [];
         $mesesDisponibles = Cuadre::obtenerMesesDisponibles();
-        $id_establecimiento = SesionHelper::obtenerEstablecimientoActual();
+        $id_establecimiento = $_GET['id_establecimiento'] ?? '';
         $rucEstablecimiento = '';
         $nombreEstablecimiento = '';
         $usuarioNombre = SesionHelper::obtenerNombreUsuario();
 
         if ($id_establecimiento) {
+            $establecimiento = \Establecimiento::obtenerEstablecimiento($id_establecimiento);
+            if ($establecimiento) {
+                $rucEstablecimiento = $establecimiento['ruc'] ?? '';
+                $nombreEstablecimiento = $establecimiento['etiqueta'] ?? '';
+            }
+        } else {
             $id_cliente = SesionHelper::obtenerClienteActual();
             $cliente = \Establecimiento::obtenerClientePorId($id_cliente);
             if ($cliente) {
@@ -336,19 +388,16 @@ class ReporteController
 
         $seriesEdSuite = [];
         if ($mesSeleccionado) {
-            $cuadres = Cuadre::obtenerCuadresPorMes($mesSeleccionado);
-            list($cuadresSIRE, $cuadresNUBOX, $cuadresEDSUITE) = $this->separarCuadresPorSistemaExcluyendoAjenas($cuadres, $mesSeleccionado);
-            $totalesTipoDoc = Cuadre::obtenerTotalesPorTipoComprobanteExcluyendoAjenas($mesSeleccionado);
-            $seriesTotales = Cuadre::obtenerTotalesPorSerieExcluyendoAjenas($mesSeleccionado);
-            $diferenciasSeries = $this->calcularDiferenciasNuboxSire($seriesTotales, $totalesTipoDoc);
-            $seriesAjenas = SerieAjena::obtenerPorMes($mesSeleccionado);
-            $ventasGlobales = VentaGlobal::obtenerPorMes($mesSeleccionado);
-            // Obtener las series EDSUITE igual que en el controlador y vistas
-            foreach ($cuadresEDSUITE as $c) {
-                if (!in_array($c['serie'], $seriesEdSuite)) {
-                    $seriesEdSuite[] = $c['serie'];
-                }
-            }
+            $datosReporte = $this->obtenerDatosReporte($mesSeleccionado);
+            $cuadresSIRE = $datosReporte['cuadresSIRE'];
+            $cuadresNUBOX = $datosReporte['cuadresNUBOX'];
+            $cuadresEDSUITE = $datosReporte['cuadresEDSUITE'];
+            $totalesTipoDoc = $datosReporte['totalesTipoDoc'];
+            $seriesTotales = $datosReporte['seriesTotales'];
+            $diferenciasSeries = $datosReporte['diferenciasNuboxSire'];
+            $seriesAjenas = $datosReporte['seriesAjenas'];
+            $ventasGlobales = $datosReporte['ventasGlobales'];
+            $seriesEdSuite = $datosReporte['seriesEdSuite'];
         }
 
         $nombreMes = $this->obtenerNombreMes($mesSeleccionado, $mesesDisponibles);
@@ -514,7 +563,11 @@ class ReporteController
         $header = '&C&"Arial,Bold,10"REPORTE EJECUTIVO DE CONCILIACIÓN DE VENTAS';
         $sheet->getHeaderFooter()->setOddHeader($header);
 
-        $nombreArchivo = "Reporte de Cuadres - {$nombreMes} - " . date('Y-m-d') . ".xlsx";
+        if ($id_establecimiento && $nombreEstablecimiento) {
+            $nombreArchivo = "Reporte - {$nombreEstablecimiento} - {$nombreMes} - " . date('Y-m-d') . ".xlsx";
+        } else {
+            $nombreArchivo = "Reporte - {$nombreEstablecimiento} - {$nombreMes} - " . date('Y-m-d') . ".xlsx";
+        }
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment;filename="' . $nombreArchivo . '"');
         header('Cache-Control: max-age=0');
@@ -967,9 +1020,18 @@ class ReporteController
         try {
             $todosReportes = Cuadre::obtenerResumenComprobantes($mesSeleccionado);
             // Filtrar solo las series EDSUITE
-            $seriesEdSuiteLookup = array_flip($seriesEdSuite);
+            $soloSeries = array_column($seriesEdSuite, 'serie');
+            $seriesEdSuiteLookup = array_flip($soloSeries);
             foreach ($todosReportes as $reporte) {
-                if (isset($seriesEdSuiteLookup[$reporte['serie']])) {
+                $serie = '';
+                if (isset($reporte['serie'])) {
+                    if (is_array($reporte['serie'])) {
+                        $serie = isset($reporte['serie']['serie']) ? $reporte['serie']['serie'] : '';
+                    } else {
+                        $serie = (string)$reporte['serie'];
+                    }
+                }
+                if ($serie !== '' && isset($seriesEdSuiteLookup[$serie])) {
                     $reportesEDSuite[] = $reporte;
                 }
             }
@@ -1004,13 +1066,14 @@ class ReporteController
             }
 
             // Solo mostrar las series en $seriesEdSuite (mantener el orden)
-            foreach ($seriesEdSuite as $serie) {
-                if (!isset($reportesPorSerie[$serie])) continue;
-                $datos = $reportesPorSerie[$serie];
-                $totalNuboxSerie = isset($nuboxPorSerie[$serie]) ? $nuboxPorSerie[$serie] : 0;
+            foreach ($seriesEdSuite as $itemSerie) {
+                $serieStr = is_array($itemSerie) && isset($itemSerie['serie']) ? $itemSerie['serie'] : (string)$itemSerie;
+                if (!isset($reportesPorSerie[$serieStr])) continue;
+                $datos = $reportesPorSerie[$serieStr];
+                $totalNuboxSerie = isset($nuboxPorSerie[$serieStr]) ? $nuboxPorSerie[$serieStr] : 0;
                 $totalEdsuiteSerie = $datos['combustibles'];
                 $diferenciaSerie = $totalNuboxSerie - $totalEdsuiteSerie;
-                $sheet->setCellValue("C$currentRowReportes", $serie);
+                $sheet->setCellValue("C$currentRowReportes", $serieStr);
                 $sheet->setCellValue("D$currentRowReportes", $totalEdsuiteSerie);
                 $sheet->setCellValue("E$currentRowReportes", 0);
                 $sheet->setCellValue("F$currentRowReportes", 0);

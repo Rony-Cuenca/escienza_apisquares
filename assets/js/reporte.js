@@ -33,27 +33,39 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function exportarArchivo(tipo) {
         const mes = mesInput.value;
+        const estSelect = document.getElementById('establecimientoPicker');
+        const idEstablecimiento = estSelect ? estSelect.value : '';
         if (!mes) {
             mostrarErrorSwal('Por favor, seleccione un mes antes de exportar.');
             return;
         }
         let url = '';
         if (tipo === 'PDF') {
-            url = `index.php?controller=reporte&action=exportarPDF&mes=${encodeURIComponent(mes)}`;
+            url = `index.php?controller=reporte&action=exportarPDF&mes=${encodeURIComponent(mes)}${idEstablecimiento ? `&id_establecimiento=${encodeURIComponent(idEstablecimiento)}` : ''}`;
         } else if (tipo === 'Excel') {
-            url = `index.php?controller=reporte&action=exportarExcel&mes=${encodeURIComponent(mes)}`;
+            url = `index.php?controller=reporte&action=exportarExcel&mes=${encodeURIComponent(mes)}${idEstablecimiento ? `&id_establecimiento=${encodeURIComponent(idEstablecimiento)}` : ''}`;
         }
         window.location.href = url;
     }
 
     if (btnExportPDF) {
         btnExportPDF.addEventListener('click', function (e) {
+            if (btnExportPDF.disabled) {
+                e.preventDefault();
+                mostrarErrorSwal('No hay datos para exportar en esta sucursal.');
+                return;
+            }
             e.preventDefault();
             exportarArchivo('PDF');
         });
     }
     if (btnExportExcel) {
         btnExportExcel.addEventListener('click', function (e) {
+            if (btnExportExcel.disabled) {
+                e.preventDefault();
+                mostrarErrorSwal('No hay datos para exportar en esta sucursal.');
+                return;
+            }
             e.preventDefault();
             exportarArchivo('Excel');
         });

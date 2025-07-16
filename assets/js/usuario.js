@@ -76,7 +76,7 @@ class ModalCrudController {
         if (values.id && window.ID_USUARIO_LOGUEADO && String(values.id) === String(window.ID_USUARIO_LOGUEADO)) {
             this.inputs.rol.disabled = true;
             this.inputs.establecimiento.disabled = true;
-            
+
             // Agregar campos hidden para asegurar que los valores se envíen
             let hiddenRol = document.querySelector('input[name="rol_hidden"]');
             if (!hiddenRol) {
@@ -86,7 +86,7 @@ class ModalCrudController {
                 this.form.appendChild(hiddenRol);
             }
             hiddenRol.value = this.inputs.rol.value;
-            
+
             let hiddenEstablecimiento = document.querySelector('input[name="id_establecimiento_hidden"]');
             if (!hiddenEstablecimiento) {
                 hiddenEstablecimiento = document.createElement('input');
@@ -95,7 +95,7 @@ class ModalCrudController {
                 this.form.appendChild(hiddenEstablecimiento);
             }
             hiddenEstablecimiento.value = this.inputs.establecimiento.value;
-            
+
             // Asegurar que el estado se mantenga
             let hiddenEstado = document.querySelector('input[name="estado_hidden"]');
             if (!hiddenEstado) {
@@ -108,7 +108,7 @@ class ModalCrudController {
         } else {
             this.inputs.rol.disabled = false;
             this.inputs.establecimiento.disabled = false;
-            
+
             // Eliminar campos hidden si existen
             const hiddenRol = document.querySelector('input[name="rol_hidden"]');
             const hiddenEstablecimiento = document.querySelector('input[name="id_establecimiento_hidden"]');
@@ -330,7 +330,7 @@ class ModalCrudController {
 
                 // Determinar la acción basada en el estado objetivo
                 let textoAccion, textoEstado;
-                
+
                 if (estadoUsuario === '1') {
                     // Cambiar a activo
                     textoAccion = 'activar';
@@ -364,8 +364,8 @@ class ModalCrudController {
                             .then(data => {
                                 if (data.success) {
                                     Swal.fire(
-                                        '¡Listo!', 
-                                        `El usuario se ${textoEstado} correctamente.`, 
+                                        '¡Listo!',
+                                        `El usuario se ${textoEstado} correctamente.`,
                                         'success'
                                     ).then(() => location.reload());
                                 } else {
@@ -445,16 +445,9 @@ class ModalCrudController {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('🔍 DEBUGGING: DOMContentLoaded fired');
-    console.log('🔍 DEBUGGING: ROL_USUARIO_LOGUEADO =', window.ROL_USUARIO_LOGUEADO);
-    
+
     const btnNuevo = document.getElementById('btnNuevoUsuario');
-    console.log('🔍 DEBUGGING: btnNuevoUsuario found =', !!btnNuevo);
-    if (btnNuevo) {
-        console.log('🔍 DEBUGGING: btnNuevo display =', btnNuevo.style.display);
-        console.log('🔍 DEBUGGING: btnNuevo visible =', btnNuevo.offsetParent !== null);
-    }
-    
+
     new ModalCrudController({
         modalId: 'modalUsuario',
         tituloId: 'modalTitulo',

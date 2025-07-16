@@ -140,9 +140,6 @@ $contexto = obtenerContextoActual();
             <li>
               <a href="index.php?controller=configuracion&action=index" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Configuración</a>
             </li>
-            <li>
-              <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Ganancias</a>
-            </li>
           <?php endif; ?>
           <li>
             <a href="index.php?controller=auth&action=logout" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Cerrar Sesión</a>
