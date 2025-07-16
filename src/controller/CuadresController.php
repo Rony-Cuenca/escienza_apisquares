@@ -9,6 +9,7 @@ require_once __DIR__ . '/../model/Usuario.php';
 require_once __DIR__ . '/../model/Cliente.php';
 require_once __DIR__ . '/../model/SerieAjena.php';
 require_once __DIR__ . '/../model/SerieSucursal.php';
+require_once __DIR__ . '/../model/DiferenciaComprobante.php';
 require_once __DIR__ . '/../model/VentaGlobal.php';
 require_once __DIR__ . '/../helpers/sesion_helper.php';
 require_once __DIR__ . '/../model/Establecimiento.php';
@@ -25,6 +26,7 @@ class CuadresController
     public $ResultsValidarSeries = [];
     public $resultsVentaGlobal = [];
     public $resultsSerieArchivos = [];
+    public $diferenciaGlobales = [];
 
     public function index()
     {
@@ -170,7 +172,7 @@ class CuadresController
                     $this->ResultsSIRE = $SIRE['ResultsSIRE'];
                     $this->validarSire = $SIRE['ResultsSIRE'];
                     try {
-                        $nuboxResponse = $this->cargar_archivo($_FILES['exe_nubox'], 1);
+                        $nuboxResponse = $this->cargar_archivo($_FILES['exe_nubox'], 1, 1);
                     } catch (Exception $e) {
                         $errorMsg = urlencode($e->getMessage());
                         header("Location: index.php?controller=cuadres&action=index&error={$errorMsg}");
@@ -183,8 +185,19 @@ class CuadresController
                         $this->validarNubox = $NUBOX['ResultsNUBOX'];
                     }
 
+                    $diferencia = $this->DiferenciaComprobante($SIRE['ResultsSIRE'], $NUBOX['ResultsNUBOX']);
+                    if($diferencia != null){
+                        $diferenciaGlobales = $this->VerificarDiferenciaComprobante($diferencia);
+                        $this->diferenciaGlobales = $diferenciaGlobales;
+                        $uploadDir = __DIR__ . '/../../uploads';
+                        $this->limpiarCarpeta($uploadDir);
+                    }else{
+                        $uploadDir = __DIR__ . '/../../uploads';
+                        $this->limpiarCarpeta($uploadDir);
+                    }
+                    
                     try {
-                        $edsuiteResponse = $this->cargar_archivo($_FILES['exe_edsuite'], 2);
+                        $edsuiteResponse = $this->cargar_archivo($_FILES['exe_edsuite'], 2, 2);
                     } catch (Exception $e) {
                         $errorMsg = urlencode($e->getMessage());
                         header("Location: index.php?controller=cuadres&action=index&error={$errorMsg}");
@@ -199,8 +212,13 @@ class CuadresController
 
                         $this->resultsVentaGlobal = $edsuiteResponse['resultados_productos'];
                         $this->resultsSerieArchivos = $edsuiteResponse['resultados_archivo'];
+
+                        $uploadDir = __DIR__ . '/../../uploads';
+                        $this->limpiarCarpeta($uploadDir);
                     } elseif (isset($edsuiteResponse['message'])) {
                         $ErrorEDSUITE = $edsuiteResponse['message'];
+                        $uploadDir = __DIR__ . '/../../uploads';
+                        $this->limpiarCarpeta($uploadDir);
                     }
 
                     $validarSeries = $this->Validar_series();
@@ -246,11 +264,13 @@ class CuadresController
         $_SESSION['ResultsEDSUITE'] = $this->ResultsEDSUITE;
         $_SESSION['ResultsValidarSeries'] = $this->ResultsValidarSeries;
         $_SESSION['resultsVentaGlobal'] = $this->resultsVentaGlobal;
+        $_SESSION['diferenciaGlobales'] = $this->diferenciaGlobales;
         if (empty($coincidentes)) {
             $_SESSION['resultsSerieArchivos'] = $this->resultsSerieArchivos;
         } else {
             $_SESSION['resultsSerieArchivos'] = null;
         }
+
 
         $contenido = 'view/components/cuadre.php';
         require 'view/layout.php';
@@ -285,7 +305,8 @@ class CuadresController
                 $_SESSION['ResultsNUBOX'],
                 $_SESSION['ResultsValidarSeries'],
                 $_SESSION['resultsVentaGlobal'],
-                $_SESSION['resultsSerieArchivos']
+                $_SESSION['resultsSerieArchivos'],
+                $_SESSION['diferenciaGlobales']
             );
             header("Location: index.php?controller=cuadres&action=index&sms=1");
             exit();
@@ -368,146 +389,164 @@ class CuadresController
         $ResultsSIRE = [];
         $reporte = 2;
 
-        $nombTemp = $_FILES['exe_sire']['tmp_name'];
-        $DataSerieGraSIRE = [];
-        $DataSerieExoSIRE = [];
-        $DataSerieInaSIRE = [];
-        $DataSerieIGVSIRE = [];
-        $DataSerieDscBISIRE = [];
-        $DataSerieDscIGVSIRE = [];
-        $conteoSeriesSIRE = [];
+        $uploadDir = __DIR__ . '/../../uploads/sire/';
+        if (!file_exists($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
 
-        if (($handle = fopen($nombTemp, "r")) != false) {
-            $header = fgetcsv($handle);
+        $fileName = 'sire_' . date('Y-m-d_H-i-s') . '_' . basename($_FILES['exe_sire']['name']);
+        $uploadPath = $uploadDir . $fileName;
 
-            $colSerie = array_search('Serie del CDP', $header);
-            $colGrav = array_search('BI Gravada', $header);
-            $colExo = array_search('Mto Exonerado', $header);
-            $colIna = array_search('Mto Inafecto', $header);
-            $colIGV = array_search('IGV / IPM', $header);
-            $colDscBI = array_search('Dscto BI', $header);
-            $colDscIGV = array_search('Dscto IGV / IPM', $header);
-            $colFecha = array_search('Fecha de emisión', $header);
+        if (move_uploaded_file($_FILES['exe_sire']['tmp_name'], $uploadPath)) {
+            $DataSerieGraSIRE = [];
+            $DataSerieExoSIRE = [];
+            $DataSerieInaSIRE = [];
+            $DataSerieIGVSIRE = [];
+            $DataSerieDscBISIRE = [];
+            $DataSerieDscIGVSIRE = [];
+            if (($handle = fopen($uploadPath, "r")) != false) {
+                $header = fgetcsv($handle);
 
-            if (
-                $colSerie != false && $colGrav != false && $colExo != false &&
-                $colIna != false && $colIGV != false && $colDscBI != false && $colDscIGV != false && $colFecha != false
-            ) {
+                $colSerie = array_search('Serie del CDP', $header);
+                $colGrav = array_search('BI Gravada', $header);
+                $colExo = array_search('Mto Exonerado', $header);
+                $colIna = array_search('Mto Inafecto', $header);
+                $colIGV = array_search('IGV / IPM', $header);
+                $colDscBI = array_search('Dscto BI', $header);
+                $colDscIGV = array_search('Dscto IGV / IPM', $header);
+                $colFecha = array_search('Fecha de emisión', $header);
 
-                $filas = [];
-                while (($fila = fgetcsv($handle)) !== false) {
-                    $filas[] = $fila;
-                }
-                fclose($handle);
+                if (
+                    $colSerie != false && $colGrav != false && $colExo != false &&
+                    $colIna != false && $colIGV != false && $colDscBI != false && $colDscIGV != false && $colFecha != false
+                ) {
+                    $filas = [];
+                    while (($fila = fgetcsv($handle)) !== false) {
+                        $filas[] = $fila;
+                    }
+                    fclose($handle);
 
-                if (isset($filas[0][$colFecha])) {
-                    $fechaSIRE = date('Y-d-01', strtotime($filas[0][$colFecha]));
-                }
-
-                foreach ($filas as $fila) {
-                    $serieSIRE = $fila[$colSerie];
-                    $GravSIRE = $fila[$colGrav];
-                    $ExoSIRE = $fila[$colExo];
-                    $InaSIRE = $fila[$colIna];
-                    $IGVSIRE = $fila[$colIGV];
-                    $DscBISIRE = $fila[$colDscBI];
-                    $DscIGVSIRE = $fila[$colDscIGV];
-
-                    if (!isset($DataSerieGraSIRE[$serieSIRE])) {
-                        $DataSerieGraSIRE[$serieSIRE] = 0;
-                        $DataSerieExoSIRE[$serieSIRE] = 0;
-                        $DataSerieInaSIRE[$serieSIRE] = 0;
-                        $DataSerieIGVSIRE[$serieSIRE] = 0;
-                        $DataSerieDscBISIRE[$serieSIRE] = 0;
-                        $DataSerieDscIGVSIRE[$serieSIRE] = 0;
-                        $conteoSeriesSIRE[$serieSIRE] = 0;
+                    if (isset($filas[0][$colFecha])) {
+                        $fechaSIRE = date('Y-d-01', strtotime($filas[0][$colFecha]));
                     }
 
-                    $DataSerieGraSIRE[$serieSIRE] += floatval($GravSIRE);
-                    $DataSerieExoSIRE[$serieSIRE] += floatval($ExoSIRE);
-                    $DataSerieInaSIRE[$serieSIRE] += floatval($InaSIRE);
-                    $DataSerieIGVSIRE[$serieSIRE] += floatval($IGVSIRE);
-                    $DataSerieDscBISIRE[$serieSIRE] += floatval($DscBISIRE);
-                    $DataSerieDscIGVSIRE[$serieSIRE] += floatval($DscIGVSIRE);
-                    $conteoSeriesSIRE[$serieSIRE]++;
-                }
+                    foreach ($filas as $fila) {
+                        $serieSIRE = $fila[$colSerie];
+                        $GravSIRE = $fila[$colGrav];
+                        $ExoSIRE = $fila[$colExo];
+                        $InaSIRE = $fila[$colIna];
+                        $IGVSIRE = $fila[$colIGV];
+                        $DscBISIRE = $fila[$colDscBI];
+                        $DscIGVSIRE = $fila[$colDscIGV];
 
-                ksort($DataSerieGraSIRE);
-
-                foreach ($DataSerieGraSIRE as $serie => $totalBI) {
-                    $TExoSIRE = $DataSerieExoSIRE[$serie];
-                    $TInaSIRE = $DataSerieInaSIRE[$serie];
-                    $TIGVSIRE = $DataSerieIGVSIRE[$serie];
-                    $TDscBISIRE = $DataSerieDscBISIRE[$serie];
-                    $TDscIGVSIRE = $DataSerieDscIGVSIRE[$serie];
-                    $TTotalSIRE = $totalBI + $TExoSIRE + $TInaSIRE + $TIGVSIRE + $TDscBISIRE + $TDscIGVSIRE;
-
-                    if ($TDscBISIRE == 0 && $TDscIGVSIRE == 0) {
-                        $BI_Gravada = $totalBI;
-                        $IGV = $TIGVSIRE;
-                    } else {
-                        $BI_Gravada = $TDscBISIRE;
-                        $IGV = $TDscIGVSIRE;
-                    }
-
-                    if ($TTotalSIRE < 0) {
-                        $tipo_comprobante = 3;
-                    } else {
-                        $letra = substr($serie, 0, 1);
-                        if ($letra == 'B') {
-                            $tipo_comprobante = 1;
-                        } else {
-                            $tipo_comprobante = 2;
+                        if (!isset($DataSerieGraSIRE[$serieSIRE])) {
+                            $DataSerieGraSIRE[$serieSIRE] = 0;
+                            $DataSerieExoSIRE[$serieSIRE] = 0;
+                            $DataSerieInaSIRE[$serieSIRE] = 0;
+                            $DataSerieIGVSIRE[$serieSIRE] = 0;
+                            $DataSerieDscBISIRE[$serieSIRE] = 0;
+                            $DataSerieDscIGVSIRE[$serieSIRE] = 0;
+                            $conteoSeriesSIRE[$serieSIRE] = 0;
                         }
+
+                        $DataSerieGraSIRE[$serieSIRE] += floatval($GravSIRE);
+                        $DataSerieExoSIRE[$serieSIRE] += floatval($ExoSIRE);
+                        $DataSerieInaSIRE[$serieSIRE] += floatval($InaSIRE);
+                        $DataSerieIGVSIRE[$serieSIRE] += floatval($IGVSIRE);
+                        $DataSerieDscBISIRE[$serieSIRE] += floatval($DscBISIRE);
+                        $DataSerieDscIGVSIRE[$serieSIRE] += floatval($DscIGVSIRE);
+                        $conteoSeriesSIRE[$serieSIRE]++;
                     }
 
-                    $ResultsSIRE[] = [
-                        'serie' => $serie,
-                        'conteo' => $conteoSeriesSIRE[$serie],
-                        'bi' => $BI_Gravada,
-                        'exonerado' => $TExoSIRE,
-                        'inafecto' => $TInaSIRE,
-                        'igv' => $IGV,
-                        'total' => $TTotalSIRE,
-                        'tipo_comprobante' => $tipo_comprobante,
-                        'reporte' => $reporte,
-                        'fecha_registro' => $fechaSIRE
-                    ];
+                    ksort($DataSerieGraSIRE);
+
+                    foreach ($DataSerieGraSIRE as $serie => $totalBI) {
+                        $TExoSIRE = $DataSerieExoSIRE[$serie];
+                        $TInaSIRE = $DataSerieInaSIRE[$serie];
+                        $TIGVSIRE = $DataSerieIGVSIRE[$serie];
+                        $TDscBISIRE = $DataSerieDscBISIRE[$serie];
+                        $TDscIGVSIRE = $DataSerieDscIGVSIRE[$serie];
+                        $TTotalSIRE = $totalBI + $TExoSIRE + $TInaSIRE + $TIGVSIRE + $TDscBISIRE + $TDscIGVSIRE;
+
+                        if ($TDscBISIRE == 0 && $TDscIGVSIRE == 0) {
+                            $BI_Gravada = $totalBI;
+                            $IGV = $TIGVSIRE;
+                        } else {
+                            $BI_Gravada = $TDscBISIRE;
+                            $IGV = $TDscIGVSIRE;
+                        }
+
+                        if ($TTotalSIRE < 0) {
+                            $tipo_comprobante = 3;
+                        } else {
+                            $letra = substr($serie, 0, 1);
+                            if ($letra == 'B') {
+                                $tipo_comprobante = 1;
+                            } else {
+                                $tipo_comprobante = 2;
+                            }
+                        }
+
+                        $ResultsSIRE[] = [
+                            'serie' => $serie,
+                            'conteo' => $conteoSeriesSIRE[$serie],
+                            'bi' => $BI_Gravada,
+                            'exonerado' => $TExoSIRE,
+                            'inafecto' => $TInaSIRE,
+                            'igv' => $IGV,
+                            'total' => $TTotalSIRE,
+                            'tipo_comprobante' => $tipo_comprobante,
+                            'reporte' => $reporte,
+                            'fecha_registro' => $fechaSIRE
+                        ];
+                    }
+                } else {
+                    $ErrorSIRE = "No se encontraron las columnas necesarias en el archivo";
                 }
             } else {
-                $ErrorSIRE = "No se encontraron las columnas necesarias en el archivo";
+                $ErrorSIRE = "No se pudo abrir el archivo SIRE";
             }
         } else {
-            $ErrorSIRE = "Error al abrir el archivo.";
+            $ErrorSIRE = "Error al subir el archivo SIRE";
         }
 
         return compact('ErrorSIRE', 'ResultsSIRE');
     }
 
-    public function cargar_archivo($archivo, $estado)
+    public function cargar_archivo($archivo, $estado, $reporte)
     {
-        $uploadDir = __DIR__ . '/../../uploads/';
+        if ($reporte == 1) {
+            $uploadDir = __DIR__ . '/../../uploads/nubox/';
+        } else {
+            $uploadDir = __DIR__ . '/../../uploads/edsuite/';
+        }
         //Sirve para cargar la carpeta por si no existe
         if (!file_exists($uploadDir)) {
             mkdir($uploadDir, 0777, true);
         }
 
-        $archivoPath = $uploadDir . uniqid('archivo_') . '.xlsx';
+        if ($reporte == 1) {
+            $fileName = 'nubox_' . date('Y-m-d_H-i-s') . '_' . basename($_FILES['exe_nubox']['name']);
+            $uploadPath = $uploadDir . $fileName;
+        } else {
+            $fileName = 'edsuite_' . date('Y-m-d_H-i-s') . '_' . basename($_FILES['exe_edsuite']['name']);
+            $uploadPath = $uploadDir . $fileName;
+        }
 
-        if (!move_uploaded_file($archivo['tmp_name'], $archivoPath)) {
+        if (!move_uploaded_file($archivo['tmp_name'], $uploadPath)) {
             throw new Exception('No se pudo guardar el archivo en el servidor');
         }
 
         try {
-            $respuesta = $this->llamarApiPython($archivoPath, $estado);
+            $respuesta = $this->llamarApiPython($uploadPath, $estado);
 
             return $respuesta;
         } finally {
-            if (file_exists($archivoPath)) {
+            /*if (file_exists($archivoPath)) {
                 unlink($archivoPath);
             }
 
-            $this->limpiarCarpeta($uploadDir);
+            $this->limpiarCarpeta($uploadDir);*/
         }
     }
 
@@ -517,8 +556,7 @@ class CuadresController
 
         $cfile = new CURLFile(
             $archivoPath,
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'nubox.xlsx'
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         );
 
         $ch = curl_init();
@@ -753,7 +791,7 @@ class CuadresController
         return $codigo;
     }
 
-    public function guardarBD($ResultsSIRE, $ResultsEDSUITE, $ResultsNUBOX, $ResultsValidarSeries, $resultsVentaGlobal, $resultsSerieArchivos)
+    public function guardarBD($ResultsSIRE, $ResultsEDSUITE, $ResultsNUBOX, $ResultsValidarSeries, $resultsVentaGlobal, $resultsSerieArchivos, $diferenciaGlobales)
     {
         if (empty($ResultsSIRE) && empty($ResultsEDSUITE) && empty($ResultsNUBOX) && empty($ResultsValidarSeries) && empty($resultsVentaGlobal)) {
             throw new Exception("No se recibieron datos para guardar");
@@ -861,6 +899,31 @@ class CuadresController
             ];
             SerieSucursal::Insertar($data);
         }
+
+        foreach ($diferenciaGlobales as $resultado) {
+            $fecha = isset($resultado['nubox']['fecha']) ? date('Y-m-01', strtotime($resultado['nubox']['fecha'])) : date('Y-m-01');
+            $data = [
+                'serie' => $resultado['sire']['serie'],
+                'numero' => $resultado['sire']['numero'],
+                'total_sire' => $resultado['sire']['total'],
+                'total_nubox' => $resultado['nubox']['total'],
+                'estado_sire' => $resultado['sire']['estado'],
+                'estado_nubox' => $resultado['nubox']['estado'],
+                'user_create' => $user_create,
+                'user_update' => $user_update,
+                'id_establecimiento' => $id_establecimiento,
+                'fecha_registro' => $fecha,
+                'estado' => 1
+            ];
+
+            foreach ($data as $key => $value) {
+                if ($value = false) {
+                    throw new Exception("Dato inválido en campo $key");
+                }
+            }
+
+            DiferenciaComprobante::Insertar($data);
+        }
     }
 
     private function limpiarCarpeta($ruta)
@@ -868,11 +931,188 @@ class CuadresController
         if (!is_dir($ruta)) {
             return;
         }
-        $archivos = glob($ruta . '/*');
-        foreach ($archivos as $archivo) {
-            if (is_file($archivo)) {
-                unlink($archivo);
+    
+        $items = scandir($ruta);
+        foreach ($items as $item) {
+            if ($item === '.' || $item === '..') {
+                continue;
+            }
+    
+            $path = $ruta . DIRECTORY_SEPARATOR . $item;
+    
+            if (is_dir($path)) {
+                // Llamada recursiva para subcarpetas
+                $this->limpiarCarpeta($path);
+    
+                // Borrar la carpeta vacía
+                rmdir($path);
+            } else {
+                // Borrar archivo
+                unlink($path);
             }
         }
+    }
+    
+
+    private function DiferenciaComprobante($sire, $nubox)
+    {
+        $totalesNubox = [];
+        foreach ($nubox as $item) {
+            $totalesNubox[$item['serie']] = $item['total'];
+        }
+
+        $totalesSire = [];
+        foreach ($sire as $item) {
+            $totalesSire[$item['serie']] = $item['total'];
+        }
+
+        // Comparar por serie
+        $diferencias = [];
+        foreach ($totalesNubox as $serie => $totalNubox) {
+            if (isset($totalesSire[$serie])) {
+                $totalSire = $totalesSire[$serie];
+                // Comparar total con tolerancia si deseas (ej. 0.01)
+                if (abs($totalNubox - $totalSire) > 0.001) {
+                    $diferencias[] = [
+                        'serie' => $serie,
+                        'total_nubox' => $totalNubox,
+                        'total_sire' => $totalSire
+                    ];
+                }
+            }
+        }
+        return $diferencias;
+    }
+
+    private function VerificarDiferenciaComprobante($diferencias)
+    {
+        $diferenciasEncontradas = [];
+
+        foreach ($diferencias as $diferencia) {
+            $data = [
+                'serie' => $diferencia['serie'],
+            ];
+
+            $VerificacionSire = $this->VerificarSire($data);
+            $VerificacionNubox = $this->VerificarNubox($data);
+
+            $resultadosSire = $VerificacionSire;
+            $resultadosNubox = $VerificacionNubox['resultados'] ?? [];
+
+            // Indexar resultados de Nubox por "numero" para búsqueda rápida
+            $nuboxIndexado = [];
+            foreach ($resultadosNubox as $item) {
+                $nuboxIndexado[$item['numero']] = $item;
+            }
+
+            // Comparar cada resultado de SIRE con el de NUBOX
+            foreach ($resultadosSire as $sireItem) {
+                $numero = $sireItem['numero'];
+                if (isset($nuboxIndexado[$numero])) {
+                    $nuboxItem = $nuboxIndexado[$numero];
+
+                    if ($sireItem['total'] != $nuboxItem['total']) {
+                        // Guardar la diferencia encontrada
+                        $diferenciasEncontradas[] = [
+                            'numero' => $numero,
+                            'sire'   => $sireItem,
+                            'nubox'  => $nuboxItem
+                        ];
+                    }
+                }
+            }
+        }
+
+        return $diferenciasEncontradas;
+    }
+
+    private function VerificarSire($data)
+    {
+        $uploadDir = __DIR__ . '/../../uploads/sire/';
+        $series = $data['serie'];
+        $registrosEncontrados = [];
+
+        // Buscar todos los archivos SIRE en el directorio
+        $archivosSIRE = glob($uploadDir . 'sire_*.csv');
+        
+        foreach ($archivosSIRE as $archivo) {
+            if (($handle = fopen($archivo, "r")) !== false) {
+                $header = fgetcsv($handle);
+                
+                $colSerie = array_search('Serie del CDP', $header);
+                $colNumero = array_search('Nro CP o Doc. Nro Inicial (Rango)', $header);
+                $colTotal = array_search('Total CP', $header);
+                $colFecha = array_search('Fecha de emisión', $header);
+                $colEstado = array_search('Est. Comp', $header);
+
+                if ($colSerie !== false) {
+                    while (($fila = fgetcsv($handle)) !== false) {
+                        if ($fila[$colSerie] === $series) {
+                            $registrosEncontrados[] = [
+                                'serie' => $fila[$colSerie],
+                                'numero' => $fila[$colNumero],
+                                'total' => $fila[$colTotal],
+                                'fecha' => $fila[$colFecha],
+                                'estado' => $fila[$colEstado]
+                            ];
+                        }
+                    }
+                }
+                fclose($handle);
+            }
+        }
+
+        return $registrosEncontrados;
+    }
+
+    private function VerificarNubox($data)
+    {
+        $uploadDir = __DIR__ . '/../../uploads/nubox/';
+        $seriesBuscada = $data['serie'];
+    
+        // Buscar todos los archivos Nubox en el directorio
+        $archivosNUBOX = glob($uploadDir . 'nubox_*.xlsx');
+    
+        foreach ($archivosNUBOX as $archivo) {
+            $url = 'http://localhost:5000/verificar?serie=' . $seriesBuscada;
+
+            $cfile = new CURLFile(
+                $archivo,
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            );
+    
+            $ch = curl_init();
+            curl_setopt_array($ch, [
+                CURLOPT_URL => $url,
+                CURLOPT_POST => true,
+                CURLOPT_POSTFIELDS => ['file' => $cfile],
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_HTTPHEADER => ['Content-Type: multipart/form-data'],
+                CURLOPT_TIMEOUT => 30,
+            ]);
+    
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $curlError = curl_error($ch);
+            curl_close($ch);
+    
+            if ($response === false) {
+                throw new Exception("Error al conectar con la API: $curlError");
+            }
+            $registrosEncontrados = json_decode($response, true);
+    
+            if ($registrosEncontrados === null) {
+                throw new Exception("Respuesta de la API no es un JSON válido. Código HTTP: $httpCode. Respuesta: $response");
+            }
+    
+            if (isset($registrosEncontrados['status']) && $registrosEncontrados['status'] === 'error') {
+                throw new Exception("Error de la API: " . ($registrosEncontrados['message'] ?? 'Error desconocido'));
+            }
+            if ($httpCode !== 200) {
+                throw new Exception("Error HTTP $httpCode de la API con mensaje: " . ($registrosEncontrados['message'] ?? 'Error desconocido'));
+            }
+        }
+    
+        return $registrosEncontrados;
     }
 }
