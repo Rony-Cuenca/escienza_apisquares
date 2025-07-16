@@ -179,40 +179,81 @@
                     </div>
                 </div>
             <?php endif; ?>
-
-            <?php if (!empty($ResultsValidarSeries)): ?>
-                <div class="w-full mt-8">
-                    <div class="bg-gray-50 rounded-lg border border-gray-200 overflow-hidden shadow-sm">
-                        <div class="px-6 py-4 bg-gradient-to-r from-orange-50 to-orange-100 border-b border-gray-200">
-                            <h3 class="text-lg font-semibold text-gray-800 text-center">Validar Series - Series Ajenas</h3>
-                        </div>
-                        <div class="p-4">
-                            <div class="overflow-x-auto">
-                                <table class="min-w-full text-sm border border-gray-300 rounded-lg overflow-hidden">
-                                    <thead class="bg-gray-100 text-xs uppercase text-gray-700">
-                                        <tr>
-                                            <th class="border border-gray-300 px-3 py-2 text-gray-900 font-bold whitespace-nowrap">Serie</th>
-                                            <th class="border border-gray-300 px-3 py-2 text-gray-900 font-bold whitespace-nowrap">Conteo</th>
-                                            <th class="border border-gray-300 px-3 py-2 text-gray-900 font-bold whitespace-nowrap">Cuadres</th>
-                                            <th class="border border-gray-300 px-3 py-2 text-gray-900 font-bold whitespace-nowrap">Total</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="divide-y divide-gray-200">
-                                        <?php foreach ($ResultsValidarSeries as $resultado): ?>
-                                            <tr class="hover:bg-gray-50 even:bg-gray-50">
-                                                <td class="border border-gray-300 px-3 py-2 text-gray-900 text-center whitespace-nowrap"><?php echo $resultado['serie']; ?></td>
-                                                <td class="border border-gray-300 px-3 py-2 text-gray-900 text-center whitespace-nowrap"><?php echo $resultado['conteo']; ?></td>
-                                                <td class="border border-gray-300 px-3 py-2 text-gray-900 text-center whitespace-nowrap"><?php echo $resultado['cuadre']; ?></td>
-                                                <td class="border border-gray-300 px-3 py-2 text-gray-900 text-center font-semibold whitespace-nowrap"><?php echo number_format($resultado['total'], 2); ?></td>
+            
+            <div class="flex flex-col xl:flex-row gap-6 w-full mt-8">
+                <?php if (!empty($ResultsValidarSeries)): ?>
+                    <div class="w-full xl:w-1/2 min-w-0">
+                        <div class="bg-gray-50 rounded-lg border border-gray-200 overflow-hidden shadow-sm">
+                            <div class="px-6 py-4 bg-gradient-to-r from-orange-50 to-orange-100 border-b border-gray-200">
+                                <h3 class="text-lg font-semibold text-gray-800 text-center">Validar Series - Series Ajenas</h3>
+                            </div>
+                            <div class="p-4">
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full text-sm border border-gray-300 rounded-lg overflow-hidden">
+                                        <thead class="bg-gray-100 text-xs uppercase text-gray-700">
+                                            <tr>
+                                                <th class="border border-gray-300 px-3 py-2 text-gray-900 font-bold whitespace-nowrap">Serie</th>
+                                                <th class="border border-gray-300 px-3 py-2 text-gray-900 font-bold whitespace-nowrap">Conteo</th>
+                                                <th class="border border-gray-300 px-3 py-2 text-gray-900 font-bold whitespace-nowrap">Cuadres</th>
+                                                <th class="border border-gray-300 px-3 py-2 text-gray-900 font-bold whitespace-nowrap">Total</th>
                                             </tr>
-                                        <?php endforeach; ?>
-                                    </tbody>
-                                </table>
+                                        </thead>
+                                        <tbody class="divide-y divide-gray-200">
+                                            <?php foreach ($ResultsValidarSeries as $resultado): ?>
+                                                <tr class="hover:bg-gray-50 even:bg-gray-50">
+                                                    <td class="border border-gray-300 px-3 py-2 text-gray-900 text-center whitespace-nowrap"><?php echo $resultado['serie']; ?></td>
+                                                    <td class="border border-gray-300 px-3 py-2 text-gray-900 text-center whitespace-nowrap"><?php echo $resultado['conteo']; ?></td>
+                                                    <td class="border border-gray-300 px-3 py-2 text-gray-900 text-center whitespace-nowrap"><?php echo $resultado['cuadre']; ?></td>
+                                                    <td class="border border-gray-300 px-3 py-2 text-gray-900 text-center font-semibold whitespace-nowrap"><?php echo number_format($resultado['total'], 2); ?></td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            <?php endif; ?>
+                <?php endif; ?>
+
+                <?php if (!empty($diferenciaGlobales)): ?>
+                    <div class="w-full xl:w-1/2 min-w-0">
+                        <div class="bg-gray-50 rounded-lg border border-gray-200 overflow-hidden shadow-sm">
+                            <div class="px-6 py-4 bg-gradient-to-r from-orange-50 to-orange-100 border-b border-gray-200">
+                                <h3 class="text-lg font-semibold text-gray-800 text-center">Diferencia Global</h3>
+                            </div>
+                            <div class="p-4">
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full text-sm border border-gray-300 rounded-lg overflow-hidden">
+                                        <thead class="bg-gray-100 text-xs uppercase text-gray-700">
+                                            <tr>
+                                                <th class="border border-gray-300 px-3 py-2 text-gray-900 font-bold whitespace-nowrap">Serie</th>
+                                                <th class="border border-gray-300 px-3 py-2 text-gray-900 font-bold whitespace-nowrap">Numero</th>
+                                                <th class="border border-gray-300 px-3 py-2 text-gray-900 font-bold whitespace-nowrap">Total Sire</th>
+                                                <th class="border border-gray-300 px-3 py-2 text-gray-900 font-bold whitespace-nowrap">Total Nubox</th>
+                                                <th class="border border-gray-300 px-3 py-2 text-gray-900 font-bold whitespace-nowrap">Estado Sire</th>
+                                                <th class="border border-gray-300 px-3 py-2 text-gray-900 font-bold whitespace-nowrap">Estado Nubox</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-gray-200">
+                                            <?php foreach ($diferenciaGlobales as $resultado): ?>
+                                                <tr class="hover:bg-gray-50 even:bg-gray-50">
+                                                    <td class="border border-gray-300 px-3 py-2 text-gray-900 text-center whitespace-nowrap"><?php echo $resultado['sire']['serie']; ?></td>
+                                                    <td class="border border-gray-300 px-3 py-2 text-gray-900 text-center whitespace-nowrap"><?php echo $resultado['sire']['numero']; ?></td>
+                                                    <td class="border border-gray-300 px-3 py-2 text-gray-900 text-center whitespace-nowrap"><?php echo $resultado['sire']['total']; ?></td>
+                                                    <td class="border border-gray-300 px-3 py-2 text-gray-900 text-center whitespace-nowrap"><?php echo $resultado['nubox']['total']; ?></td>
+                                                    <td class="border border-gray-300 px-3 py-2 text-gray-900 text-center whitespace-nowrap"><?php echo $resultado['sire']['estado']; ?></td>
+                                                    <td class="border border-gray-300 px-3 py-2 text-gray-900 text-center whitespace-nowrap"><?php echo $resultado['nubox']['estado']; ?></td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <?php endif; ?>
+            
+            </div>
             
             <!-- Botón de acciones -->
             <div class="flex justify-center mt-8 pt-6 border-t border-gray-200">

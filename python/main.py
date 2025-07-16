@@ -320,6 +320,69 @@ def descargar_archivo(nombre_archivo):
     carpeta_destino = os.path.join(os.getcwd(), 'uploads/unificados')
     limpiar_carpeta(carpeta_destino)
     return send_from_directory(carpeta_destino, nombre_archivo, as_attachment=True)
+
+@app.route('/verificar', methods=['POST'])
+def verificar():
+    serie_buscada = request.args.get('serie', type=str)
+    if not serie_buscada:
+        return jsonify({'status': 'error', 'message': 'Serie no proporcionada'}), 400
+
+    if 'file' not in request.files:
+        return jsonify({'status': 'error', 'message': 'No se recibió ningún archivo'}), 400
+
+    file = request.files['file']
+
+    try:
+        df = pd.read_excel(file, header=None, engine='openpyxl')
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': f'No se pudo leer el archivo: {str(e)}'}), 400
+
+    # Asegúrate de que haya al menos 8 filas para tener encabezado y datos
+    if len(df) <= 7:
+        return jsonify({'status': 'error', 'message': 'El archivo no tiene suficientes filas'}), 400
+
+    # La fila 8 (índice 7) es el encabezado real
+    header = df.iloc[7].tolist()
+    data = df.iloc[8:].copy()
+    data.columns = header
+
+    # Validar que existen las columnas requeridas
+    required_columns = ['Número', 'Total', 'Fecha emisión', 'Estado']
+    for col in required_columns:
+        if col not in data.columns:
+            return jsonify({'status': 'error', 'message': f'La columna {col} no existe en el archivo'}), 400
+
+    # Dividir la columna 'Número' en 'Serie' y 'Numero'
+    numero_split = data['Número'].astype(str).str.split('-', n=1, expand=True)
+    data['Serie'] = numero_split[0].str.strip()
+    data['Numero'] = numero_split[1].str.strip()
+
+    # Filtrar por la serie buscada
+    filtrado = data[data['Serie'] == serie_buscada]
+
+    # Si no hay registros
+    if filtrado.empty:
+        return jsonify({
+            'status': 'success',
+            'resultados': []
+        }), 200
+
+    # Preparar respuesta
+    registros = []
+    for _, row in filtrado.iterrows():
+        registros.append({
+            'serie': row['Serie'],
+            'numero': row['Numero'],
+            'total': row['Total'],
+            'fecha': str(row['Fecha emisión']),
+            'estado': row['Estado'],
+        })
+
+    return jsonify({
+        'status': 'success',
+        'resultados': registros
+    }), 200
+
     
 
 if __name__ == '__main__':
