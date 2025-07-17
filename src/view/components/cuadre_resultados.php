@@ -229,8 +229,8 @@
                                                 <th class="border border-gray-300 px-3 py-2 text-gray-900 font-bold whitespace-nowrap">Serie</th>
                                                 <th class="border border-gray-300 px-3 py-2 text-gray-900 font-bold whitespace-nowrap">Numero</th>
                                                 <th class="border border-gray-300 px-3 py-2 text-gray-900 font-bold whitespace-nowrap">Total Sire</th>
-                                                <th class="border border-gray-300 px-3 py-2 text-gray-900 font-bold whitespace-nowrap">Total Nubox</th>
                                                 <th class="border border-gray-300 px-3 py-2 text-gray-900 font-bold whitespace-nowrap">Estado Sire</th>
+                                                <th class="border border-gray-300 px-3 py-2 text-gray-900 font-bold whitespace-nowrap">Total Nubox</th>
                                                 <th class="border border-gray-300 px-3 py-2 text-gray-900 font-bold whitespace-nowrap">Estado Nubox</th>
                                             </tr>
                                         </thead>
@@ -240,8 +240,8 @@
                                                     <td class="border border-gray-300 px-3 py-2 text-gray-900 text-center whitespace-nowrap"><?php echo $resultado['sire']['serie']; ?></td>
                                                     <td class="border border-gray-300 px-3 py-2 text-gray-900 text-center whitespace-nowrap"><?php echo $resultado['sire']['numero']; ?></td>
                                                     <td class="border border-gray-300 px-3 py-2 text-gray-900 text-center whitespace-nowrap"><?php echo $resultado['sire']['total']; ?></td>
-                                                    <td class="border border-gray-300 px-3 py-2 text-gray-900 text-center whitespace-nowrap"><?php echo $resultado['nubox']['total']; ?></td>
                                                     <td class="border border-gray-300 px-3 py-2 text-gray-900 text-center whitespace-nowrap"><?php echo $resultado['sire']['estado']; ?></td>
+                                                    <td class="border border-gray-300 px-3 py-2 text-gray-900 text-center whitespace-nowrap"><?php echo $resultado['nubox']['total']; ?></td>
                                                     <td class="border border-gray-300 px-3 py-2 text-gray-900 text-center whitespace-nowrap"><?php echo $resultado['nubox']['estado']; ?></td>
                                                 </tr>
                                             <?php endforeach; ?>

@@ -188,6 +188,13 @@ class CuadresController
                     $diferencia = $this->DiferenciaComprobante($SIRE['ResultsSIRE'], $NUBOX['ResultsNUBOX']);
                     if($diferencia != null){
                         $diferenciaGlobales = $this->VerificarDiferenciaComprobante($diferencia);
+
+                        foreach ($diferenciaGlobales as &$diferenciaGlobale) {
+                            if (isset($diferenciaGlobale['sire']['estado'])) {
+                                $diferenciaGlobale['sire']['estado'] = ($diferenciaGlobale['sire']['estado'] == 1) ? 'Aceptado' : 'Anulado';
+                            }
+                        }
+                        unset($diferenciaGlobale);
                         $this->diferenciaGlobales = $diferenciaGlobales;
                         $uploadDir = __DIR__ . '/../../uploads';
                         $this->limpiarCarpeta($uploadDir);
@@ -286,7 +293,6 @@ class CuadresController
                 $_SESSION['resultsSerieArchivos'] = $data;
             }
         }
-
         // Obtener información del usuario actual usando SesionHelper
         $userId = SesionHelper::obtenerUsuarioActual();
         $user = Usuario::obtenerId($userId);
@@ -593,38 +599,6 @@ class CuadresController
         return $json;
     }
 
-    public function guardarCuadre($serie, $conteo, $Gravada, $Exonerada, $Inafecto, $IGV, $Total, $tipo_comprobante, $reporte, $fecha_registro)
-    {
-        $user_create = SesionHelper::obtenerNombreUsuario();
-        $user_update = SesionHelper::obtenerNombreUsuario();
-        $id_establecimiento = SesionHelper::obtenerEstablecimientoActual();
-
-        $data = [
-            'serie' => $serie,
-            'cantidad_compr' => $conteo,
-            'suma_gravada' => $Gravada,
-            'suma_exonerada' => $Exonerada,
-            'suma_inafecto' => $Inafecto,
-            'suma_igv' => $IGV,
-            'monto_total' => $Total,
-            'tipo_comprobante' => $tipo_comprobante,
-            'id_reporte' => $reporte,
-            'user_create' => $user_create,
-            'user_update' => $user_update,
-            'id_establecimiento' => $id_establecimiento,
-            'fecha_registro' => $fecha_registro,
-            'estado' => 1
-        ];
-
-        foreach ($data as $key => $value) {
-            if ($value = false) {
-                throw new Exception("Dato inválido en campo $key");
-            }
-        }
-
-        Cuadre::Insertar($data);
-    }
-
     private function procesarDatosNubox($datosNubox)
     {
         $ErrorNUBOX = null;
@@ -800,53 +774,134 @@ class CuadresController
         $user_create = SesionHelper::obtenerNombreUsuario();
         $user_update = SesionHelper::obtenerNombreUsuario();
         $id_establecimiento = SesionHelper::obtenerEstablecimientoActual();
-
+        
         foreach ($ResultsSIRE as $resultado) {
-            $this->guardarCuadre(
-                $resultado['serie'],
-                $resultado['conteo'],
-                $resultado['bi'],
-                $resultado['exonerado'],
-                $resultado['inafecto'],
-                $resultado['igv'],
-                $resultado['total'],
-                $resultado['tipo_comprobante'],
-                $resultado['reporte'],
-                $resultado['fecha_registro']
-            );
+
+            $establecimiento = null;
+
+            // Verifica en el array de series por archivo
+            if ($resultsSerieArchivos) {
+                foreach ($resultsSerieArchivos as $archivoData) {
+                    if (in_array($resultado['serie'], $archivoData['series'])) {
+                        $establecimiento = $archivoData['id_establecimiento'];
+                        break; // Salir al encontrar la primera coincidencia
+                    }
+                }
+            }
+        
+            // Si no se encuentra el establecimiento, puedes manejarlo según tu lógica
+            if (!$establecimiento) {
+                $establecimiento = $id_establecimiento;
+            }
+
+            $data = [
+                'serie' => $resultado['serie'],
+                'cantidad_compr' => $resultado['conteo'],
+                'suma_gravada' => $resultado['bi'],
+                'suma_exonerada' => $resultado['exonerado'],
+                'suma_inafecto' => $resultado['inafecto'],
+                'suma_igv' => $resultado['igv'],
+                'monto_total' => $resultado['total'],
+                'tipo_comprobante' => $resultado['tipo_comprobante'],
+                'id_reporte' => $resultado['reporte'],
+                'user_create' => $user_create,
+                'user_update' => $user_update,
+                'id_establecimiento' => $establecimiento,
+                'fecha_registro' => $resultado['fecha_registro'],
+                'estado' => 1
+            ];
+            Cuadre::Insertar($data);
         }
 
         foreach ($ResultsEDSUITE as $resultado) {
-            $this->guardarCuadre(
-                $resultado['serie'],
-                $resultado['conteo'],
-                $resultado['bi'],
-                $resultado['exonerado'],
-                $resultado['inafecto'],
-                $resultado['igv'],
-                $resultado['total'],
-                $resultado['tipo_comprobante'],
-                $resultado['reporte'],
-                $resultado['fecha_registro']
-            );
+            $establecimiento = null;
+
+            // Verifica en el array de series por archivo
+            if ($resultsSerieArchivos) {
+                foreach ($resultsSerieArchivos as $archivoData) {
+                    if (in_array($resultado['serie'], $archivoData['series'])) {
+                        $establecimiento = $archivoData['id_establecimiento'];
+                        break; // Salir al encontrar la primera coincidencia
+                    }
+                }
+            }
+        
+            // Si no se encuentra el establecimiento, puedes manejarlo según tu lógica
+            if (!$establecimiento) {
+                $establecimiento = $id_establecimiento;
+            }
+            $data = [
+                'serie' => $resultado['serie'],
+                'cantidad_compr' => $resultado['conteo'],
+                'suma_gravada' => $resultado['bi'],
+                'suma_exonerada' => $resultado['exonerado'],
+                'suma_inafecto' => $resultado['inafecto'],
+                'suma_igv' => $resultado['igv'],
+                'monto_total' => $resultado['total'],
+                'tipo_comprobante' => $resultado['tipo_comprobante'],
+                'id_reporte' => $resultado['reporte'],
+                'user_create' => $user_create,
+                'user_update' => $user_update,
+                'id_establecimiento' => $establecimiento,
+                'fecha_registro' => $resultado['fecha_registro'],
+                'estado' => 1
+            ];
+            Cuadre::Insertar($data);
         }
 
         foreach ($ResultsNUBOX as $resultado) {
-            $this->guardarCuadre(
-                $resultado['serie'],
-                $resultado['conteo'],
-                $resultado['bi'],
-                $resultado['exonerado'],
-                $resultado['inafecto'],
-                $resultado['igv'],
-                $resultado['total'],
-                $resultado['tipo_comprobante'],
-                $resultado['reporte'],
-                $resultado['fecha_registro']
-            );
+            $establecimiento = null;
+
+            // Verifica en el array de series por archivo
+            if ($resultsSerieArchivos) {
+                foreach ($resultsSerieArchivos as $archivoData) {
+                    if (in_array($resultado['serie'], $archivoData['series'])) {
+                        $establecimiento = $archivoData['id_establecimiento'];
+                        break; // Salir al encontrar la primera coincidencia
+                    }
+                }
+            }
+        
+            // Si no se encuentra el establecimiento, puedes manejarlo según tu lógica
+            if (!$establecimiento) {
+                $establecimiento = $id_establecimiento;
+            }
+            $data = [
+                'serie' => $resultado['serie'],
+                'cantidad_compr' => $resultado['conteo'],
+                'suma_gravada' => $resultado['bi'],
+                'suma_exonerada' => $resultado['exonerado'],
+                'suma_inafecto' => $resultado['inafecto'],
+                'suma_igv' => $resultado['igv'],
+                'monto_total' => $resultado['total'],
+                'tipo_comprobante' => $resultado['tipo_comprobante'],
+                'id_reporte' => $resultado['reporte'],
+                'user_create' => $user_create,
+                'user_update' => $user_update,
+                'id_establecimiento' => $establecimiento,
+                'fecha_registro' => $resultado['fecha_registro'],
+                'estado' => 1
+            ];
+            Cuadre::Insertar($data);
         }
 
         foreach ($ResultsValidarSeries as $resultado) {
+            $establecimiento = null;
+
+            // Verifica en el array de series por archivo
+            if ($resultsSerieArchivos) {
+                foreach ($resultsSerieArchivos as $archivoData) {
+                    if (in_array($resultado['serie'], $archivoData['series'])) {
+                        $establecimiento = $archivoData['id_establecimiento'];
+                        break; // Salir al encontrar la primera coincidencia
+                    }
+                }
+            }
+        
+            // Si no se encuentra el establecimiento, puedes manejarlo según tu lógica
+            if (!$establecimiento) {
+                $establecimiento = $id_establecimiento;
+            }
             $data = [
                 'serie' => $resultado['serie'],
                 'conteo' => $resultado['conteo'],
@@ -854,7 +909,7 @@ class CuadresController
                 'fecha_registro' => $resultado['fecha'],
                 'user_create' => $user_create,
                 'user_update' => $user_update,
-                'id_establecimiento' => $id_establecimiento,
+                'id_establecimiento' => $establecimiento,
                 'estado' => 1
             ];
             SerieAjena::Insertar($data);
