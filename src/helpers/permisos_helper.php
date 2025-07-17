@@ -1,11 +1,6 @@
 <?php
 
-/**
- * FUNCIONES DE PERMISOS UNIFICADAS Y CONSISTENTES
- * Sistema refactorizado para roles claros y permisos específicos
- */
 
-// Evitar redeclaración de funciones
 if (!function_exists('esSuperAdmin')) {
     function esSuperAdmin()
     {
