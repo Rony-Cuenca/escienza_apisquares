@@ -259,7 +259,7 @@
             <div class="flex justify-center mt-8 pt-6 border-t border-gray-200">
                 <button id="btnGuardarCuadres" 
                         class="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition duration-200"
-                        <?php if (isset($_SESSION['resultsSerieArchivos']) && $_SESSION['resultsSerieArchivos'] != null): ?>
+                        <?php if (isset($_SESSION['resultsSerieArchivos']) && ($_SESSION['resultsSerieArchivos'] != null)): ?>
                             onclick="guardarCuadres()"
                         <?php else: ?>
                             onclick="window.location.href='index.php?controller=cuadres&action=cargarBD&user=<?php echo $id_usuario ?? '' ?>'"

@@ -36,6 +36,10 @@ class CuadresController
 
     public function cuadre()
     {
+        $ErrorSIRE = null;
+        $ErrorNUBOX = null;
+        $ErrorEDSUITE = null;
+        $resultsSerieArchivos = [];
         try {
             $RUCSIRE = $this->cuadreService->validarRucSire($_FILES['exe_sire']['tmp_name']);
         } catch (Exception $e) {
@@ -152,43 +156,33 @@ class CuadresController
         } else {
             $ErrorSIRE = "No se subieron archivos válidos.";
         }
-        $seriesEstablecimientos = [];
+
+
         foreach ($establecimientos as &$establecimiento) {
             $series = SerieSucursal::obtenerSeriesPorEstablecimiento($establecimiento['id']);
             if ($series && isset($series['serie'])) {
                 $establecimiento['serie'] = $series['serie'];
-                $seriesEstablecimientos[] = $series['serie'];
             } else {
                 $establecimiento['serie'] = null;
             }
         }
         unset($establecimiento);
 
-        if (empty($resultsSerieArchivos)) {
-            $resultsSerieArchivos = [];
-            $todasSeries = [];
-            foreach ([$ResultsSIRE, $ResultsNUBOX, $ResultsEDSUITE] as $arr) {
-                foreach ($arr as $item) {
-                    if (isset($item['serie'])) {
-                        $todasSeries[$item['serie']] = true;
-                    }
-                }
-            }
-            foreach (array_keys($todasSeries) as $serie) {
-                $resultsSerieArchivos[] = [
-                    'series' => [$serie],
-                ];
-            }
+        $serieArchivos = $resultsSerieArchivos;
+        $seriesString = [];
+        foreach ($serieArchivos as $archivo) {
+            $seriesString[] = implode('-', $archivo['series']);
         }
+        unset($serieArchivos);
 
         $coincidentes = [];
-        foreach ($resultsSerieArchivos as $archivo) {
-            foreach ($archivo['series'] as $serieArchivo) {
-                if (in_array($serieArchivo, $seriesEstablecimientos)) {
-                    $coincidentes[] = $serieArchivo;
-                }
+
+        foreach ($establecimientos as $e) {
+            if ($e['serie'] !== null && in_array($e['serie'], $seriesString)) {
+                $coincidentes[] = $e['serie'];
             }
         }
+        unset($establecimientos);
 
         $_SESSION['ResultsSIRE'] = $ResultsSIRE ?? [];
         $_SESSION['ResultsNUBOX'] = $ResultsNUBOX ?? [];
@@ -198,7 +192,9 @@ class CuadresController
         $_SESSION['diferenciaGlobales'] = $diferenciaGlobales ?? [];
         // Si NO hay coincidencias, mostrar el modal para asignar establecimiento
         if (empty($coincidentes)) {
-            $_SESSION['resultsSerieArchivos'] = $resultsSerieArchivos;
+            if (!empty($resultsSerieArchivos)) {
+                $_SESSION['resultsSerieArchivos'] = $resultsSerieArchivos;
+            }
         } else {
             $_SESSION['resultsSerieArchivos'] = null;
         }

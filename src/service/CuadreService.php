@@ -3,6 +3,7 @@
 
 require_once __DIR__ . '/ArchivoService.php';
 require_once __DIR__ . '/ApiPythonService.php';
+require_once __DIR__ . '/../model/SerieSucursal.php';
 
 class CuadreService
 {
@@ -360,8 +361,22 @@ class CuadreService
                 }
             }
             if (!$establecimiento) {
+                $establecimientosSerie = SerieSucursal::listarSeriesPorCliente($id_establecimiento);
+                if ($establecimientosSerie && is_array($establecimientosSerie)) {
+                    foreach ($establecimientosSerie as $archivoData) {
+                        $series = explode('-', $archivoData['serie']); // eliminar concatenación
+                        if (in_array($resultado['serie'], $series)) {
+                            $establecimiento = $archivoData['id_establecimiento'];
+                            break;
+                        }
+                    }
+                }
+            }
+        
+            if (!$establecimiento) {
                 $establecimiento = $id_establecimiento;
             }
+
             $data = [
                 'serie' => $resultado['serie'],
                 'cantidad_compr' => $resultado['conteo'],
@@ -392,6 +407,19 @@ class CuadreService
                     }
                 }
             }
+            if (!$establecimiento) {
+                $establecimientosSerie = SerieSucursal::listarSeriesPorCliente($id_establecimiento);
+                if ($establecimientosSerie && is_array($establecimientosSerie)) {
+                    foreach ($establecimientosSerie as $archivoData) {
+                        $series = explode('-', $archivoData['serie']); // eliminar concatenación
+                        if (in_array($resultado['serie'], $series)) {
+                            $establecimiento = $archivoData['id_establecimiento'];
+                            break;
+                        }
+                    }
+                }
+            }
+        
             if (!$establecimiento) {
                 $establecimiento = $id_establecimiento;
             }
@@ -425,6 +453,19 @@ class CuadreService
                     }
                 }
             }
+            if (!$establecimiento) {
+                $establecimientosSerie = SerieSucursal::listarSeriesPorCliente($id_establecimiento);
+                if ($establecimientosSerie && is_array($establecimientosSerie)) {
+                    foreach ($establecimientosSerie as $archivoData) {
+                        $series = explode('-', $archivoData['serie']); // eliminar concatenación
+                        if (in_array($resultado['serie'], $series)) {
+                            $establecimiento = $archivoData['id_establecimiento'];
+                            break;
+                        }
+                    }
+                }
+            }
+        
             if (!$establecimiento) {
                 $establecimiento = $id_establecimiento;
             }
@@ -538,20 +579,22 @@ class CuadreService
         }
 
         // Guardar SerieSucursal
-        foreach ($resultsSerieArchivos as $resultado) {
-            $id_establecimiento = $resultado['id_establecimiento'];
-            $codigoAleatorio = $this->generarCodigoAleatorio(5);
-            $codigo = $id_establecimiento . '-' . $codigoAleatorio;
-            $seriesString = implode('-', $resultado['series']);
-            $data = [
-                'serie' => $seriesString,
-                'codigo' => $codigo,
-                'id_establecimiento' => $resultado['id_establecimiento'],
-                'user_create' => $user_create,
-                'user_update' => $user_update,
-                'estado' => 1
-            ];
-            SerieSucursal::Insertar($data);
+        if ($resultsSerieArchivos) {
+            foreach ($resultsSerieArchivos as $resultado) {
+                $id_establecimiento = $resultado['id_establecimiento'];
+                $codigoAleatorio = $this->generarCodigoAleatorio(5);
+                $codigo = $id_establecimiento . '-' . $codigoAleatorio;
+                $seriesString = implode('-', $resultado['series']);
+                $data = [
+                    'serie' => $seriesString,
+                    'codigo' => $codigo,
+                    'id_establecimiento' => $resultado['id_establecimiento'],
+                    'user_create' => $user_create,
+                    'user_update' => $user_update,
+                    'estado' => 1
+                ];
+                SerieSucursal::Insertar($data);
+            }
         }
 
         // Guardar DiferenciaComprobante
@@ -604,27 +647,36 @@ class CuadreService
     public function verificarDiferenciaComprobante($diferencias)
     {
         $diferenciasEncontradas = [];
+
         foreach ($diferencias as $diferencia) {
             $data = [
-                'serie' => $diferencia['serie']
+                'serie' => $diferencia['serie'],
             ];
-            $resultadosSire = $this->verificarSire($data);
-            $resultadosNubox = $this->verificarNubox($data);
+
+            $VerificacionSire = $this->verificarSire($data);
+            $VerificacionNubox = $this->verificarNubox($data);
+
+            $resultadosSire = $VerificacionSire;
+            $resultadosNubox = $VerificacionNubox['resultados'] ?? [];
+
+            // Indexar resultados de Nubox por "numero" para búsqueda rápida
             $nuboxIndexado = [];
             foreach ($resultadosNubox as $item) {
-                if (isset($item['numero'])) {
-                    $nuboxIndexado[$item['numero']] = $item;
-                }
+                $nuboxIndexado[$item['numero']] = $item;
             }
+
+            // Comparar cada resultado de SIRE con el de NUBOX
             foreach ($resultadosSire as $sireItem) {
-                $num = $sireItem['numero'] ?? null;
-                if ($num && isset($nuboxIndexado[$num])) {
-                    if (abs($sireItem['total'] - $nuboxIndexado[$num]['total']) > 0.001) {
+                $numero = $sireItem['numero'];
+                if (isset($nuboxIndexado[$numero])) {
+                    $nuboxItem = $nuboxIndexado[$numero];
+
+                    if ($sireItem['total'] != $nuboxItem['total']) {
+                        // Guardar la diferencia encontrada
                         $diferenciasEncontradas[] = [
-                            'serie' => $diferencia['serie'],
-                            'numero' => $num,
-                            'total_sire' => $sireItem['total'],
-                            'total_nubox' => $nuboxIndexado[$num]['total']
+                            'numero' => $numero,
+                            'sire'   => $sireItem,
+                            'nubox'  => $nuboxItem
                         ];
                     }
                 }
@@ -641,15 +693,24 @@ class CuadreService
         foreach ($archivosSIRE as $archivo) {
             if (($handle = fopen($archivo, "r")) !== false) {
                 $header = fgetcsv($handle);
+                
                 $colSerie = array_search('Serie del CDP', $header);
-                $colNumero = array_search('Nro del CDP', $header);
-                $colTotal = array_search('Importe Total', $header);
-                while (($fila = fgetcsv($handle)) !== false) {
-                    if ($fila[$colSerie] == $series) {
-                        $registrosEncontrados[] = [
-                            'numero' => $fila[$colNumero],
-                            'total' => floatval($fila[$colTotal])
-                        ];
+                $colNumero = array_search('Nro CP o Doc. Nro Inicial (Rango)', $header);
+                $colTotal = array_search('Total CP', $header);
+                $colFecha = array_search('Fecha de emisión', $header);
+                $colEstado = array_search('Est. Comp', $header);
+
+                if ($colSerie !== false) {
+                    while (($fila = fgetcsv($handle)) !== false) {
+                        if ($fila[$colSerie] === $series) {
+                            $registrosEncontrados[] = [
+                                'serie' => $fila[$colSerie],
+                                'numero' => $fila[$colNumero],
+                                'total' => $fila[$colTotal],
+                                'fecha' => $fila[$colFecha],
+                                'estado' => $fila[$colEstado]
+                            ];
+                        }
                     }
                 }
                 fclose($handle);
@@ -658,7 +719,7 @@ class CuadreService
         return $registrosEncontrados;
     }
 
-    public function verificarNubox($data)
+    public function verificarNubox_1($data)
     {
         $seriesBuscada = $data['serie'];
         $archivosNUBOX = $this->archivoService->listarArchivosPorTipo('nubox', 'nubox_*.xlsx');
@@ -673,6 +734,18 @@ class CuadreService
                 continue;
             }
         }
+        return $registrosEncontrados;
+    }
+
+    private function VerificarNubox($data)
+    {
+        $seriesBuscada = $data['serie'];
+        $archivosNUBOX = $this->archivoService->listarArchivosPorTipo('nubox', 'nubox_*.xlsx');
+    
+        foreach ($archivosNUBOX as $archivo) {
+            $registrosEncontrados = $this->apiPythonService->verificarSerieNubox($archivo, $seriesBuscada);
+        }
+    
         return $registrosEncontrados;
     }
 }
