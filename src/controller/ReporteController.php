@@ -372,224 +372,245 @@ class ReporteController
         exit;
     }
 
+    private function limpiarNombreHoja($nombre)
+    {
+        $nombre = preg_replace('/[\\\\\\/\\?\\*\\[\\]:]/', '-', $nombre);
+        $nombre = preg_replace('/\\s+/', ' ', $nombre);
+        return mb_substr(trim($nombre), 0, 31);
+    }
+
     public function exportarExcel()
     {
         $this->verificarSesion();
         $this->verificarPermisosGeneracion();
 
         $mesSeleccionado = $_GET['mes'] ?? '';
-        $cuadresSIRE = $cuadresNUBOX = $cuadresEDSUITE = [];
-        $totalesTipoDoc = $seriesTotales = $diferenciasSeries = [];
-        $seriesAjenas = $ventasGlobales = [];
         $mesesDisponibles = Cuadre::obtenerMesesDisponibles();
-        $id_establecimiento = $_GET['id_establecimiento'] ?? '';
-        $rucEstablecimiento = '';
-        $nombreEstablecimiento = '';
         $usuarioNombre = SesionHelper::obtenerNombreUsuario();
-
-        if ($id_establecimiento) {
-            $establecimiento = \Establecimiento::obtenerEstablecimiento($id_establecimiento);
-            if ($establecimiento) {
-                $nombreEstablecimiento = $establecimiento['etiqueta'] ?? '';
-                $id_cliente = $establecimiento['id_cliente'] ?? null;
-                if ($id_cliente) {
-                    $cliente = \Establecimiento::obtenerClientePorId($id_cliente);
-                    $rucEstablecimiento = $cliente['ruc'] ?? '';
-                } else {
-                    $rucEstablecimiento = '';
-                }
-            }
-        } else {
+        $id_establecimientos = $_GET['id_establecimientos'] ?? [];
+        if (!is_array($id_establecimientos)) {
+            $id_establecimientos = [$id_establecimientos];
+        }
+        if (empty($id_establecimientos)) {
             $id_cliente = SesionHelper::obtenerClienteActual();
             $cliente = \Establecimiento::obtenerClientePorId($id_cliente);
-            if ($cliente) {
-                $rucEstablecimiento = $cliente['ruc'] ?? '';
-                $nombreEstablecimiento = $cliente['razon_social'] ?? '';
-            }
-        }
-
-        $seriesEdSuite = [];
-        if ($mesSeleccionado) {
-            $datosReporte = $this->obtenerDatosReporte($mesSeleccionado);
-            $cuadresSIRE = $datosReporte['cuadresSIRE'];
-            $cuadresNUBOX = $datosReporte['cuadresNUBOX'];
-            $cuadresEDSUITE = $datosReporte['cuadresEDSUITE'];
-            $totalesTipoDoc = $datosReporte['totalesTipoDoc'];
-            $seriesTotales = $datosReporte['seriesTotales'];
-            $diferenciasSeries = $datosReporte['diferenciasNuboxSire'];
-            $seriesAjenas = $datosReporte['seriesAjenas'];
-            $ventasGlobales = $datosReporte['ventasGlobales'];
-            $seriesEdSuite = $datosReporte['seriesEdSuite'];
+            $rucEstablecimiento = $cliente['ruc'] ?? '';
+            $nombreEstablecimiento = $cliente['razon_social'] ?? '';
+            $id_establecimientos = [];
         }
 
         $nombreMes = $this->obtenerNombreMes($mesSeleccionado, $mesesDisponibles);
         $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
-        $sheet->setTitle('Reporte Cuadres');
+        $spreadsheet->removeSheetByIndex(0);
 
         $headerPrincipalStyle = [
             'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 16],
-            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '0f172a']], // Slate-900 premium
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '0f172a']],
             'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_MEDIUM, 'color' => ['rgb' => '1e293b']]],
             'alignment' => ['horizontal' => 'center', 'vertical' => 'center']
         ];
-
         $headerSecundarioStyle = [
             'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 11],
-            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '1e40af']], // Blue-800 ejecutivo
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '1e40af']],
             'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_MEDIUM, 'color' => ['rgb' => '1d4ed8']]],
             'alignment' => ['horizontal' => 'center', 'vertical' => 'center']
         ];
-
         $separadorStyle = [
             'font' => ['bold' => true, 'size' => 12, 'color' => ['rgb' => '0f172a']],
-            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'f8fafc']], // Slate-50 premium
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'f8fafc']],
             'borders' => [
                 'bottom' => ['borderStyle' => Border::BORDER_THICK, 'color' => ['rgb' => '2563eb']],
                 'top' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => 'cbd5e1']]
             ],
             'alignment' => ['horizontal' => 'left', 'vertical' => 'center']
         ];
-
         $yellowHeaderStyle = [
             'font' => ['bold' => true, 'color' => ['rgb' => '0f172a'], 'size' => 11],
-            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'fcd34d']], // Amber-300 ejecutivo
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'fcd34d']],
             'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => 'f59e0b']]],
             'alignment' => ['horizontal' => 'center', 'vertical' => 'center']
         ];
-
         $blueHeaderStyle = [
             'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 10],
-            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '1d4ed8']], // Blue-700 corporativo
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '1d4ed8']],
             'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '1e40af']]],
             'alignment' => ['horizontal' => 'center', 'vertical' => 'center']
         ];
-
         $greenTotalStyle = [
             'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 10],
-            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '059669']], // Emerald-600 profesional
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '059669']],
             'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '047857']]],
             'alignment' => ['horizontal' => 'center', 'vertical' => 'center']
         ];
-
         $redStyle = [
             'font' => ['color' => ['rgb' => 'FFFFFF'], 'bold' => true, 'size' => 10],
-            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'dc2626']], // Red-600 controlado
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'dc2626']],
             'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => 'b91c1c']]],
             'alignment' => ['horizontal' => 'center', 'vertical' => 'center']
         ];
-
         $borderStyle = [
             'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => 'e2e8f0']]],
             'alignment' => ['horizontal' => 'center', 'vertical' => 'center'],
-            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'ffffff']] // Fondo blanco limpio
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'ffffff']]
         ];
-
         $warningStyle = [
             'font' => ['bold' => true, 'color' => ['rgb' => '0f172a'], 'size' => 10],
-            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'fed7aa']], // Orange-200 suave
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'fed7aa']],
             'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => 'ea580c']]],
             'alignment' => ['horizontal' => 'center', 'vertical' => 'center']
         ];
-
         $infoStyle = [
             'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 10],
-            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '0369a1']], // Sky-700 profesional
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '0369a1']],
             'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '0284c7']]],
             'alignment' => ['horizontal' => 'center', 'vertical' => 'center']
         ];
-
         $neutralStyle = [
             'font' => ['bold' => true, 'color' => ['rgb' => '1f2937'], 'size' => 10],
-            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'f3f4f6']], // Gray-100 elegante
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'f3f4f6']],
             'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '9ca3af']]],
             'alignment' => ['horizontal' => 'center', 'vertical' => 'center']
         ];
-
         $totalEspecialStyle = [
             'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 11],
-            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '374151']], // Gray-700 ejecutivo
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '374151']],
             'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_MEDIUM, 'color' => ['rgb' => '1f2937']]],
             'alignment' => ['horizontal' => 'center', 'vertical' => 'center']
         ];
 
-        $this->SeccionCabecera($sheet, $nombreMes, $nombreEstablecimiento, $rucEstablecimiento, $usuarioNombre, $headerPrincipalStyle, $headerSecundarioStyle);
-
-        $row = 6;
-
-        $this->SeccionSeparador($sheet, $row, "ANÁLISIS COMPARATIVO POR SISTEMA DE FACTURACIÓN", $separadorStyle);
-
-        $row += 2;
-
-        $this->SeccionResumenSoftware($sheet, $row, $cuadresNUBOX, $cuadresEDSUITE, $cuadresSIRE, $yellowHeaderStyle, $blueHeaderStyle, $greenTotalStyle, $borderStyle, $redStyle, $warningStyle);
-
-        $row += 1;
-
-        $this->SeccionSeparador($sheet, $row, "RESUMEN DE COMPROBANTES", $separadorStyle);
-
-        $row += 2;
-
-        $this->SeccionResumenComprobante($sheet, $row, $totalesTipoDoc, $yellowHeaderStyle, $greenTotalStyle, $redStyle, $borderStyle, $infoStyle);
-
-        $row += 1;
-
-        $this->SeccionSeparador($sheet, $row, "REPORTES GLOBALES Y SERIES AJENAS", $separadorStyle);
-
-        $row += 2;
-
-        $this->SeccionReportesGlobales($sheet, $row, $cuadresNUBOX, $seriesAjenas, $ventasGlobales, $mesSeleccionado, $seriesEdSuite, $yellowHeaderStyle, $blueHeaderStyle, $greenTotalStyle, $borderStyle, $redStyle);
-
-        $sheet->getColumnDimension('A')->setWidth(20);
-        $sheet->getColumnDimension('B')->setWidth(12);
-
-        foreach (range('C', 'R') as $col) {
-            $sheet->getColumnDimension($col)->setAutoSize(true);
-            $sheet->getColumnDimension($col)->setWidth(max(10, min(25, $sheet->getColumnDimension($col)->getWidth())));
-        }
-
-        for ($i = 6; $i <= $row; $i++) {
-            $sheet->getRowDimension($i)->setRowHeight(18);
-        }
-
-        $sheet->getStyle("C6:R{$row}")->getNumberFormat()->setFormatCode('_("S/" * #,##0.00_);_("S/" * \(#,##0.00\);_("S/" * 0.00_);_(@_)');
-        $sheet->getStyle("B6:B{$row}")->getNumberFormat()->setFormatCode('#,##0;-#,##0;0;@');
-        $sheet->getStyle("J6:J{$row}")->getNumberFormat()->setFormatCode('#,##0;-#,##0;0;@');
-        $sheet->getStyle("N6:N{$row}")->getNumberFormat()->setFormatCode('#,##0;-#,##0;0;@');
-        $sheet->getStyle("A6:A{$row}")->getAlignment()->setWrapText(true);
-        $columnasMomentarias = ['C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'O', 'P', 'Q', 'R'];
-        foreach ($columnasMomentarias as $col) {
-            $sheet->getStyle("{$col}6:{$col}{$row}")->getNumberFormat()->setFormatCode('_("S/" * #,##0.00_);_("S/" * \(#,##0.00\);_("S/" * 0.00_);_(@_)');
-        }
-
-        $columnasUnidades = ['J', 'N'];
-        foreach ($columnasUnidades as $col) {
-            $sheet->getStyle("{$col}6:{$col}{$row}")->getNumberFormat()->setFormatCode('#,##0;-#,##0;0;@');
-        }
-
-        $sheet->getPageSetup()
-            ->setOrientation(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::ORIENTATION_LANDSCAPE)
-            ->setPaperSize(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::PAPERSIZE_A4)
-            ->setScale(95);
-        $sheet->getPageMargins()
-            ->setTop(1.2)
-            ->setRight(0.8)
-            ->setLeft(0.8)
-            ->setBottom(1.2)
-            ->setHeader(0.5)
-            ->setFooter(0.5);
-        $sheet->getPageSetup()->setRowsToRepeatAtTopByStartAndEnd(1, 5);
-        $sheet->getPageSetup()->setFitToWidth(1)->setFitToHeight(0);
-        $fechaActual = date('d/m/Y H:i');
-        $footer = '&L&"Arial,Bold,9"ESCIENZA - SISTEMA DE GESTIÓN EMPRESARIAL&C&"Arial,8"Reporte de Conciliación de Ventas&R&"Arial,8"Generado: ' . $fechaActual . ' - Página &P de &N';
-        $sheet->getHeaderFooter()->setOddFooter($footer);
-        $header = '&C&"Arial,Bold,10"REPORTE EJECUTIVO DE CONCILIACIÓN DE VENTAS';
-        $sheet->getHeaderFooter()->setOddHeader($header);
-
-        if ($id_establecimiento && $nombreEstablecimiento) {
-            $nombreArchivo = "Reporte {$nombreEstablecimiento} - {$nombreMes} - " . date('Y-m-d') . ".xlsx";
+        if (empty($id_establecimientos)) {
+            $sheet = new \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet($spreadsheet, 'Reporte General');
+            $spreadsheet->addSheet($sheet);
+            $row = 6;
+            $this->SeccionCabecera($sheet, $nombreMes, $nombreEstablecimiento ?? '', $rucEstablecimiento ?? '', $usuarioNombre, $headerPrincipalStyle, $headerSecundarioStyle);
+            $this->SeccionSeparador($sheet, $row, "ANÁLISIS COMPARATIVO POR SISTEMA DE FACTURACIÓN", $separadorStyle);
+            $row += 2;
+            $this->SeccionResumenSoftware($sheet, $row, $cuadresNUBOX ?? [], $cuadresEDSUITE ?? [], $cuadresSIRE ?? [], $yellowHeaderStyle, $blueHeaderStyle, $greenTotalStyle, $borderStyle, $redStyle, $warningStyle);
+            $row += 1;
+            $this->SeccionSeparador($sheet, $row, "RESUMEN DE COMPROBANTES", $separadorStyle);
+            $row += 2;
+            $this->SeccionResumenComprobante($sheet, $row, $totalesTipoDoc ?? [], $yellowHeaderStyle, $greenTotalStyle, $redStyle, $borderStyle, $infoStyle);
+            $row += 1;
+            $this->SeccionSeparador($sheet, $row, "REPORTES GLOBALES Y SERIES AJENAS", $separadorStyle);
+            $row += 2;
+            $this->SeccionReportesGlobales($sheet, $row, $cuadresNUBOX ?? [], $seriesAjenas ?? [], $ventasGlobales ?? [], $mesSeleccionado, $seriesEdSuite ?? [], $yellowHeaderStyle, $blueHeaderStyle, $greenTotalStyle, $borderStyle, $redStyle);
+            $sheet->getColumnDimension('A')->setWidth(20);
+            $sheet->getColumnDimension('B')->setWidth(12);
+            foreach (range('C', 'R') as $col) {
+                $sheet->getColumnDimension($col)->setAutoSize(true);
+                $sheet->getColumnDimension($col)->setWidth(max(10, min(25, $sheet->getColumnDimension($col)->getWidth())));
+            }
+            for ($i = 6; $i <= $row; $i++) {
+                $sheet->getRowDimension($i)->setRowHeight(18);
+            }
+            $sheet->getStyle("C6:R{$row}")->getNumberFormat()->setFormatCode('_("S/" * #,##0.00_);_("S/" * \(,#,##0.00\);_("S/" * 0.00_);_(@_)');
+            $sheet->getStyle("B6:B{$row}")->getNumberFormat()->setFormatCode('#,##0;-#,##0;0;@');
+            $sheet->getStyle("J6:J{$row}")->getNumberFormat()->setFormatCode('#,##0;-#,##0;0;@');
+            $sheet->getStyle("N6:N{$row}")->getNumberFormat()->setFormatCode('#,##0;-#,##0;0;@');
+            $sheet->getStyle("A6:A{$row}")->getAlignment()->setWrapText(true);
+            $columnasMomentarias = ['C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'O', 'P', 'Q', 'R'];
+            foreach ($columnasMomentarias as $col) {
+                $sheet->getStyle("{$col}6:{$col}{$row}")->getNumberFormat()->setFormatCode('_("S/" * #,##0.00_);_("S/" * \(,#,##0.00\);_("S/" * 0.00_);_(@_)');
+            }
+            $columnasUnidades = ['J', 'N'];
+            foreach ($columnasUnidades as $col) {
+                $sheet->getStyle("{$col}6:{$col}{$row}")->getNumberFormat()->setFormatCode('#,##0;-#,##0;0;@');
+            }
+            $sheet->getPageSetup()
+                ->setOrientation(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::ORIENTATION_LANDSCAPE)
+                ->setPaperSize(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::PAPERSIZE_A4)
+                ->setScale(95);
+            $sheet->getPageMargins()
+                ->setTop(1.2)
+                ->setRight(0.8)
+                ->setLeft(0.8)
+                ->setBottom(1.2)
+                ->setHeader(0.5)
+                ->setFooter(0.5);
+            $sheet->getPageSetup()->setRowsToRepeatAtTopByStartAndEnd(1, 5);
+            $sheet->getPageSetup()->setFitToWidth(1)->setFitToHeight(0);
+            $fechaActual = date('d/m/Y H:i');
+            $footer = '&L&"Arial,Bold,9"ESCIENZA - SISTEMA DE GESTIÓN EMPRESARIAL&C&"Arial,8"Reporte de Conciliación de Ventas&R&"Arial,8"Generado: ' . $fechaActual . ' - Página &P de &N';
+            $sheet->getHeaderFooter()->setOddFooter($footer);
+            $header = '&C&"Arial,Bold,10"REPORTE EJECUTIVO DE CONCILIACIÓN DE VENTAS';
+            $sheet->getHeaderFooter()->setOddHeader($header);
         } else {
-            $nombreArchivo = "Reporte General {$nombreEstablecimiento} - {$nombreMes} - " . date('Y-m-d') . ".xlsx";
+            foreach ($id_establecimientos as $id_estab) {
+                $establecimiento = \Establecimiento::obtenerEstablecimiento($id_estab);
+                $nombreEstablecimiento = $establecimiento['etiqueta'] ?? 'Establecimiento';
+                $rucEstablecimiento = $establecimiento['ruc'] ?? '';
+                $_GET['id_establecimiento'] = $id_estab;
+                $datosReporte = $this->obtenerDatosReporte($mesSeleccionado);
+                $cuadresSIRE = $datosReporte['cuadresSIRE'];
+                $cuadresNUBOX = $datosReporte['cuadresNUBOX'];
+                $cuadresEDSUITE = $datosReporte['cuadresEDSUITE'];
+                $totalesTipoDoc = $datosReporte['totalesTipoDoc'];
+                $seriesTotales = $datosReporte['seriesTotales'];
+                $diferenciasSeries = $datosReporte['diferenciasNuboxSire'];
+                $seriesAjenas = $datosReporte['seriesAjenas'];
+                $ventasGlobales = $datosReporte['ventasGlobales'];
+                $seriesEdSuite = $datosReporte['seriesEdSuite'];
+
+                $nombreHoja = $this->limpiarNombreHoja($nombreEstablecimiento);
+                $sheet = new \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet($spreadsheet, $nombreHoja);
+                $spreadsheet->addSheet($sheet);
+                $row = 6;
+                $this->SeccionCabecera($sheet, $nombreMes, $nombreEstablecimiento, $rucEstablecimiento, $usuarioNombre, $headerPrincipalStyle, $headerSecundarioStyle);
+                $this->SeccionSeparador($sheet, $row, "ANÁLISIS COMPARATIVO POR SISTEMA DE FACTURACIÓN", $separadorStyle);
+                $row += 2;
+                $this->SeccionResumenSoftware($sheet, $row, $cuadresNUBOX, $cuadresEDSUITE, $cuadresSIRE, $yellowHeaderStyle, $blueHeaderStyle, $greenTotalStyle, $borderStyle, $redStyle, $warningStyle);
+                $row += 1;
+                $this->SeccionSeparador($sheet, $row, "RESUMEN DE COMPROBANTES", $separadorStyle);
+                $row += 2;
+                $this->SeccionResumenComprobante($sheet, $row, $totalesTipoDoc, $yellowHeaderStyle, $greenTotalStyle, $redStyle, $borderStyle, $infoStyle);
+                $row += 1;
+                $this->SeccionSeparador($sheet, $row, "REPORTES GLOBALES Y SERIES AJENAS", $separadorStyle);
+                $row += 2;
+                $this->SeccionReportesGlobales($sheet, $row, $cuadresNUBOX, $seriesAjenas, $ventasGlobales, $mesSeleccionado, $seriesEdSuite, $yellowHeaderStyle, $blueHeaderStyle, $greenTotalStyle, $borderStyle, $redStyle);
+                $sheet->getColumnDimension('A')->setWidth(20);
+                $sheet->getColumnDimension('B')->setWidth(12);
+                foreach (range('C', 'R') as $col) {
+                    $sheet->getColumnDimension($col)->setAutoSize(true);
+                    $sheet->getColumnDimension($col)->setWidth(max(10, min(25, $sheet->getColumnDimension($col)->getWidth())));
+                }
+                for ($i = 6; $i <= $row; $i++) {
+                    $sheet->getRowDimension($i)->setRowHeight(18);
+                }
+                $sheet->getStyle("C6:R{$row}")->getNumberFormat()->setFormatCode('_("S/" * #,##0.00_);_("S/" * \(,#,##0.00\);_("S/" * 0.00_);_(@_)');
+                $sheet->getStyle("B6:B{$row}")->getNumberFormat()->setFormatCode('#,##0;-#,##0;0;@');
+                $sheet->getStyle("J6:J{$row}")->getNumberFormat()->setFormatCode('#,##0;-#,##0;0;@');
+                $sheet->getStyle("N6:N{$row}")->getNumberFormat()->setFormatCode('#,##0;-#,##0;0;@');
+                $sheet->getStyle("A6:A{$row}")->getAlignment()->setWrapText(true);
+                $columnasMomentarias = ['C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'O', 'P', 'Q', 'R'];
+                foreach ($columnasMomentarias as $col) {
+                    $sheet->getStyle("{$col}6:{$col}{$row}")->getNumberFormat()->setFormatCode('_("S/" * #,##0.00_);_("S/" * \(,#,##0.00\);_("S/" * 0.00_);_(@_)');
+                }
+                $columnasUnidades = ['J', 'N'];
+                foreach ($columnasUnidades as $col) {
+                    $sheet->getStyle("{$col}6:{$col}{$row}")->getNumberFormat()->setFormatCode('#,##0;-#,##0;0;@');
+                }
+                $sheet->getPageSetup()
+                    ->setOrientation(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::ORIENTATION_LANDSCAPE)
+                    ->setPaperSize(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::PAPERSIZE_A4)
+                    ->setScale(95);
+                $sheet->getPageMargins()
+                    ->setTop(1.2)
+                    ->setRight(0.8)
+                    ->setLeft(0.8)
+                    ->setBottom(1.2)
+                    ->setHeader(0.5)
+                    ->setFooter(0.5);
+                $sheet->getPageSetup()->setRowsToRepeatAtTopByStartAndEnd(1, 5);
+                $sheet->getPageSetup()->setFitToWidth(1)->setFitToHeight(0);
+                $fechaActual = date('d/m/Y H:i');
+                $footer = '&L&"Arial,Bold,9"ESCIENZA - SISTEMA DE GESTIÓN EMPRESARIAL&C&"Arial,8"Reporte de Conciliación de Ventas&R&"Arial,8"Generado: ' . $fechaActual . ' - Página &P de &N';
+                $sheet->getHeaderFooter()->setOddFooter($footer);
+                $header = '&C&"Arial,Bold,10"REPORTE EJECUTIVO DE CONCILIACIÓN DE VENTAS';
+                $sheet->getHeaderFooter()->setOddHeader($header);
+            }
         }
+        $spreadsheet->setActiveSheetIndex(0);
+        $nombreArchivo = 'Reporte_Multisucursal_' . $nombreMes . '_' . date('Y-m-d') . '.xlsx';
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment;filename="' . $nombreArchivo . '"');
         header('Cache-Control: max-age=0');
