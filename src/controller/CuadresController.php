@@ -169,6 +169,7 @@ class CuadresController
         unset($establecimiento);
 
         $serieArchivos = $resultsSerieArchivos;
+        $seriesString = [];
         foreach ($serieArchivos as $archivo) {
             $seriesString[] = implode('-', $archivo['series']);
         }
@@ -182,9 +183,6 @@ class CuadresController
             }
         }
         unset($establecimientos);
-        
-
-
 
         $_SESSION['ResultsSIRE'] = $ResultsSIRE ?? [];
         $_SESSION['ResultsNUBOX'] = $ResultsNUBOX ?? [];
