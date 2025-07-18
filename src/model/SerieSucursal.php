@@ -28,6 +28,31 @@ class SerieSucursal
         return true;
     }
 
+    public static function listarSeriesPorCliente($id_establecimiento){
+        $conn = Conexion::conectar();
+
+        $sql = "
+            SELECT ss.serie, ss.id_establecimiento
+            FROM series_sucursales ss
+            JOIN establecimiento e ON ss.id_establecimiento = e.id
+            WHERE e.id_cliente = (
+                SELECT id_cliente FROM establecimiento WHERE id = ?
+            )
+        ";
+    
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i", $id_establecimiento);
+        $stmt->execute();
+        $res = $stmt->get_result();
+    
+        $series = [];
+        while ($row = $res->fetch_assoc()) {
+            $series[] = $row;
+        }
+    
+        return $series;
+    }
+
     public static function obtenerSeriesPorEstablecimiento($id_establecimiento)
     {
         $conn = Conexion::conectar();
