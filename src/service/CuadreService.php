@@ -496,6 +496,28 @@ class CuadreService
 
         // Guardar VentaGlobal
         foreach ($resultsVentaGlobal as $resultado) {
+            $establecimiento = null;
+            // Buscar el establecimiento correspondiente al producto/serie
+            if (isset($resultado['serie']) && $resultsSerieArchivos) {
+                foreach ($resultsSerieArchivos as $archivoData) {
+                    if (in_array($resultado['serie'], $archivoData['series'])) {
+                        $establecimiento = $archivoData['id_establecimiento'];
+                        break;
+                    }
+                }
+            }
+            // Si no hay serie, intentar por producto (si tienes esa relación)
+            if (!$establecimiento && isset($resultado['producto']) && $resultsSerieArchivos) {
+                foreach ($resultsSerieArchivos as $archivoData) {
+                    if (isset($archivoData['productos']) && in_array($resultado['producto'], $archivoData['productos'])) {
+                        $establecimiento = $archivoData['id_establecimiento'];
+                        break;
+                    }
+                }
+            }
+            if (!$establecimiento) {
+                $establecimiento = $id_establecimiento;
+            }
             $fecha = isset($resultado['fecha']) ? date('Y-m-01', strtotime($resultado['fecha'])) : date('Y-m-01');
             $data = [
                 'producto' => $resultado['producto'],
@@ -503,7 +525,7 @@ class CuadreService
                 'total' => $resultado['total'],
                 'user_create' => $user_create,
                 'user_update' => $user_update,
-                'id_establecimiento' => $id_establecimiento,
+                'id_establecimiento' => $establecimiento,
                 'fecha_registro' => $fecha,
                 'estado' => 1
             ];

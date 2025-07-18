@@ -38,6 +38,7 @@ class SerieSucursal
         $res = $stmt->get_result();
         return $res->fetch_assoc();
     }
+    
     public static function obtenerTodasLasSeriesPorEstablecimiento($id_establecimiento, $soloActivas = true)
     {
         $conn = Conexion::conectar();

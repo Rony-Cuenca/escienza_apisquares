@@ -147,7 +147,7 @@ class ReporteController
             $cuadresNUBOX = $this->procesarSeriesConNotasCredito($cuadresNUBOX);
             $cuadresEDSUITE = $this->procesarSeriesConNotasCredito($cuadresEDSUITE);
             $cuadresSIRE = $this->procesarSeriesConNotasCredito($cuadresSIRE);
-            $totalesTipoDoc = Cuadre::obtenerTotalesPorTipoComprobanteExcluyendoAjenas($mesSeleccionado);
+            $totalesTipoDoc = Cuadre::obtenerTotalesPorTipoComprobante($mesSeleccionado, $id_establecimiento ?: null);
             $seriesTotales = Cuadre::obtenerTotalesPorSerieExcluyendoAjenas($mesSeleccionado);
             $seriesAjenas = SerieAjena::obtenerPorMes($mesSeleccionado);
             $ventasGlobales = VentaGlobal::obtenerPorMes($mesSeleccionado);
@@ -308,13 +308,29 @@ class ReporteController
         $mesesDisponibles = Cuadre::obtenerMesesDisponibles();
         $usuarioNombre = SesionHelper::obtenerNombreUsuario();
         list($id_cliente, $establecimientos) = $this->getClienteYEstablecimientos();
+        $id_establecimiento = $_GET['id_establecimiento'] ?? '';
         $rucEstablecimiento = '';
         $nombreEstablecimiento = '';
-        if ($id_cliente) {
-            $cliente = \Establecimiento::obtenerClientePorId($id_cliente);
-            if ($cliente) {
-                $rucEstablecimiento = $cliente['ruc'] ?? '';
-                $nombreEstablecimiento = $cliente['razon_social'] ?? '';
+
+        if ($id_establecimiento) {
+            $establecimiento = \Establecimiento::obtenerEstablecimiento($id_establecimiento);
+            if ($establecimiento) {
+                $nombreEstablecimiento = $establecimiento['etiqueta'] ?? '';
+                $id_cliente = $establecimiento['id_cliente'] ?? null;
+                if ($id_cliente) {
+                    $cliente = \Establecimiento::obtenerClientePorId($id_cliente);
+                    $rucEstablecimiento = $cliente['ruc'] ?? '';
+                } else {
+                    $rucEstablecimiento = '';
+                }
+            }
+        } else {
+            if ($id_cliente) {
+                $cliente = \Establecimiento::obtenerClientePorId($id_cliente);
+                if ($cliente) {
+                    $rucEstablecimiento = $cliente['ruc'] ?? '';
+                    $nombreEstablecimiento = $cliente['razon_social'] ?? '';
+                }
             }
         }
 
@@ -374,8 +390,14 @@ class ReporteController
         if ($id_establecimiento) {
             $establecimiento = \Establecimiento::obtenerEstablecimiento($id_establecimiento);
             if ($establecimiento) {
-                $rucEstablecimiento = $establecimiento['ruc'] ?? '';
                 $nombreEstablecimiento = $establecimiento['etiqueta'] ?? '';
+                $id_cliente = $establecimiento['id_cliente'] ?? null;
+                if ($id_cliente) {
+                    $cliente = \Establecimiento::obtenerClientePorId($id_cliente);
+                    $rucEstablecimiento = $cliente['ruc'] ?? '';
+                } else {
+                    $rucEstablecimiento = '';
+                }
             }
         } else {
             $id_cliente = SesionHelper::obtenerClienteActual();
@@ -564,9 +586,9 @@ class ReporteController
         $sheet->getHeaderFooter()->setOddHeader($header);
 
         if ($id_establecimiento && $nombreEstablecimiento) {
-            $nombreArchivo = "Reporte - {$nombreEstablecimiento} - {$nombreMes} - " . date('Y-m-d') . ".xlsx";
+            $nombreArchivo = "Reporte {$nombreEstablecimiento} - {$nombreMes} - " . date('Y-m-d') . ".xlsx";
         } else {
-            $nombreArchivo = "Reporte - {$nombreEstablecimiento} - {$nombreMes} - " . date('Y-m-d') . ".xlsx";
+            $nombreArchivo = "Reporte General {$nombreEstablecimiento} - {$nombreMes} - " . date('Y-m-d') . ".xlsx";
         }
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment;filename="' . $nombreArchivo . '"');

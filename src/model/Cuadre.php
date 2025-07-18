@@ -64,7 +64,7 @@ class Cuadre
     {
         $conn = Conexion::conectar();
         $id_cliente = $_SESSION['id_cliente'] ?? null;
-        
+
         $sql = "SELECT DISTINCT DATE_FORMAT(rc.fecha_registro, '%Y-%m') as mes, DATE_FORMAT(rc.fecha_registro, '%M %Y') as mes_nombre 
                 FROM resumen_comprobante rc
                 INNER JOIN establecimiento e ON rc.id_establecimiento = e.id
@@ -74,7 +74,7 @@ class Cuadre
         $stmt->bind_param("i", $id_cliente);
         $stmt->execute();
         $result = $stmt->get_result();
-        
+
         $meses = [];
         while ($row = $result->fetch_assoc()) {
             $meses[] = $row;
@@ -86,7 +86,7 @@ class Cuadre
     {
         $conn = Conexion::conectar();
         $id_cliente = $_SESSION['id_cliente'] ?? null;
-        
+
         $sql = "SELECT rc.* FROM resumen_comprobante rc
                 INNER JOIN establecimiento e ON rc.id_establecimiento = e.id
                 WHERE DATE_FORMAT(rc.fecha_registro, '%Y-%m') = ? 
@@ -103,21 +103,30 @@ class Cuadre
         return $cuadres;
     }
 
-    public static function obtenerTotalesPorTipoComprobante($mes)
+    public static function obtenerTotalesPorTipoComprobante($mes, $id_establecimiento = null)
     {
         $conn = Conexion::conectar();
         $id_cliente = $_SESSION['id_cliente'] ?? null;
-        
+
         $sql = "
         SELECT rc.tipo_comprobante, rc.id_reporte, SUM(rc.monto_total) as total
         FROM resumen_comprobante rc
         INNER JOIN establecimiento e ON rc.id_establecimiento = e.id
         WHERE DATE_FORMAT(rc.fecha_registro, '%Y-%m') = ?
         AND e.id_cliente = ?
-        GROUP BY rc.tipo_comprobante, rc.id_reporte
         ";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("si", $mes, $id_cliente);
+        if ($id_establecimiento) {
+            $sql .= " AND rc.id_establecimiento = ?";
+        }
+        $sql .= " GROUP BY rc.tipo_comprobante, rc.id_reporte";
+
+        if ($id_establecimiento) {
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("sii", $mes, $id_cliente, $id_establecimiento);
+        } else {
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("si", $mes, $id_cliente);
+        }
         $stmt->execute();
         $result = $stmt->get_result();
         $totales = [];
@@ -131,7 +140,7 @@ class Cuadre
     {
         $conn = Conexion::conectar();
         $id_cliente = $_SESSION['id_cliente'] ?? null;
-        
+
         $sql = "
         SELECT 
             rc.serie,
@@ -158,7 +167,7 @@ class Cuadre
     {
         $conn = Conexion::conectar();
         $id_cliente = $_SESSION['id_cliente'] ?? null;
-        
+
         $sql = "
             SELECT 
                 rc.serie,
@@ -181,7 +190,7 @@ class Cuadre
         $stmt->bind_param("si", $mes, $id_cliente);
         $stmt->execute();
         $result = $stmt->get_result();
-        
+
         $resumen = [];
         while ($row = $result->fetch_assoc()) {
             $resumen[] = [
@@ -196,7 +205,7 @@ class Cuadre
                 'diferencia' => 0 // Se puede calcular según requerimientos específicos
             ];
         }
-        
+
         return $resumen;
     }
 
@@ -204,7 +213,7 @@ class Cuadre
     {
         $conn = Conexion::conectar();
         $id_cliente = $_SESSION['id_cliente'] ?? null;
-        
+
         $sql = "
         SELECT rc.tipo_comprobante, rc.id_reporte, SUM(rc.monto_total) as total
         FROM resumen_comprobante rc
@@ -236,7 +245,7 @@ class Cuadre
     {
         $conn = Conexion::conectar();
         $id_cliente = $_SESSION['id_cliente'] ?? null;
-        
+
         $sql = "
         SELECT 
             rc.serie,
