@@ -362,20 +362,21 @@ class CuadreService
             }
             if (!$establecimiento) {
                 $establecimientosSerie = SerieSucursal::listarSeriesPorCliente($id_establecimiento);
-                if ($establecimientosSerie) {
+                if ($establecimientosSerie && is_array($establecimientosSerie)) {
                     foreach ($establecimientosSerie as $archivoData) {
-                        // Convertir el string de series en array
-                        $series = explode('-', $archivoData['serie']);
-            
+                        $series = explode('-', $archivoData['serie']); // eliminar concatenación
                         if (in_array($resultado['serie'], $series)) {
                             $establecimiento = $archivoData['id_establecimiento'];
                             break;
                         }
                     }
-                } else{
-                    $establecimiento = $id_establecimiento;
                 }
             }
+        
+            if (!$establecimiento) {
+                $establecimiento = $id_establecimiento;
+            }
+
             $data = [
                 'serie' => $resultado['serie'],
                 'cantidad_compr' => $resultado['conteo'],
@@ -408,19 +409,19 @@ class CuadreService
             }
             if (!$establecimiento) {
                 $establecimientosSerie = SerieSucursal::listarSeriesPorCliente($id_establecimiento);
-                if ($establecimientosSerie) {
+                if ($establecimientosSerie && is_array($establecimientosSerie)) {
                     foreach ($establecimientosSerie as $archivoData) {
-                        // Convertir el string de series en array
-                        $series = explode('-', $archivoData['serie']);
-            
+                        $series = explode('-', $archivoData['serie']); // eliminar concatenación
                         if (in_array($resultado['serie'], $series)) {
                             $establecimiento = $archivoData['id_establecimiento'];
                             break;
                         }
                     }
-                } else{
-                    $establecimiento = $id_establecimiento;
                 }
+            }
+        
+            if (!$establecimiento) {
+                $establecimiento = $id_establecimiento;
             }
             $data = [
                 'serie' => $resultado['serie'],
@@ -454,19 +455,19 @@ class CuadreService
             }
             if (!$establecimiento) {
                 $establecimientosSerie = SerieSucursal::listarSeriesPorCliente($id_establecimiento);
-                if ($establecimientosSerie) {
+                if ($establecimientosSerie && is_array($establecimientosSerie)) {
                     foreach ($establecimientosSerie as $archivoData) {
-                        // Convertir el string de series en array
-                        $series = explode('-', $archivoData['serie']);
-            
+                        $series = explode('-', $archivoData['serie']); // eliminar concatenación
                         if (in_array($resultado['serie'], $series)) {
                             $establecimiento = $archivoData['id_establecimiento'];
                             break;
                         }
                     }
-                } else{
-                    $establecimiento = $id_establecimiento;
                 }
+            }
+        
+            if (!$establecimiento) {
+                $establecimiento = $id_establecimiento;
             }
             $data = [
                 'serie' => $resultado['serie'],
