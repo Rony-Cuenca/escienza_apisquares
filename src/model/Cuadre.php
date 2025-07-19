@@ -202,7 +202,7 @@ class Cuadre
                 'suma_inafecto' => $row['suma_inafecto'],
                 'suma_igv' => $row['suma_igv'],
                 'monto_total' => $row['monto_total'],
-                'diferencia' => 0 // Se puede calcular según requerimientos específicos
+                'diferencia' => 0
             ];
         }
 
@@ -274,5 +274,17 @@ class Cuadre
             $series[$row['serie']][$row['id_reporte']] = $row['total'];
         }
         return $series;
+    }
+
+    public static function datosEstablecimiento($id_establecimiento, $mes)
+    {
+        $conn = Conexion::conectar();
+        $sql = "SELECT COUNT(*) as total FROM resumen_comprobante WHERE id_establecimiento = ? AND DATE_FORMAT(fecha_registro, '%Y-%m') = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("is", $id_establecimiento, $mes);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
+        return ($row && $row['total'] > 0);
     }
 }

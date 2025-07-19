@@ -273,7 +273,7 @@ class CuadreService
                 $ErrorEDSUITE = "Estructura de datos incorrecta";
                 return compact('ErrorEDSUITE', 'ResultsEDSUITE');
             }
-            $fecha = isset($resultado['fecha']) ? date('Y-m-01', strtotime($resultado['fecha'])) : date('Y-m-01');
+            $fecha = isset($resultado['fecha']) ? date('Y-d-01', strtotime($resultado['fecha'])) : date('Y-d-01');
             $tipo_comprobante = ($resultado['total'] < 0) ? 3 : (substr($resultado['serie'], 0, 1) == 'B' ? 1 : 2);
             $ResultsEDSUITE[] = [
                 'serie' => $resultado['serie'],
@@ -559,7 +559,7 @@ class CuadreService
             if (!$establecimiento) {
                 $establecimiento = $id_establecimiento;
             }
-            $fecha = isset($resultado['fecha']) ? date('Y-m-01', strtotime($resultado['fecha'])) : date('Y-m-01');
+            $fecha = isset($resultado['fecha']) ? date('Y-d-01', strtotime($resultado['fecha'])) : date('Y-d-01');
             $data = [
                 'producto' => $resultado['producto'],
                 'cantidad' => $resultado['cantidad'],
@@ -599,7 +599,7 @@ class CuadreService
 
         // Guardar DiferenciaComprobante
         foreach ($diferenciaGlobales as $resultado) {
-            $fecha = isset($resultado['nubox']['fecha']) ? date('Y-m-01', strtotime($resultado['nubox']['fecha'])) : date('Y-m-01');
+            $fecha = isset($resultado['nubox']['fecha']) ? date('Y-d-01', strtotime($resultado['nubox']['fecha'])) : date('Y-d-01');
             $data = [
                 'serie' => $resultado['sire']['serie'],
                 'numero' => $resultado['sire']['numero'],

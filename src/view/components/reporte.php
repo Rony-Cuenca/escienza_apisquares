@@ -540,11 +540,13 @@ $sinSeries = $idEstablecimiento && empty($cuadresNUBOX) && empty($cuadresEDSUITE
 </div>
 <script>
     window.MESES_HABILITADOS = <?= json_encode(array_column($mesesDisponibles, 'mes')) ?>;
-    window.ESTABLECIMIENTOS_EXPORT = <?= json_encode(array_map(function($e) {
-        return [
-            'id' => $e['id'],
-            'etiqueta' => $e['etiqueta']
-        ];
-    }, $establecimientos ?? [])) ?>;
+    window.ESTABLECIMIENTOS_EXPORT = <?= json_encode(array_map(function ($e) use ($mesSeleccionado) {
+                                            $tieneDatos = \Cuadre::datosEstablecimiento($e['id'], $mesSeleccionado);
+                                            return [
+                                                'id' => $e['id'],
+                                                'etiqueta' => $e['etiqueta'],
+                                                'tiene_datos' => $tieneDatos
+                                            ];
+                                        }, $establecimientos ?? [])) ?>;
 </script>
 <script src="../assets/js/reporte.js"></script>
