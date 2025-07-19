@@ -27,17 +27,33 @@ if (!function_exists('obtenerContextoActual')) {
         <div class="flex flex-col w-full sm:w-auto">
           <label class="block text-base font-semibold text-slate-700 mb-2" for="select-establecimiento">Establecimiento</label>
           <select id="select-establecimiento" class="border border-gray-300 rounded-lg px-4 py-3 text-base w-full md:w-[400px] sm:w-64 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 bg-white shadow-sm transition duration-200">
-            <?php foreach ($establecimientos as $s): ?>
-              <option value="<?= $s['id'] ?>"><?= htmlspecialchars($s['etiqueta']) ?></option>
-            <?php endforeach; ?>
+            <?php 
+            if (isset($establecimientos) && is_array($establecimientos)):
+              foreach ($establecimientos as $s): ?>
+                <option value="<?= $s['id'] ?>"><?= htmlspecialchars($s['etiqueta']) ?></option>
+            <?php 
+              endforeach;
+            else: ?>
+              <option value="1">Establecimiento por defecto</option>
+            <?php endif; ?>
           </select>
         </div>
         <div class="flex flex-col w-full sm:w-auto">
           <label class="block text-base font-semibold text-slate-700 mb-2" for="select-anio">Año</label>
           <select id="select-anio" class="border border-gray-300 rounded-lg px-4 py-3 text-base w-full sm:w-40 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 bg-white shadow-sm transition duration-200">
-            <?php foreach ($anios as $anio): ?>
-              <option value="<?= $anio ?>"><?= $anio ?></option>
-            <?php endforeach; ?>
+            <?php 
+            if (isset($anios) && is_array($anios)):
+              foreach ($anios as $anio): ?>
+                <option value="<?= $anio ?>"><?= $anio ?></option>
+            <?php 
+              endforeach;
+            else: 
+              $currentYear = date('Y');
+              for ($i = $currentYear; $i >= $currentYear - 5; $i--): ?>
+                <option value="<?= $i ?>"><?= $i ?></option>
+            <?php 
+              endfor;
+            endif; ?>
           </select>
         </div>
       </div>
@@ -369,5 +385,3 @@ if (!function_exists('obtenerContextoActual')) {
     }, 1000);
   });
 </script>
-</div>
-</div>
