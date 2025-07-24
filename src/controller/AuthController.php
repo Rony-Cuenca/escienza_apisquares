@@ -26,9 +26,8 @@ class AuthController
             if ($user) {
                 session_regenerate_id(true);
                 
-                // Verificar si es Super Admin
                 if ($user['rol'] == 'SuperAdmin') {
-                    $_SESSION['id_cliente'] = $user['id_cliente']; // Mantener el cliente original
+                    $_SESSION['id_cliente'] = $user['id_cliente'];
                     $_SESSION['usuario'] = $user['usuario'];
                     $_SESSION['id_usuario'] = $user['id'];
                     $_SESSION['correo'] = $user['correo'];
@@ -136,11 +135,12 @@ class AuthController
             header('Location: index.php?controller=auth&action=login');
             exit;
         }
-        define('TIEMPO_INACTIVIDAD', 600);
+        define('TIEMPO_INACTIVIDAD', 6000);
         if (isset($_SESSION['ultima_actividad']) && (time() - $_SESSION['ultima_actividad']) > TIEMPO_INACTIVIDAD) {
             session_unset();
             session_destroy();
-            header('Location: index.php?controller=auth&action=login&error=Sesión expirada por inactividad');
+            header('Location: index.php?controller=auth&action=login');
+            //header('Location: index.php?controller=auth&action=login&error=Sesión expirada por inactividad');
             exit;
         }
         $_SESSION['ultima_actividad'] = time();

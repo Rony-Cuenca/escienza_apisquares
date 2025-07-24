@@ -109,27 +109,11 @@ class ReporteController
         $id_establecimiento = $_GET['id_establecimiento'] ?? '';
         $seriesEstablecimiento = [];
 
-        if ($id_establecimiento) {
-            require_once __DIR__ . '/../model/SerieSucursal.php';
-            $seriesEstablecimiento = SerieSucursal::obtenerTodasLasSeriesPorEstablecimiento($id_establecimiento);
-            if ($id_establecimiento && empty($seriesEstablecimiento)) {
-                return [
-                    'cuadresSIRE' => [],
-                    'cuadresNUBOX' => [],
-                    'cuadresEDSUITE' => [],
-                    'totalesTipoDoc' => [],
-                    'seriesTotales' => [],
-                    'diferenciasNuboxSire' => [],
-                    'diferenciasTipoDocNuboxSire' => [],
-                    'seriesAjenas' => [],
-                    'ventasGlobales' => [],
-                    'seriesEdSuite' => []
-                ];
-            }
-        }
-
         if ($mesSeleccionado) {
             $cuadres = Cuadre::obtenerCuadresPorMes($mesSeleccionado);
+            if ($id_establecimiento) {
+                $cuadres = array_filter($cuadres, fn($c) => $c['id_establecimiento'] == $id_establecimiento);
+            }
             list($cuadresSIRE, $cuadresNUBOX, $cuadresEDSUITE) = $this->separarCuadresPorSistemaExcluyendoAjenas($cuadres, $mesSeleccionado);
 
             $cuadresNUBOX = $this->procesarSeriesConNotasCredito($cuadresNUBOX);
@@ -143,19 +127,6 @@ class ReporteController
             $diferenciasNuboxSire = $diferencias['diferenciasNuboxSire'];
             $diferenciasTipoDocNuboxSire = $diferencias['diferenciasTipoDocNuboxSire'];
             $seriesEdSuite = $this->calcularDiferenciasNuboxEdSuite($cuadresEDSUITE, $seriesTotales);
-
-            // FILTRADO POR ESTABLECIMIENTO
-            if ($id_establecimiento && !empty($seriesEstablecimiento)) {
-                $cuadresNUBOX = array_filter($cuadresNUBOX, fn($c) => in_array($c['serie'], $seriesEstablecimiento));
-                $cuadresEDSUITE = array_filter($cuadresEDSUITE, fn($c) => in_array($c['serie'], $seriesEstablecimiento));
-                $cuadresSIRE = array_filter($cuadresSIRE, fn($c) => in_array($c['serie'], $seriesEstablecimiento));
-                $seriesEdSuite = array_filter($seriesEdSuite, fn($c) => in_array($c['serie'], $seriesEstablecimiento));
-                $seriesTotales = array_filter($seriesTotales, fn($k) => in_array($k, $seriesEstablecimiento), ARRAY_FILTER_USE_KEY);
-                $diferenciasNuboxSire = array_filter($diferenciasNuboxSire, fn($row) => in_array($row['serie'], $seriesEstablecimiento));
-                if (!empty($ventasGlobales) && isset($ventasGlobales[0]['serie'])) {
-                    $ventasGlobales = array_filter($ventasGlobales, fn($v) => in_array($v['serie'], $seriesEstablecimiento));
-                }
-            }
         }
 
         return compact(
@@ -531,19 +502,7 @@ class ReporteController
             for ($i = 6; $i <= $row; $i++) {
                 $sheet->getRowDimension($i)->setRowHeight(18);
             }
-            $sheet->getStyle("C6:R{$row}")->getNumberFormat()->setFormatCode('_("S/" * #,##0.00_);_("S/" * \(,#,##0.00\);_("S/" * 0.00_);_(@_)');
-            $sheet->getStyle("B6:B{$row}")->getNumberFormat()->setFormatCode('#,##0;-#,##0;0;@');
-            $sheet->getStyle("J6:J{$row}")->getNumberFormat()->setFormatCode('#,##0;-#,##0;0;@');
-            $sheet->getStyle("N6:N{$row}")->getNumberFormat()->setFormatCode('#,##0;-#,##0;0;@');
             $sheet->getStyle("A6:A{$row}")->getAlignment()->setWrapText(true);
-            $columnasMomentarias = ['C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'O', 'P', 'Q', 'R'];
-            foreach ($columnasMomentarias as $col) {
-                $sheet->getStyle("{$col}6:{$col}{$row}")->getNumberFormat()->setFormatCode('_("S/" * #,##0.00_);_("S/" * \(,#,##0.00\);_("S/" * 0.00_);_(@_)');
-            }
-            $columnasUnidades = ['J', 'N'];
-            foreach ($columnasUnidades as $col) {
-                $sheet->getStyle("{$col}6:{$col}{$row}")->getNumberFormat()->setFormatCode('#,##0;-#,##0;0;@');
-            }
             $sheet->getPageSetup()
                 ->setOrientation(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::ORIENTATION_LANDSCAPE)
                 ->setPaperSize(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::PAPERSIZE_A4)
@@ -601,19 +560,7 @@ class ReporteController
             for ($i = 6; $i <= $row; $i++) {
                 $sheet->getRowDimension($i)->setRowHeight(18);
             }
-            $sheet->getStyle("C6:R{$row}")->getNumberFormat()->setFormatCode('_("S/" * #,##0.00_);_("S/" * \(,#,##0.00\);_("S/" * 0.00_);_(@_)');
-            $sheet->getStyle("B6:B{$row}")->getNumberFormat()->setFormatCode('#,##0;-#,##0;0;@');
-            $sheet->getStyle("J6:J{$row}")->getNumberFormat()->setFormatCode('#,##0;-#,##0;0;@');
-            $sheet->getStyle("N6:N{$row}")->getNumberFormat()->setFormatCode('#,##0;-#,##0;0;@');
             $sheet->getStyle("A6:A{$row}")->getAlignment()->setWrapText(true);
-            $columnasMomentarias = ['C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'O', 'P', 'Q', 'R'];
-            foreach ($columnasMomentarias as $col) {
-                $sheet->getStyle("{$col}6:{$col}{$row}")->getNumberFormat()->setFormatCode('_("S/" * #,##0.00_);_("S/" * \(,#,##0.00\);_("S/" * 0.00_);_(@_)');
-            }
-            $columnasUnidades = ['J', 'N'];
-            foreach ($columnasUnidades as $col) {
-                $sheet->getStyle("{$col}6:{$col}{$row}")->getNumberFormat()->setFormatCode('#,##0;-#,##0;0;@');
-            }
             $sheet->getPageSetup()
                 ->setOrientation(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::ORIENTATION_LANDSCAPE)
                 ->setPaperSize(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::PAPERSIZE_A4)
@@ -678,19 +625,7 @@ class ReporteController
                 for ($i = 6; $i <= $row; $i++) {
                     $sheet->getRowDimension($i)->setRowHeight(18);
                 }
-                $sheet->getStyle("C6:R{$row}")->getNumberFormat()->setFormatCode('_("S/" * #,##0.00_);_("S/" * \(,#,##0.00\);_("S/" * 0.00_);_(@_)');
-                $sheet->getStyle("B6:B{$row}")->getNumberFormat()->setFormatCode('#,##0;-#,##0;0;@');
-                $sheet->getStyle("J6:J{$row}")->getNumberFormat()->setFormatCode('#,##0;-#,##0;0;@');
-                $sheet->getStyle("N6:N{$row}")->getNumberFormat()->setFormatCode('#,##0;-#,##0;0;@');
                 $sheet->getStyle("A6:A{$row}")->getAlignment()->setWrapText(true);
-                $columnasMomentarias = ['C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'O', 'P', 'Q', 'R'];
-                foreach ($columnasMomentarias as $col) {
-                    $sheet->getStyle("{$col}6:{$col}{$row}")->getNumberFormat()->setFormatCode('_("S/" * #,##0.00_);_("S/" * \(,#,##0.00\);_("S/" * 0.00_);_(@_)');
-                }
-                $columnasUnidades = ['J', 'N'];
-                foreach ($columnasUnidades as $col) {
-                    $sheet->getStyle("{$col}6:{$col}{$row}")->getNumberFormat()->setFormatCode('#,##0;-#,##0;0;@');
-                }
                 $sheet->getPageSetup()
                     ->setOrientation(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::ORIENTATION_LANDSCAPE)
                     ->setPaperSize(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::PAPERSIZE_A4)
@@ -727,19 +662,10 @@ class ReporteController
         exit;
     }
 
-    private function SeccionResumenSoftware(
-        $sheet,
-        &$row,
-        $cuadresNUBOX,
-        $cuadresEDSUITE,
-        $cuadresSIRE,
-        $yellowHeaderStyle,
-        $blueHeaderStyle,
-        $greenTotalStyle,
-        $borderStyle,
-        $redStyle,
-        $warningStyle
-    ) {
+    private function SeccionResumenSoftware($sheet, &$row, $cuadresNUBOX, $cuadresEDSUITE, $cuadresSIRE, $yellowHeaderStyle, $blueHeaderStyle, $greenTotalStyle, $borderStyle, $redStyle, $warningStyle)
+    {
+        $monedaFormat = '"S/. "#,##0.00;"S/. -"#,##0.00;"S/. "0.00';
+
         $startRow = $row;
         $nuboxPorSerie = [];
         $edsuitePorSerie = [];
@@ -803,12 +729,18 @@ class ReporteController
             foreach ($cuadresNUBOX as $cuadre) {
                 $sheet->setCellValue("C$currentRow", $cuadre['serie']);
                 if ($cuadre['tipo_comprobante'] == 3) {
+                    $valorNota = number_format($cuadre['monto_total'], 2, '.', '');
                     $sheet->setCellValue("D$currentRow", 0);
-                    $sheet->setCellValue("E$currentRow", $cuadre['monto_total']);
+                    $sheet->setCellValue("E$currentRow", $valorNota);
+                    $sheet->getStyle("E$currentRow")->getNumberFormat()->setFormatCode($monedaFormat);
+                    $sheet->getStyle("D$currentRow")->getNumberFormat()->setFormatCode($monedaFormat);
                     $totalNotasNubox += $cuadre['monto_total'];
                 } else {
-                    $sheet->setCellValue("D$currentRow", $cuadre['monto_total']);
+                    $valorTotal = number_format($cuadre['monto_total'], 2, '.', '');
+                    $sheet->setCellValue("D$currentRow", $valorTotal);
                     $sheet->setCellValue("E$currentRow", 0);
+                    $sheet->getStyle("D$currentRow")->getNumberFormat()->setFormatCode($monedaFormat);
+                    $sheet->getStyle("E$currentRow")->getNumberFormat()->setFormatCode($monedaFormat);
                     $totalNubox += $cuadre['monto_total'];
                 }
                 $sheet->getStyle("C$currentRow:E$currentRow")->applyFromArray($borderStyle);
@@ -818,13 +750,16 @@ class ReporteController
 
         $totalRow1Nubox = $currentRow;
         $sheet->setCellValue("C$currentRow", "TOTAL");
-        $sheet->setCellValue("D$currentRow", $totalNubox);
-        $sheet->setCellValue("E$currentRow", $totalNotasNubox);
+        $sheet->setCellValue("D$currentRow", number_format($totalNubox, 2, '.', ''));
+        $sheet->setCellValue("E$currentRow", number_format($totalNotasNubox, 2, '.', ''));
         $sheet->getStyle("D$currentRow:E$currentRow")->applyFromArray($greenTotalStyle);
+        $sheet->getStyle("D$currentRow")->getNumberFormat()->setFormatCode($monedaFormat);
+        $sheet->getStyle("E$currentRow")->getNumberFormat()->setFormatCode($monedaFormat);
         $currentRow++;
         $totalRow2Nubox = $currentRow;
         $totalNetoNubox = $totalNubox + $totalNotasNubox;
-        $sheet->setCellValue("D$currentRow", $totalNetoNubox);
+        $sheet->setCellValue("D$currentRow", number_format($totalNetoNubox, 2, '.', ''));
+        $sheet->getStyle("D$currentRow")->getNumberFormat()->setFormatCode($monedaFormat);
         $sheet->mergeCells("D$currentRow:E$currentRow");
         $sheet->getStyle("D$currentRow:E$currentRow")->applyFromArray(array_merge($greenTotalStyle, [
             'alignment' => [
@@ -866,21 +801,32 @@ class ReporteController
                 $sheet->setCellValue("G$currentRow", $serie);
 
                 if ($cuadre['tipo_comprobante'] == 3) {
+                    $valorNota = number_format($cuadre['monto_total'], 2, '.', '');
                     $sheet->setCellValue("H$currentRow", 0);
-                    $sheet->setCellValue("I$currentRow", $cuadre['monto_total']);
+                    $sheet->setCellValue("I$currentRow", $valorNota);
+                    $sheet->getStyle("I$currentRow")->getNumberFormat()->setFormatCode($monedaFormat);
+                    $sheet->getStyle("H$currentRow")->getNumberFormat()->setFormatCode($monedaFormat);
                     $totalNotasEdsuite += $cuadre['monto_total'];
                     $nuboxNotas = isset($nuboxPorSerie[$serie]) ? abs($nuboxPorSerie[$serie]['notas']) : 0;
                     $edsuiteNotas = abs($cuadre['monto_total']);
                     $diferencia = $edsuiteNotas - $nuboxNotas;
                 } else {
-                    $sheet->setCellValue("H$currentRow", $cuadre['monto_total']);
+                    $valorTotal = number_format($cuadre['monto_total'], 2, '.', '');
+                    $sheet->setCellValue("H$currentRow", $valorTotal);
                     $sheet->setCellValue("I$currentRow", 0);
+                    $sheet->getStyle("H$currentRow")->getNumberFormat()->setFormatCode($monedaFormat);
+                    $sheet->getStyle("I$currentRow")->getNumberFormat()->setFormatCode($monedaFormat);
                     $totalEdsuite += $cuadre['monto_total'];
                     $nuboxTotal = isset($nuboxPorSerie[$serie]) ? $nuboxPorSerie[$serie]['total'] : 0;
                     $diferencia = $cuadre['monto_total'] - $nuboxTotal;
                 }
 
-                $sheet->setCellValue("J$currentRow", $diferencia);
+                $diferencia = round($diferencia, 2);
+                if ($diferencia == 0) $diferencia = 0;
+
+                $sheet->setCellValue("J$currentRow", number_format($diferencia, 2, '.', ''));
+                $sheet->getStyle("J$currentRow")->getNumberFormat()->setFormatCode($monedaFormat);
+
                 $totalDiferenciaEdsuite += $diferencia;
 
                 if ($diferencia != 0) {
@@ -895,10 +841,13 @@ class ReporteController
 
         $totalRow1Edsuite = $currentRow;
         $sheet->setCellValue("G$currentRow", "TOTAL");
-        $sheet->setCellValue("H$currentRow", $totalEdsuite);
-        $sheet->setCellValue("I$currentRow", $totalNotasEdsuite);
-        $sheet->setCellValue("J$currentRow", $totalDiferenciaEdsuite);
+        $sheet->setCellValue("H$currentRow", number_format($totalEdsuite, 2, '.', ''));
+        $sheet->setCellValue("I$currentRow", number_format($totalNotasEdsuite, 2, '.', ''));
+        $sheet->setCellValue("J$currentRow", number_format($totalDiferenciaEdsuite, 2, '.', ''));
         $sheet->getStyle("H$currentRow:I$currentRow")->applyFromArray($greenTotalStyle);
+        $sheet->getStyle("H$currentRow")->getNumberFormat()->setFormatCode($monedaFormat);
+        $sheet->getStyle("I$currentRow")->getNumberFormat()->setFormatCode($monedaFormat);
+        $sheet->getStyle("J$currentRow")->getNumberFormat()->setFormatCode($monedaFormat);
 
         if ($totalDiferenciaEdsuite != 0) {
             $sheet->getStyle("J$currentRow")->applyFromArray($redStyle);
@@ -911,8 +860,12 @@ class ReporteController
         $totalNetoEdsuite = $totalEdsuite + $totalNotasEdsuite;
         $totalNetoNuboxCompleto = $totalNubox + $totalNotasNubox;
         $diferenciaTotalNetoEdsuite = $totalNetoEdsuite - $totalNetoNuboxCompleto;
-        $sheet->setCellValue("H$currentRow", $totalNetoEdsuite);
-        $sheet->setCellValue("J$currentRow", $diferenciaTotalNetoEdsuite);
+        $diferenciaTotalNetoEdsuite = round($diferenciaTotalNetoEdsuite, 2);
+        if ($diferenciaTotalNetoEdsuite == 0) $diferenciaTotalNetoEdsuite = 0;
+        $sheet->setCellValue("H$currentRow", number_format($totalNetoEdsuite, 2, '.', ''));
+        $sheet->getStyle("H$currentRow")->getNumberFormat()->setFormatCode($monedaFormat);
+        $sheet->setCellValue("J$currentRow", number_format($diferenciaTotalNetoEdsuite, 2, '.', ''));
+        $sheet->getStyle("J$currentRow")->getNumberFormat()->setFormatCode($monedaFormat);
         $sheet->mergeCells("H$currentRow:I$currentRow");
         $sheet->getStyle("H$currentRow:I$currentRow")->applyFromArray(array_merge($greenTotalStyle, [
             'alignment' => [
@@ -936,7 +889,9 @@ class ReporteController
         ]));
 
         $sheet->mergeCells("J$totalRow1Edsuite:J$totalRow2Edsuite");
-        $sheet->setCellValue("J$totalRow1Edsuite", $totalDiferenciaEdsuite);
+        $sheet->setCellValue("J$totalRow1Edsuite", number_format($totalDiferenciaEdsuite, 2, '.', ''));
+        $sheet->getStyle("J$totalRow1Edsuite")->getNumberFormat()->setFormatCode($monedaFormat);
+        $sheet->getStyle("J$totalRow2Edsuite")->getNumberFormat()->setFormatCode($monedaFormat);
 
         if ($totalDiferenciaEdsuite != 0) {
             $sheet->getStyle("J$totalRow1Edsuite:J$totalRow2Edsuite")->applyFromArray(array_merge($redStyle, [
@@ -979,21 +934,32 @@ class ReporteController
                 $sheet->setCellValue("L$currentRow", $serie);
 
                 if ($cuadre['tipo_comprobante'] == 3) {
+                    $valorNota = number_format($cuadre['monto_total'], 2, '.', '');
                     $sheet->setCellValue("M$currentRow", 0);
-                    $sheet->setCellValue("N$currentRow", $cuadre['monto_total']);
+                    $sheet->setCellValue("N$currentRow", $valorNota);
+                    $sheet->getStyle("N$currentRow")->getNumberFormat()->setFormatCode($monedaFormat);
+                    $sheet->getStyle("M$currentRow")->getNumberFormat()->setFormatCode($monedaFormat);
                     $totalNotasSire += $cuadre['monto_total'];
                     $sireNotas = abs($cuadre['monto_total']);
                     $nuboxNotas = isset($nuboxPorSerie[$serie]) ? abs($nuboxPorSerie[$serie]['notas']) : 0;
                     $diferencia = $sireNotas - $nuboxNotas;
                 } else {
-                    $sheet->setCellValue("M$currentRow", $cuadre['monto_total']);
+                    $valorTotal = number_format($cuadre['monto_total'], 2, '.', '');
+                    $sheet->setCellValue("M$currentRow", $valorTotal);
                     $sheet->setCellValue("N$currentRow", 0);
+                    $sheet->getStyle("M$currentRow")->getNumberFormat()->setFormatCode($monedaFormat);
+                    $sheet->getStyle("N$currentRow")->getNumberFormat()->setFormatCode($monedaFormat);
                     $totalSire += $cuadre['monto_total'];
                     $nuboxTotal = isset($nuboxPorSerie[$serie]) ? $nuboxPorSerie[$serie]['total'] : 0;
                     $diferencia = $cuadre['monto_total'] - $nuboxTotal;
                 }
 
-                $sheet->setCellValue("O$currentRow", $diferencia);
+                $diferencia = round($diferencia, 2);
+                if ($diferencia == 0) $diferencia = 0;
+
+                $sheet->setCellValue("O$currentRow", number_format($diferencia, 2, '.', ''));
+                $sheet->getStyle("O$currentRow")->getNumberFormat()->setFormatCode($monedaFormat);
+
                 $totalDiferenciaSire += $diferencia;
                 if ($diferencia != 0) {
                     $sheet->getStyle("O$currentRow")->applyFromArray($redStyle);
@@ -1007,10 +973,13 @@ class ReporteController
 
         $totalRow1Sire = $currentRow;
         $sheet->setCellValue("L$currentRow", "TOTAL");
-        $sheet->setCellValue("M$currentRow", $totalSire);
-        $sheet->setCellValue("N$currentRow", $totalNotasSire);
-        $sheet->setCellValue("O$currentRow", $totalDiferenciaSire);
+        $sheet->setCellValue("M$currentRow", number_format($totalSire, 2, '.', ''));
+        $sheet->setCellValue("N$currentRow", number_format($totalNotasSire, 2, '.', ''));
+        $sheet->setCellValue("O$currentRow", number_format($totalDiferenciaSire, 2, '.', ''));
         $sheet->getStyle("M$currentRow:N$currentRow")->applyFromArray($greenTotalStyle);
+        $sheet->getStyle("M$currentRow")->getNumberFormat()->setFormatCode($monedaFormat);
+        $sheet->getStyle("N$currentRow")->getNumberFormat()->setFormatCode($monedaFormat);
+        $sheet->getStyle("O$currentRow")->getNumberFormat()->setFormatCode($monedaFormat);
 
         if ($totalDiferenciaSire != 0) {
             $sheet->getStyle("O$currentRow")->applyFromArray($redStyle);
@@ -1023,9 +992,13 @@ class ReporteController
         $totalNetoSire = $totalSire + $totalNotasSire;
         $totalNetoNuboxCompleto = $totalNubox + $totalNotasNubox;
         $diferenciaTotalNetoSire = $totalNetoSire - $totalNetoNuboxCompleto;
+        $diferenciaTotalNetoSire = round($diferenciaTotalNetoSire, 2);
+        if ($diferenciaTotalNetoSire == 0) $diferenciaTotalNetoSire = 0;
 
-        $sheet->setCellValue("M$currentRow", $totalNetoSire);
-        $sheet->setCellValue("O$currentRow", $diferenciaTotalNetoSire);
+        $sheet->setCellValue("M$currentRow", number_format($totalNetoSire, 2, '.', ''));
+        $sheet->getStyle("M$currentRow")->getNumberFormat()->setFormatCode($monedaFormat);
+        $sheet->setCellValue("O$currentRow", number_format($diferenciaTotalNetoSire, 2, '.', ''));
+        $sheet->getStyle("O$currentRow")->getNumberFormat()->setFormatCode($monedaFormat);
 
         $sheet->mergeCells("M$currentRow:N$currentRow");
         $sheet->getStyle("M$currentRow:N$currentRow")->applyFromArray(array_merge($greenTotalStyle, [
@@ -1050,7 +1023,9 @@ class ReporteController
         ]));
 
         $sheet->mergeCells("O$totalRow1Sire:O$totalRow2Sire");
-        $sheet->setCellValue("O$totalRow1Sire", $totalDiferenciaSire);
+        $sheet->setCellValue("O$totalRow1Sire", number_format($totalDiferenciaSire, 2, '.', ''));
+        $sheet->getStyle("O$totalRow1Sire")->getNumberFormat()->setFormatCode($monedaFormat);
+        $sheet->getStyle("O$totalRow2Sire")->getNumberFormat()->setFormatCode($monedaFormat);
 
         if ($totalDiferenciaSire != 0) {
             $sheet->getStyle("O$totalRow1Sire:O$totalRow2Sire")->applyFromArray(array_merge($redStyle, [
@@ -1076,6 +1051,7 @@ class ReporteController
     private function SeccionResumenComprobante($sheet, &$row, $totalesTipoDoc, $yellowHeaderStyle, $greenTotalStyle, $redStyle, $borderStyle)
     {
         $startRow = $row;
+        $monedaFormat = '"S/. "#,##0.00; "S/. -"#,##0.00;"S/. "0.00';
 
         // FACTURAS (C-D)
         $sheet->setCellValue("C$startRow", "FACTURAS");
@@ -1083,16 +1059,21 @@ class ReporteController
         $sheet->getStyle("C$startRow:D$startRow")->applyFromArray($yellowHeaderStyle);
 
         $sheet->setCellValue("C" . ($startRow + 1), "SIRE");
-        $sheet->setCellValue("D" . ($startRow + 1), isset($totalesTipoDoc[2][2]) ? $totalesTipoDoc[2][2] : 0);
+        $valorSIREFact = isset($totalesTipoDoc[2][2]) ? $totalesTipoDoc[2][2] : 0;
+        $sheet->setCellValue("D" . ($startRow + 1), $valorSIREFact);
+        $sheet->getStyle("D" . ($startRow + 1))->getNumberFormat()->setFormatCode($monedaFormat);
         $sheet->getStyle("C" . ($startRow + 1) . ":D" . ($startRow + 1))->applyFromArray($borderStyle);
 
         $sheet->setCellValue("C" . ($startRow + 2), "NUBOX");
-        $sheet->setCellValue("D" . ($startRow + 2), isset($totalesTipoDoc[2][1]) ? $totalesTipoDoc[2][1] : 0);
+        $valorNUBOXFact = isset($totalesTipoDoc[2][1]) ? $totalesTipoDoc[2][1] : 0;
+        $sheet->setCellValue("D" . ($startRow + 2), $valorNUBOXFact);
+        $sheet->getStyle("D" . ($startRow + 2))->getNumberFormat()->setFormatCode($monedaFormat);
         $sheet->getStyle("C" . ($startRow + 2) . ":D" . ($startRow + 2))->applyFromArray($borderStyle);
 
-        $faltanteFact = (isset($totalesTipoDoc[2][2]) ? $totalesTipoDoc[2][2] : 0) - (isset($totalesTipoDoc[2][1]) ? $totalesTipoDoc[2][1] : 0);
+        $faltanteFact = $valorSIREFact - $valorNUBOXFact;
         $sheet->setCellValue("C" . ($startRow + 3), "FALTANTE");
         $sheet->setCellValue("D" . ($startRow + 3), $faltanteFact);
+        $sheet->getStyle("D" . ($startRow + 3))->getNumberFormat()->setFormatCode($monedaFormat);
         if ($faltanteFact == 0) {
             $sheet->getStyle("C" . ($startRow + 3) . ":D" . ($startRow + 3))->applyFromArray($greenTotalStyle);
         } else {
@@ -1105,16 +1086,21 @@ class ReporteController
         $sheet->getStyle("G$startRow:H$startRow")->applyFromArray($yellowHeaderStyle);
 
         $sheet->setCellValue("G" . ($startRow + 1), "SIRE");
-        $sheet->setCellValue("H" . ($startRow + 1), isset($totalesTipoDoc[1][2]) ? $totalesTipoDoc[1][2] : 0);
+        $valorSIREBol = isset($totalesTipoDoc[1][2]) ? $totalesTipoDoc[1][2] : 0;
+        $sheet->setCellValue("H" . ($startRow + 1), $valorSIREBol);
+        $sheet->getStyle("H" . ($startRow + 1))->getNumberFormat()->setFormatCode($monedaFormat);
         $sheet->getStyle("G" . ($startRow + 1) . ":H" . ($startRow + 1))->applyFromArray($borderStyle);
 
         $sheet->setCellValue("G" . ($startRow + 2), "NUBOX");
-        $sheet->setCellValue("H" . ($startRow + 2), isset($totalesTipoDoc[1][1]) ? $totalesTipoDoc[1][1] : 0);
+        $valorNUBOXBol = isset($totalesTipoDoc[1][1]) ? $totalesTipoDoc[1][1] : 0;
+        $sheet->setCellValue("H" . ($startRow + 2), $valorNUBOXBol);
+        $sheet->getStyle("H" . ($startRow + 2))->getNumberFormat()->setFormatCode($monedaFormat);
         $sheet->getStyle("G" . ($startRow + 2) . ":H" . ($startRow + 2))->applyFromArray($borderStyle);
 
-        $faltanteBoleta = (isset($totalesTipoDoc[1][2]) ? $totalesTipoDoc[1][2] : 0) - (isset($totalesTipoDoc[1][1]) ? $totalesTipoDoc[1][1] : 0);
+        $faltanteBoleta = $valorSIREBol - $valorNUBOXBol;
         $sheet->setCellValue("G" . ($startRow + 3), "FALTANTE");
         $sheet->setCellValue("H" . ($startRow + 3), $faltanteBoleta);
+        $sheet->getStyle("H" . ($startRow + 3))->getNumberFormat()->setFormatCode($monedaFormat);
         if ($faltanteBoleta == 0) {
             $sheet->getStyle("G" . ($startRow + 3) . ":H" . ($startRow + 3))->applyFromArray($greenTotalStyle);
         } else {
@@ -1127,16 +1113,21 @@ class ReporteController
         $sheet->getStyle("K$startRow:L$startRow")->applyFromArray($yellowHeaderStyle);
 
         $sheet->setCellValue("K" . ($startRow + 1), "SIRE");
-        $sheet->setCellValue("L" . ($startRow + 1), isset($totalesTipoDoc[3][2]) ? $totalesTipoDoc[3][2] : 0);
+        $valorSIRENota = isset($totalesTipoDoc[3][2]) ? $totalesTipoDoc[3][2] : 0;
+        $sheet->setCellValue("L" . ($startRow + 1), $valorSIRENota);
+        $sheet->getStyle("L" . ($startRow + 1))->getNumberFormat()->setFormatCode($monedaFormat);
         $sheet->getStyle("K" . ($startRow + 1) . ":L" . ($startRow + 1))->applyFromArray($borderStyle);
 
         $sheet->setCellValue("K" . ($startRow + 2), "NUBOX");
-        $sheet->setCellValue("L" . ($startRow + 2), isset($totalesTipoDoc[3][1]) ? $totalesTipoDoc[3][1] : 0);
+        $valorNUBOXNota = isset($totalesTipoDoc[3][1]) ? $totalesTipoDoc[3][1] : 0;
+        $sheet->setCellValue("L" . ($startRow + 2), $valorNUBOXNota);
+        $sheet->getStyle("L" . ($startRow + 2))->getNumberFormat()->setFormatCode($monedaFormat);
         $sheet->getStyle("K" . ($startRow + 2) . ":L" . ($startRow + 2))->applyFromArray($borderStyle);
 
-        $faltanteNota = (isset($totalesTipoDoc[3][2]) ? $totalesTipoDoc[3][2] : 0) - (isset($totalesTipoDoc[3][1]) ? $totalesTipoDoc[3][1] : 0);
+        $faltanteNota = $valorSIRENota - $valorNUBOXNota;
         $sheet->setCellValue("K" . ($startRow + 3), "FALTANTE");
         $sheet->setCellValue("L" . ($startRow + 3), $faltanteNota);
+        $sheet->getStyle("L" . ($startRow + 3))->getNumberFormat()->setFormatCode($monedaFormat);
         if ($faltanteNota == 0) {
             $sheet->getStyle("K" . ($startRow + 3) . ":L" . ($startRow + 3))->applyFromArray($greenTotalStyle);
         } else {
@@ -1149,6 +1140,7 @@ class ReporteController
     private function SeccionReportesGlobales($sheet, &$row, $cuadresNUBOX, $seriesAjenas, $ventasGlobales, $mesSeleccionado, $seriesEdSuite, $yellowHeaderStyle, $blueHeaderStyle, $greenTotalStyle, $borderStyle, $redStyle)
     {
         $startRow = $row;
+        $monedaFormat = '"S/. "#,##0.00;"S/. -"#,##0.00;"S/. "0.00';
 
         // --- TABLA REPORTES GLOBALES EDSuite (LADO IZQUIERDO C-G) ---
         $sheet->setCellValue("C$startRow", "REPORTES GLOBALES");
@@ -1170,7 +1162,6 @@ class ReporteController
         $reportesEDSuite = [];
         try {
             $todosReportes = Cuadre::obtenerResumenComprobantes($mesSeleccionado);
-            // Filtrar solo las series EDSUITE
             $soloSeries = array_column($seriesEdSuite, 'serie');
             $seriesEdSuiteLookup = array_flip($soloSeries);
             foreach ($todosReportes as $reporte) {
@@ -1216,7 +1207,6 @@ class ReporteController
                 }
             }
 
-            // Solo mostrar las series en $seriesEdSuite (mantener el orden)
             foreach ($seriesEdSuite as $itemSerie) {
                 $serieStr = is_array($itemSerie) && isset($itemSerie['serie']) ? $itemSerie['serie'] : (string)$itemSerie;
                 if (!isset($reportesPorSerie[$serieStr])) continue;
@@ -1225,10 +1215,14 @@ class ReporteController
                 $totalEdsuiteSerie = $datos['combustibles'];
                 $diferenciaSerie = $totalNuboxSerie - $totalEdsuiteSerie;
                 $sheet->setCellValue("C$currentRowReportes", $serieStr);
-                $sheet->setCellValue("D$currentRowReportes", $totalEdsuiteSerie);
+                $sheet->setCellValue("D$currentRowReportes", number_format($totalEdsuiteSerie, 2, '.', ''));
+                $sheet->getStyle("D$currentRowReportes")->getNumberFormat()->setFormatCode($monedaFormat);
                 $sheet->setCellValue("E$currentRowReportes", 0);
+                $sheet->getStyle("E$currentRowReportes")->getNumberFormat()->setFormatCode($monedaFormat);
                 $sheet->setCellValue("F$currentRowReportes", 0);
-                $sheet->setCellValue("G$currentRowReportes", $diferenciaSerie);
+                $sheet->getStyle("F$currentRowReportes")->getNumberFormat()->setFormatCode($monedaFormat);
+                $sheet->setCellValue("G$currentRowReportes", number_format($diferenciaSerie, 2, '.', ''));
+                $sheet->getStyle("G$currentRowReportes")->getNumberFormat()->setFormatCode($monedaFormat);
 
                 if ($diferenciaSerie != 0) {
                     $sheet->getStyle("G$currentRowReportes")->applyFromArray($redStyle);
@@ -1251,10 +1245,15 @@ class ReporteController
 
         // Total Reportes EDSuite - Primera fila (D, E, F, G)
         $sheet->setCellValue("C$currentRowReportes", "TOTAL");
-        $sheet->setCellValue("D$currentRowReportes", $totalCombustibles);
-        $sheet->setCellValue("E$currentRowReportes", $totalExtras);
-        $sheet->setCellValue("F$currentRowReportes", $totalNotasCredito);
-        $sheet->setCellValue("G$currentRowReportes", $totalDiferencias);
+        $sheet->setCellValue("D$currentRowReportes", number_format($totalCombustibles, 2, '.', ''));
+        $sheet->getStyle("D$currentRowReportes")->getNumberFormat()->setFormatCode($monedaFormat);
+        $sheet->setCellValue("E$currentRowReportes", number_format($totalExtras, 2, '.', ''));
+        $sheet->getStyle("E$currentRowReportes")->getNumberFormat()->setFormatCode($monedaFormat);
+        $sheet->setCellValue("F$currentRowReportes", number_format($totalNotasCredito, 2, '.', ''));
+        $sheet->getStyle("F$currentRowReportes")->getNumberFormat()->setFormatCode($monedaFormat);
+        $sheet->setCellValue("G$currentRowReportes", number_format($totalDiferencias, 2, '.', ''));
+        $sheet->getStyle("G$currentRowReportes")->getNumberFormat()->setFormatCode($monedaFormat);
+
         $sheet->getStyle("D$currentRowReportes:F$currentRowReportes")->applyFromArray($greenTotalStyle);
 
         if ($totalDiferencias != 0) {
@@ -1268,9 +1267,11 @@ class ReporteController
 
         // Total Reportes EDSuite - Segunda fila (D+E+F combinadas, G)
         $totalNetoReportes = $totalCombustibles + $totalExtras + $totalNotasCredito;
-        $sheet->setCellValue("D$currentRowReportes", $totalNetoReportes);
-        $sheet->setCellValue("G$currentRowReportes", $totalDiferencias);
+        $sheet->setCellValue("D$currentRowReportes", number_format($totalNetoReportes, 2, '.', ''));
+        $sheet->getStyle("D$currentRowReportes")->getNumberFormat()->setFormatCode($monedaFormat);
         $sheet->mergeCells("D$currentRowReportes:F$currentRowReportes");
+        $sheet->setCellValue("G$currentRowReportes", number_format($totalDiferencias, 2, '.', ''));
+        $sheet->getStyle("G$currentRowReportes")->getNumberFormat()->setFormatCode($monedaFormat);
         $sheet->getStyle("D$currentRowReportes:F$currentRowReportes")->applyFromArray(array_merge($greenTotalStyle, [
             'alignment' => [
                 'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
@@ -1324,7 +1325,8 @@ class ReporteController
             foreach ($ventasGlobales as $venta) {
                 $sheet->setCellValue("I$currentRowVentas", $venta['producto']);
                 $sheet->setCellValue("J$currentRowVentas", $venta['total_cantidad']);
-                $sheet->setCellValue("K$currentRowVentas", $venta['total_importe']);
+                $sheet->setCellValue("K$currentRowVentas", number_format($venta['total_importe'], 2, '.', ''));
+                $sheet->getStyle("K$currentRowVentas")->getNumberFormat()->setFormatCode($monedaFormat);
                 $sheet->getStyle("I$currentRowVentas:K$currentRowVentas")->applyFromArray($borderStyle);
                 $totalCantidadGlobal += $venta['total_cantidad'];
                 $totalMontoGlobal += $venta['total_importe'];
@@ -1340,7 +1342,8 @@ class ReporteController
         // Total Ventas Globales
         $sheet->setCellValue("I$currentRowVentas", "TOTAL");
         $sheet->setCellValue("J$currentRowVentas", $totalCantidadGlobal);
-        $sheet->setCellValue("K$currentRowVentas", $totalMontoGlobal);
+        $sheet->setCellValue("K$currentRowVentas", number_format($totalMontoGlobal, 2, '.', ''));
+        $sheet->getStyle("K$currentRowVentas")->getNumberFormat()->setFormatCode($monedaFormat);
         $sheet->getStyle("I$currentRowVentas:K$currentRowVentas")->applyFromArray($greenTotalStyle);
 
         // --- TABLA SERIES AJENAS (DERECHA M-O) ---
@@ -1362,7 +1365,8 @@ class ReporteController
             foreach ($seriesAjenas as $serie) {
                 $sheet->setCellValue("M$currentRowAjenas", $serie['serie']);
                 $sheet->setCellValue("N$currentRowAjenas", $serie['total_conteo']);
-                $sheet->setCellValue("O$currentRowAjenas", $serie['total_importe']);
+                $sheet->setCellValue("O$currentRowAjenas", number_format($serie['total_importe'], 2, '.', ''));
+                $sheet->getStyle("O$currentRowAjenas")->getNumberFormat()->setFormatCode($monedaFormat);
                 $sheet->getStyle("M$currentRowAjenas:O$currentRowAjenas")->applyFromArray($borderStyle);
                 $totalConteoAjenas += $serie['total_conteo'];
                 $totalImporteAjenas += $serie['total_importe'];
@@ -1378,7 +1382,8 @@ class ReporteController
         // Total Series Ajenas
         $sheet->setCellValue("M$currentRowAjenas", "TOTAL");
         $sheet->setCellValue("N$currentRowAjenas", $totalConteoAjenas);
-        $sheet->setCellValue("O$currentRowAjenas", $totalImporteAjenas);
+        $sheet->setCellValue("O$currentRowAjenas", number_format($totalImporteAjenas, 2, '.', ''));
+        $sheet->getStyle("O$currentRowAjenas")->getNumberFormat()->setFormatCode($monedaFormat);
         $sheet->getStyle("M$currentRowAjenas:O$currentRowAjenas")->applyFromArray($greenTotalStyle);
 
         $row = max($maxRowReportes, $currentRowVentas, $currentRowAjenas) + 1;

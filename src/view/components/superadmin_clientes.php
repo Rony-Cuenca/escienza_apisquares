@@ -165,7 +165,6 @@ unset($_SESSION['errores'], $_SESSION['form_data']);
                                                 </svg>
                                                 Ver
                                             </a>
-
                                             <!-- Botón Editar -->
                                             <button onclick="abrirModalEdicion(<?= $cliente['id'] ?>)"
                                                 class="inline-flex items-center gap-1 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
@@ -175,83 +174,33 @@ unset($_SESSION['errores'], $_SESSION['form_data']);
                                                 </svg>
                                                 Editar
                                             </button>
-
-                                            <!-- Flecha expandible para todos los clientes -->
-                                            <button onclick="toggleEstablecimientos(<?= $cliente['id'] ?>); event.stopPropagation();"
-                                                class="inline-flex items-center gap-1 px-3 py-1.5 bg-slate-500 hover:bg-slate-600 text-white text-xs font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
-                                                title="Ver establecimientos">
-                                                <svg id="arrow-<?= $cliente['id'] ?>" class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                                                </svg>
-                                            </button>
+                                            <?php
+                                            $establecimiento_principal = null;
+                                            if (!empty($cliente['establecimientos'])) {
+                                                foreach ($cliente['establecimientos'] as $est) {
+                                                    if ($est['codigo_establecimiento'] === '0000') {
+                                                        $establecimiento_principal = $est;
+                                                        break;
+                                                    }
+                                                }
+                                            }
+                                            ?>
+                                            <?php if ($establecimiento_principal): ?>
+                                                <button type="button"
+                                                    class="inline-flex items-center gap-1 px-3 py-1.5 bg-purple-500 hover:bg-purple-600 text-white text-xs font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
+                                                    title="Ingresar al establecimiento principal"
+                                                    onclick="entrarEstablecimientoSweet(<?= $cliente['id'] ?>, <?= $establecimiento_principal['id'] ?>)">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                                                    </svg>
+                                                    Ingresar
+                                                </button>
+                                            <?php else: ?>
+                                                <span class="text-xs text-gray-400">Sin establecimiento</span>
+                                            <?php endif; ?>
                                         </div>
                                     </td>
                                 </tr>
-
-                                <!-- Filas de establecimientos (ocultas por defecto) - Para todos los clientes -->
-                                <?php if (!empty($cliente['establecimientos'])): ?>
-                                    <?php foreach ($cliente['establecimientos'] as $index => $establecimiento): ?>
-                                        <?php if (!empty($establecimiento) && isset($establecimiento['id'])): ?>
-                                            <tr id="establecimientos-<?= $cliente['id'] ?>-<?= $index ?>" class="hidden bg-slate-50 border-l-4 border-blue-300 establecimientos-<?= $cliente['id'] ?>">
-                                                <td class="py-3 px-6 text-center">
-                                                    <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
-                                                        <svg class="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                                                        </svg>
-                                                    </div>
-                                                </td>
-                                                <td class="py-3 px-6">
-                                                    <div class="pl-4">
-                                                        <div class="font-medium text-slate-700"><?= htmlspecialchars($establecimiento['etiqueta']) ?></div>
-                                                        <div class="text-sm text-slate-500">Código: <?= htmlspecialchars($establecimiento['codigo_establecimiento']) ?></div>
-                                                    </div>
-                                                </td>
-                                                <td class="py-3 px-6">
-                                                    <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-slate-200 text-slate-600">
-                                                        <?= htmlspecialchars($establecimiento['tipo_establecimiento']) ?>
-                                                    </span>
-                                                </td>
-                                                <td class="py-3 px-6">
-                                                    <div class="flex items-center gap-1 text-slate-500 text-sm">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 text-slate-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                        </svg>
-                                                        <span class="truncate" title="<?= htmlspecialchars($establecimiento['distrito'] . ' - ' . $establecimiento['provincia']) ?>">
-                                                            <?= htmlspecialchars($establecimiento['distrito'] . ' - ' . $establecimiento['provincia']) ?>
-                                                        </span>
-                                                    </div>
-                                                </td>
-                                                <td class="py-3 px-6">
-                                                    <?php if ($establecimiento['estado'] == 1): ?>
-                                                        <button onclick="cambiarEstadoEstablecimiento(<?= $establecimiento['id'] ?>, 2)"
-                                                            class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-green-100 to-emerald-200 text-green-800 border border-green-300 hover:from-green-200 hover:to-emerald-300 transition-all duration-200 cursor-pointer"
-                                                            title="Hacer clic para desactivar">
-                                                            <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>Activo
-                                                        </button>
-                                                    <?php else: ?>
-                                                        <button onclick="cambiarEstadoEstablecimiento(<?= $establecimiento['id'] ?>, 1)"
-                                                            class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-red-100 to-pink-200 text-red-800 border border-red-300 hover:from-red-200 hover:to-pink-300 transition-all duration-200 cursor-pointer"
-                                                            title="Hacer clic para activar">
-                                                            <span class="w-2 h-2 bg-red-500 rounded-full mr-2"></span>Inactivo
-                                                        </button>
-                                                    <?php endif; ?>
-                                                </td>
-                                                <td class="py-3 px-6">
-                                                    <button type="button"
-                                                        class="inline-flex items-center gap-1 px-3 py-1.5 bg-purple-500 hover:bg-purple-600 text-white text-xs font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
-                                                        title="Acceso a este establecimiento"
-                                                        onclick="entrarEstablecimientoSweet(<?= $cliente['id'] ?>, <?= $establecimiento['id'] ?>)">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                                                        </svg>
-                                                        Entrar
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        <?php endif; ?>
-                                    <?php endforeach; ?>
-                                <?php endif; ?>
                             <?php endforeach; ?>
                         <?php else: ?>
                             <tr>
@@ -292,8 +241,8 @@ unset($_SESSION['errores'], $_SESSION['form_data']);
                         <?php for ($i = 1; $i <= ceil($total / $limit); $i++): ?>
                             <a href="index.php?controller=superadmin&action=clientes&page=<?= $i ?>&limit=<?= $limit ?>"
                                 class="<?= $i == $page
-                                            ? 'px-4 py-2 bg-blue-600 font-bold rounded-xl shadow-lg text-white'
-                                            : 'px-4 py-2 font-medium rounded-xl hover:from-blue-100 hover:to-indigo-100 hover:text-blue-600 transition-all duration-200' ?> 
+                                            ? 'px-4 bg-blue-600 rounded-xl hover:bg-blue-700 shadow-lg text-white'
+                                            : 'px-4 font-medium rounded-xl hover:bg-gray-200 hover:text-blue-500 transition-all duration-200' ?> 
                                 inline-flex items-center justify-center min-w-[40px] h-10">
                                 <?= $i ?>
                             </a>
@@ -465,7 +414,6 @@ unset($_SESSION['errores'], $_SESSION['form_data']);
                                     • Use el botón 🔍 para consultar RUC y autocompletar datos básicos<br>
                                     • Se creará automáticamente un <strong>establecimiento principal</strong> con código "0000"<br>
                                     • Los establecimientos adicionales deben agregarse desde el módulo de gestión<br>
-                                    • Solo se consulta información básica por optimización de API
                                 </p>
                             </div>
                         </div>
