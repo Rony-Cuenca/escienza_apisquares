@@ -122,7 +122,7 @@ class ReporteController
             $totalesTipoDoc = Cuadre::obtenerTotalesPorTipoComprobante($mesSeleccionado, $id_establecimiento ?: null);
             $seriesTotales = Cuadre::obtenerTotalesPorSerieExcluyendoAjenas($mesSeleccionado);
             $seriesAjenas = SerieAjena::obtenerPorMes($mesSeleccionado);
-            $ventasGlobales = VentaGlobal::obtenerPorMes($mesSeleccionado);
+            $ventasGlobales = VentaGlobal::obtenerPorMes($mesSeleccionado, $id_establecimiento ?: null);
             $diferencias = $this->calcularDiferenciasNuboxSire($seriesTotales, $totalesTipoDoc);
             $diferenciasNuboxSire = $diferencias['diferenciasNuboxSire'];
             $diferenciasTipoDocNuboxSire = $diferencias['diferenciasTipoDocNuboxSire'];
@@ -270,7 +270,6 @@ class ReporteController
         $nombreMes = $this->obtenerNombreMes($mesSeleccionado, $mesesDisponibles);
 
         if ($esGlobal) {
-            // Reporte Global: un solo PDF consolidado
             $rucEstablecimiento = '';
             $nombreEstablecimiento = '';
             if ($id_cliente) {

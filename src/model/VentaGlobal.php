@@ -32,10 +32,9 @@ class VentaGlobal
         return true;
     }
 
-    public static function obtenerPorMes($mesSeleccionado)
+    public static function obtenerPorMes($mesSeleccionado, $id_establecimiento)
     {
         $conn = Conexion::conectar();
-        $id_establecimiento = $_SESSION['id_establecimiento'] ?? null;
         if (empty($mesSeleccionado)) {
             $sql = "SELECT 
                         producto,

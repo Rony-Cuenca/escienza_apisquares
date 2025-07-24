@@ -135,7 +135,7 @@ class AuthController
             header('Location: index.php?controller=auth&action=login');
             exit;
         }
-        define('TIEMPO_INACTIVIDAD', 6000);
+        define('TIEMPO_INACTIVIDAD', 600);
         if (isset($_SESSION['ultima_actividad']) && (time() - $_SESSION['ultima_actividad']) > TIEMPO_INACTIVIDAD) {
             session_unset();
             session_destroy();
