@@ -134,6 +134,8 @@ def procesar():
                 col_producto = header.index('Producto')
                 col_cantidad = header.index('Cantidad')
 
+                col_api = header.index('api_almacen_id')
+
                 if 'Archivo_Origen' in header:
                     col_archivo = header.index('Archivo_Origen')
                 else:
@@ -144,9 +146,14 @@ def procesar():
             data_serie_total = {}
             data_serie_igv = {}
             conteo_series = {}
+            data_serie_api = {}  # Nuevo diccionario para almacenar el valor de api_almacen_id por serie
+            data_producto_api = {}
+            data_archivo_api = {}
 
+            # Diccionarios para almacenar datos de productos, ahora usando tuplas (producto, api_id) como clave
             data_cantidad = {}
             data_producto_total = {}
+            data_producto_info = {}  # Para almacenar información adicional del producto
             data_cantidad_archivo = {}
             data_archivo_serie = {}
 
@@ -182,22 +189,32 @@ def procesar():
                         data_serie_total[serie] = 0.0
                         data_serie_igv[serie] = 0.0
                         conteo_series[serie] = 0
+                        # Solo guardamos el valor de api_almacen_id la primera vez que vemos la serie
+                        data_serie_api[serie] = str(row[col_api]).strip() if not pd.isna(row[col_api]) else ""
 
                     data_serie_total[serie] += total
                     data_serie_igv[serie] += igv
                     conteo_series[serie] += 1
 
-                    if producto not in data_cantidad:
-                        data_cantidad[producto] = 0.0
-                        data_producto_total[producto] = 0.0
-
-                    data_cantidad[producto] += cantidad
-                    data_producto_total[producto] += total
+                    # Creamos una clave única basada en producto y api_almacen_id
+                    api_value = str(row[col_api]).strip() if not pd.isna(row[col_api]) else ""
+                    producto_key = (producto, api_value)
+                    
+                    # Inicializamos los contadores si es la primera vez que vemos este producto con este api_value
+                    if producto_key not in data_cantidad:
+                        data_cantidad[producto_key] = 0.0
+                        data_producto_total[producto_key] = 0.0
+                        data_producto_info[producto_key] = api_value
+                    
+                    # Sumamos las cantidades
+                    data_cantidad[producto_key] += cantidad
+                    data_producto_total[producto_key] += total
 
                     if col_archivo is not None:
                         if archivo not in data_cantidad_archivo:
                             data_cantidad_archivo[archivo] = 0.0
                             data_archivo_serie[archivo] = set()
+                            data_archivo_api[archivo] = str(row[col_api]).strip() if not pd.isna(row[col_api]) else ""
                         data_cantidad_archivo[archivo] += 1
                         data_archivo_serie[archivo].add(serie)
                 except Exception:
@@ -209,35 +226,42 @@ def procesar():
                 total_total = data_serie_total[serie]
                 total_igv = data_serie_igv[serie]
                 conteo = conteo_series[serie]
+                api_almacen_id = data_serie_api.get(serie, "")
                 
                 resultados.append({
                     'serie': serie,
                     'conteo': conteo,
                     'igv': round(total_igv, 2),
                     'total': round(total_total, 2),
-                    'fecha': primer_valor_fecha
+                    'fecha': primer_valor_fecha,
+                    'api_almacen_id': api_almacen_id
                 })
 
             resultados_productos = []
-            for producto in sorted(data_cantidad.keys()):
-                cantidad = data_cantidad[producto]
-                total = data_producto_total[producto]
+            # Ordenamos primero por nombre de producto y luego por api_almacen_id
+            for (producto, api_value) in sorted(data_cantidad.keys()):
+                producto_key = (producto, api_value)
+                cantidad = data_cantidad[producto_key]
+                total = data_producto_total[producto_key]
                 
                 resultados_productos.append({
                     'producto': producto,
                     'cantidad': cantidad,
                     'total': round(total, 2),
-                    'fecha': primer_valor_fecha
+                    'fecha': primer_valor_fecha,
+                    'api_almacen_id': api_value
                 })
 
             resultados_archivo = []
             for archivo in sorted(data_cantidad_archivo.keys()):
                 cantidad = data_cantidad_archivo[archivo]
                 series = data_archivo_serie[archivo]
+                api_almacen_id = data_archivo_api.get(archivo, "")
                 resultados_archivo.append({
                     'archivo': archivo,
                     'cantidad': cantidad,
-                    'series': list(series)
+                    'series': list(series),
+                    'api_almacen_id': api_almacen_id
                 })
 
             return jsonify({
@@ -268,7 +292,7 @@ def unificar_archivos():
     carpeta_destino = os.path.join(os.getcwd(), 'uploads/unificados')
     os.makedirs(carpeta_destino, exist_ok=True)
     temp_dir = tempfile.mkdtemp()
-    columnas_deseadas = ['Serie','Fecha', 'IGV', 'Total', 'Producto', 'Cantidad']
+    columnas_deseadas = ['Serie','Fecha', 'IGV', 'Total', 'Producto', 'Cantidad', 'api_almacen_id']
 
     try:
         dfs = []

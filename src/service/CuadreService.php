@@ -285,7 +285,9 @@ class CuadreService
                 'total' => $resultado['total'],
                 'tipo_comprobante' => $tipo_comprobante,
                 'reporte' => $reporte,
-                'fecha_registro' => $fecha
+                'fecha_registro' => $fecha,
+                'api_columna' => $resultado['api_almacen_id'],
+
             ];
         }
         return compact('ErrorEDSUITE', 'ResultsEDSUITE');
@@ -490,18 +492,6 @@ class CuadreService
 
         // Guardar Series Validadas (SerieAjena)
         foreach ($ResultsValidarSeries as $resultado) {
-            $establecimiento = null;
-            if ($resultsSerieArchivos) {
-                foreach ($resultsSerieArchivos as $archivoData) {
-                    if (in_array($resultado['serie'], $archivoData['series'])) {
-                        $establecimiento = $archivoData['id_establecimiento'];
-                        break;
-                    }
-                }
-            }
-            if (!$establecimiento) {
-                $establecimiento = $id_establecimiento;
-            }
             $fecha_registro = null;
             if (isset($resultado['fecha_registro']) && !empty($resultado['fecha_registro'])) {
                 $fecha_registro = $resultado['fecha_registro'];
@@ -529,7 +519,7 @@ class CuadreService
                 'fecha_registro' => $fecha_registro,
                 'user_create' => $user_create,
                 'user_update' => $user_update,
-                'id_establecimiento' => $establecimiento,
+                'id_establecimiento' => $id_establecimiento,
                 'estado' => 1
             ];
             SerieAjena::Insertar($data);
@@ -538,21 +528,23 @@ class CuadreService
         // Guardar VentaGlobal
         foreach ($resultsVentaGlobal as $resultado) {
             $establecimiento = null;
-            // Buscar el establecimiento correspondiente al producto/serie
-            if (isset($resultado['serie']) && $resultsSerieArchivos) {
+            if ($resultsSerieArchivos) {
                 foreach ($resultsSerieArchivos as $archivoData) {
-                    if (in_array($resultado['serie'], $archivoData['series'])) {
+                    if ($resultado['api_almacen_id'] == $archivoData['api_almacen_id']) {
                         $establecimiento = $archivoData['id_establecimiento'];
                         break;
                     }
                 }
             }
-            // Si no hay serie, intentar por producto (si tienes esa relación)
-            if (!$establecimiento && isset($resultado['producto']) && $resultsSerieArchivos) {
-                foreach ($resultsSerieArchivos as $archivoData) {
-                    if (isset($archivoData['productos']) && in_array($resultado['producto'], $archivoData['productos'])) {
-                        $establecimiento = $archivoData['id_establecimiento'];
-                        break;
+            if (!$establecimiento) {
+                $establecimientosApi = SerieSucursal::listarSeriesPorCliente($id_establecimiento);
+                if ($establecimientosApi && is_array($establecimientosApi)) {
+                    foreach ($establecimientosApi as $archivoData) {
+                        $api_almacen_id = explode('-', $archivoData['codigo_establecimiento']); // eliminar concatenación
+                        if (in_array($resultado['api_almacen_id'], $api_almacen_id)) {
+                            $establecimiento = $archivoData['id_establecimiento'];
+                            break;
+                        }
                     }
                 }
             }
@@ -582,8 +574,12 @@ class CuadreService
         if ($resultsSerieArchivos) {
             foreach ($resultsSerieArchivos as $resultado) {
                 $id_establecimiento = $resultado['id_establecimiento'];
+                $cliente = Establecimiento::obtenerClientePorestablecimiento($id_establecimiento);
+                $ruc = $cliente['ruc'];
+                $ruc = (string) $cliente['ruc'];
+                $ultimos3 = substr($ruc, -3); 
                 $codigoAleatorio = $this->generarCodigoAleatorio(5);
-                $codigo = $id_establecimiento . '-' . $codigoAleatorio;
+                $codigo = $ultimos3 . '-' . $resultado['api_almacen_id'];
                 $seriesString = implode('-', $resultado['series']);
                 $data = [
                     'serie' => $seriesString,
@@ -594,11 +590,40 @@ class CuadreService
                     'estado' => 1
                 ];
                 SerieSucursal::Insertar($data);
+                Establecimiento::actualizar_codigo_establecimiento($id_establecimiento, $codigo);
             }
         }
 
         // Guardar DiferenciaComprobante
         foreach ($diferenciaGlobales as $resultado) {
+            $establecimiento = null;
+            if ($resultsSerieArchivos) {
+                foreach ($resultsSerieArchivos as $archivoData) {
+                    $serie = $resultado['sire']['serie'] ?? ($resultado['nubox']['serie'] ?? null);
+                    if ($serie && in_array($serie, $archivoData['series'])) {
+                        $establecimiento = $archivoData['id_establecimiento'];
+                        break;
+                    }
+                }
+            }
+
+            if (!$establecimiento) {
+                $establecimientosSerie = SerieSucursal::listarSeriesPorCliente($id_establecimiento);
+                if ($establecimientosSerie && is_array($establecimientosSerie)) {
+                    foreach ($establecimientosSerie as $archivoData) {
+                        $series = explode('-', $archivoData['serie']); // eliminar concatenación
+                        $serie = $resultado['sire']['serie'] ?? ($resultado['nubox']['serie'] ?? null);
+                        if (in_array($serie, $series)) {
+                            $establecimiento = $archivoData['id_establecimiento'];
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (!$establecimiento) {
+                $establecimiento = $id_establecimiento;
+            }
             $fecha = isset($resultado['nubox']['fecha']) ? date('Y-d-01', strtotime($resultado['nubox']['fecha'])) : date('Y-d-01');
             $data = [
                 'serie' => $resultado['sire']['serie'],
@@ -609,7 +634,7 @@ class CuadreService
                 'estado_nubox' => $resultado['nubox']['estado'],
                 'user_create' => $user_create,
                 'user_update' => $user_update,
-                'id_establecimiento' => $id_establecimiento,
+                'id_establecimiento' => $establecimiento,
                 'fecha_registro' => $fecha,
                 'estado' => 1
             ];

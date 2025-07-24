@@ -416,4 +416,44 @@ class Establecimiento
             return ['success' => false, 'error' => 'Error al crear el establecimiento'];
         }
     }
+
+    public static function actualizar_codigo_establecimiento($id, $codigo_establecimiento)
+    {
+        $conn = Conexion::conectar();
+        $date_update = date('Y-m-d H:i:s');
+
+        $sql = "UPDATE establecimiento SET 
+                    codigo_establecimiento = ?
+                WHERE id = ?";
+
+        $stmt = $conn->prepare($sql);
+
+        $stmt->bind_param(
+            "ss",
+            $codigo_establecimiento,
+            $id
+        );
+
+        return $stmt->execute();
+    }
+
+    public static function obtenerClientePorestablecimiento($id_establecimiento)
+    {
+        $conn = Conexion::conectar();
+
+        $sql = "
+            SELECT c.id, c.ruc
+            FROM cliente c
+            JOIN establecimiento e ON c.id = e.id_cliente
+            WHERE e.id = ?
+        ";
+    
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i", $id_establecimiento);
+        $stmt->execute();
+        $res = $stmt->get_result();
+    
+        return $res->fetch_assoc();
+    }
+
 }
