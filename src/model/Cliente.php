@@ -72,6 +72,22 @@ class Cliente
         return false;
     }
 
+    public static function filtrarClientes($busqueda, $limit = 10)
+    {
+        $conn = Conexion::conectar();
+        $sql = "SELECT * FROM cliente WHERE ruc LIKE ? OR razon_social LIKE ? ORDER BY razon_social LIMIT ?";
+        $like = "%$busqueda%";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("ssi", $like, $like, $limit);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        $clientes = $res->fetch_all(MYSQLI_ASSOC);
+        foreach ($clientes as &$cliente) {
+            $cliente['establecimientos'] = self::obtenerEstablecimientos($cliente['id']);
+        }
+        return $clientes;
+    }
+
     public static function obtenerEstablecimientos($id_cliente)
     {
         $conn = Conexion::conectar();

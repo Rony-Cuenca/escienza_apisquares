@@ -4,6 +4,7 @@ require_once __DIR__ . '/../model/Cuadre.php';
 require_once __DIR__ . '/../model/Establecimiento.php';
 require_once __DIR__ . '/../model/SerieAjena.php';
 require_once __DIR__ . '/../model/VentaGlobal.php';
+require_once __DIR__ . '/../model/DiferenciaComprobante.php';
 require_once __DIR__ . '/../helpers/permisos_helper.php';
 require_once __DIR__ . '/../helpers/sesion_helper.php';
 
@@ -108,25 +109,27 @@ class ReporteController
         $seriesEdSuite = [];
         $id_establecimiento = $_GET['id_establecimiento'] ?? '';
         $seriesEstablecimiento = [];
+        $incidencias = [];
 
         if ($mesSeleccionado) {
             $cuadres = Cuadre::obtenerCuadresPorMes($mesSeleccionado);
             if ($id_establecimiento) {
                 $cuadres = array_filter($cuadres, fn($c) => $c['id_establecimiento'] == $id_establecimiento);
             }
-            list($cuadresSIRE, $cuadresNUBOX, $cuadresEDSUITE) = $this->separarCuadresPorSistemaExcluyendoAjenas($cuadres, $mesSeleccionado);
+            list($cuadresSIRE, $cuadresNUBOX, $cuadresEDSUITE) = $this->separarCuadresPorSistemaExcluyendoAjenas($cuadres, $mesSeleccionado, $id_establecimiento ?: null);
 
             $cuadresNUBOX = $this->procesarSeriesConNotasCredito($cuadresNUBOX);
             $cuadresEDSUITE = $this->procesarSeriesConNotasCredito($cuadresEDSUITE);
             $cuadresSIRE = $this->procesarSeriesConNotasCredito($cuadresSIRE);
             $totalesTipoDoc = Cuadre::obtenerTotalesPorTipoComprobante($mesSeleccionado, $id_establecimiento ?: null);
-            $seriesTotales = Cuadre::obtenerTotalesPorSerieExcluyendoAjenas($mesSeleccionado);
-            $seriesAjenas = SerieAjena::obtenerPorMes($mesSeleccionado);
+            $seriesTotales = Cuadre::obtenerTotalesPorSerieExcluyendoAjenas($mesSeleccionado, $id_establecimiento ?: null);
+            $seriesAjenas = SerieAjena::obtenerPorMes($mesSeleccionado, $id_establecimiento ?: null);
             $ventasGlobales = VentaGlobal::obtenerPorMes($mesSeleccionado, $id_establecimiento ?: null);
             $diferencias = $this->calcularDiferenciasNuboxSire($seriesTotales, $totalesTipoDoc);
             $diferenciasNuboxSire = $diferencias['diferenciasNuboxSire'];
             $diferenciasTipoDocNuboxSire = $diferencias['diferenciasTipoDocNuboxSire'];
             $seriesEdSuite = $this->calcularDiferenciasNuboxEdSuite($cuadresEDSUITE, $seriesTotales);
+            $incidencias = DiferenciaComprobante::obtenerIncidencias($mesSeleccionado, $id_establecimiento ?: null);
         }
 
         return compact(
@@ -139,7 +142,8 @@ class ReporteController
             'diferenciasTipoDocNuboxSire',
             'seriesAjenas',
             'ventasGlobales',
-            'seriesEdSuite'
+            'seriesEdSuite',
+            'incidencias'
         );
     }
 
@@ -162,9 +166,9 @@ class ReporteController
         return $resultado;
     }
 
-    private function separarCuadresPorSistemaExcluyendoAjenas($cuadres, $mesSeleccionado)
+    private function separarCuadresPorSistemaExcluyendoAjenas($cuadres, $mesSeleccionado, $id_establecimiento = null)
     {
-        $seriesAjenasArray = SerieAjena::obtenerPorMes($mesSeleccionado);
+        $seriesAjenasArray = SerieAjena::obtenerPorMes($mesSeleccionado, $id_establecimiento ?: null);
         $seriesAjenasLista = array_column($seriesAjenasArray, 'serie');
 
         $sire = [];
@@ -476,6 +480,7 @@ class ReporteController
             $seriesAjenas = $datosReporte['seriesAjenas'];
             $ventasGlobales = $datosReporte['ventasGlobales'];
             $seriesEdSuite = $datosReporte['seriesEdSuite'];
+            $incidencias = $datosReporte['incidencias'];
 
             $sheet = new \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet($spreadsheet, 'Reporte Global');
             $spreadsheet->addSheet($sheet);
@@ -492,6 +497,10 @@ class ReporteController
             $this->SeccionSeparador($sheet, $row, "REPORTES GLOBALES Y SERIES AJENAS", $separadorStyle);
             $row += 2;
             $this->SeccionReportesGlobales($sheet, $row, $cuadresNUBOX, $seriesAjenas, $ventasGlobales, $mesSeleccionado, $seriesEdSuite, $yellowHeaderStyle, $blueHeaderStyle, $greenTotalStyle, $borderStyle, $redStyle);
+            $row += 2;
+            $this->SeccionSeparador($sheet, $row, "INCIDENCIAS", $separadorStyle);
+            $row += 2;
+            $this->SeccionIncidencias($sheet, $row, $incidencias, $yellowHeaderStyle, $blueHeaderStyle, $borderStyle, true);
             $sheet->getColumnDimension('A')->setWidth(20);
             $sheet->getColumnDimension('B')->setWidth(12);
             foreach (range('C', 'R') as $col) {
@@ -534,6 +543,7 @@ class ReporteController
             $seriesAjenas = $datosReporte['seriesAjenas'];
             $ventasGlobales = $datosReporte['ventasGlobales'];
             $seriesEdSuite = $datosReporte['seriesEdSuite'];
+            $incidencias = $datosReporte['incidencias'];
 
             $sheet = new \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet($spreadsheet, 'Reporte General');
             $spreadsheet->addSheet($sheet);
@@ -550,6 +560,10 @@ class ReporteController
             $this->SeccionSeparador($sheet, $row, "REPORTES GLOBALES Y SERIES AJENAS", $separadorStyle);
             $row += 2;
             $this->SeccionReportesGlobales($sheet, $row, $cuadresNUBOX ?? [], $seriesAjenas ?? [], $ventasGlobales ?? [], $mesSeleccionado, $seriesEdSuite ?? [], $yellowHeaderStyle, $blueHeaderStyle, $greenTotalStyle, $borderStyle, $redStyle);
+            $row += 2;
+            $this->SeccionSeparador($sheet, $row, "INCIDENCIAS", $separadorStyle);
+            $row += 2;
+            $this->SeccionIncidencias($sheet, $row, $incidencias, $yellowHeaderStyle, $blueHeaderStyle, $borderStyle, false);
             $sheet->getColumnDimension('A')->setWidth(20);
             $sheet->getColumnDimension('B')->setWidth(12);
             foreach (range('C', 'R') as $col) {
@@ -598,6 +612,7 @@ class ReporteController
                 $seriesAjenas = $datosReporte['seriesAjenas'];
                 $ventasGlobales = $datosReporte['ventasGlobales'];
                 $seriesEdSuite = $datosReporte['seriesEdSuite'];
+                $incidencias = $datosReporte['incidencias'];
 
                 $nombreHoja = $this->limpiarNombreHoja($nombreEstablecimiento);
                 $sheet = new \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet($spreadsheet, $nombreHoja);
@@ -615,6 +630,10 @@ class ReporteController
                 $this->SeccionSeparador($sheet, $row, "REPORTES GLOBALES Y SERIES AJENAS", $separadorStyle);
                 $row += 2;
                 $this->SeccionReportesGlobales($sheet, $row, $cuadresNUBOX, $seriesAjenas, $ventasGlobales, $mesSeleccionado, $seriesEdSuite, $yellowHeaderStyle, $blueHeaderStyle, $greenTotalStyle, $borderStyle, $redStyle);
+                $row += 2;
+                $this->SeccionSeparador($sheet, $row, "INCIDENCIAS", $separadorStyle);
+                $row += 2;
+                $this->SeccionIncidencias($sheet, $row, $incidencias, $yellowHeaderStyle, $blueHeaderStyle, $borderStyle, false);
                 $sheet->getColumnDimension('A')->setWidth(20);
                 $sheet->getColumnDimension('B')->setWidth(12);
                 foreach (range('C', 'R') as $col) {
@@ -1386,6 +1405,50 @@ class ReporteController
         $sheet->getStyle("M$currentRowAjenas:O$currentRowAjenas")->applyFromArray($greenTotalStyle);
 
         $row = max($maxRowReportes, $currentRowVentas, $currentRowAjenas) + 1;
+    }
+
+    private function SeccionIncidencias($sheet, &$row, $incidencias, $yellowHeaderStyle, $blueHeaderStyle, $borderStyle, $mostrarEstablecimiento = true)
+    {
+        $startRow = $row;
+        $sheet->setCellValue("C$startRow", "INCIDENCIAS");
+        $lastCol = $mostrarEstablecimiento ? "I" : "H";
+        $sheet->mergeCells("C$startRow:{$lastCol}$startRow");
+        $sheet->getStyle("C$startRow:{$lastCol}$startRow")->applyFromArray($yellowHeaderStyle);
+        $col = "C";
+        if ($mostrarEstablecimiento) {
+            $sheet->setCellValue($col . ($startRow + 1), "ESTABLECIMIENTO");
+            $col++;
+        }
+        $sheet->setCellValue($col++ . ($startRow + 1), "SERIE");
+        $sheet->setCellValue($col++ . ($startRow + 1), "NÚMERO");
+        $sheet->setCellValue($col++ . ($startRow + 1), "TOTAL SIRE");
+        $sheet->setCellValue($col++ . ($startRow + 1), "TOTAL NUBOX");
+        $sheet->setCellValue($col++ . ($startRow + 1), "ESTADO SIRE");
+        $sheet->setCellValue($col++ . ($startRow + 1), "ESTADO NUBOX");
+        $sheet->getStyle("C" . ($startRow + 1) . ":{$lastCol}" . ($startRow + 1))->applyFromArray($blueHeaderStyle);
+
+        $currentRow = $startRow + 2;
+        if (!empty($incidencias)) {
+            foreach ($incidencias as $inc) {
+                $col = "C";
+                if ($mostrarEstablecimiento) {
+                    $sheet->setCellValue($col++ . $currentRow, $inc['establecimiento']);
+                }
+                $sheet->setCellValue($col++ . $currentRow, $inc['serie']);
+                $sheet->setCellValue($col++ . $currentRow, $inc['numero']);
+                $sheet->setCellValue($col++ . $currentRow, $inc['total_sire']);
+                $sheet->setCellValue($col++ . $currentRow, $inc['total_nubox']);
+                $sheet->setCellValue($col++ . $currentRow, $inc['estado_sire']);
+                $sheet->setCellValue($col++ . $currentRow, $inc['estado_nubox']);
+                $sheet->getStyle("C$currentRow:{$lastCol}$currentRow")->applyFromArray($borderStyle);
+                $currentRow++;
+            }
+        } else {
+            $sheet->setCellValue("C$currentRow", "No hay incidencias para este mes.");
+            $sheet->mergeCells("C$currentRow:{$lastCol}$currentRow");
+            $sheet->getStyle("C$currentRow:{$lastCol}$currentRow")->applyFromArray($borderStyle);
+        }
+        $row = $currentRow + 1;
     }
 
     private function SeccionCabecera($sheet, $nombreMes, $nombreEstablecimiento, $rucEstablecimiento, $usuarioNombre, $headerPrincipalStyle, $headerSecundarioStyle)

@@ -37,12 +37,20 @@ class SuperAdminController
         $offset = ($page - 1) * $limit;
         $sort = $_GET['sort'] ?? 'razon_social';
         $dir = ($_GET['dir'] ?? 'ASC') === 'DESC' ? 'DESC' : 'ASC';
-
         $clientes = Cliente::obtenerClientesConEstablecimientos($limit, $offset, $sort, $dir);
         $total = Usuario::contarTodosLosClientes();
-
         $contenido = 'view/components/superadmin_clientes.php';
         require 'view/layout.php';
+    }
+
+    public function buscarClientesAjax()
+    {
+        $busqueda = $_GET['busqueda'] ?? '';
+        require_once 'model/Cliente.php';
+        $clientes = Cliente::filtrarClientes($busqueda, 10);
+        header('Content-Type: application/json');
+        echo json_encode($clientes);
+        exit;
     }
 
     public function verCliente()

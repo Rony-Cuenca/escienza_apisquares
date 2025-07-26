@@ -32,7 +32,20 @@ unset($_SESSION['errores'], $_SESSION['form_data']);
                 </div>
             </div>
         </div>
-
+        <div class="relative w-full max-w-md mb-8">
+            <input
+                type="text"
+                id="busquedaCliente"
+                placeholder="Buscar por RUC o Razón Social..."
+                autocomplete="off"
+                class="w-full px-5 py-3 pl-12 rounded-xl border border-slate-300 bg-gradient-to-r from-slate-50 to-blue-50 shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-800 font-medium transition-all duration-200">
+            <span class="absolute left-3 top-0 h-full flex items-center text-blue-500">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2" fill="none" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                </svg>
+            </span>
+        </div>
         <!-- Mensajes de éxito/error -->
         <?php if (isset($_SESSION['mensaje'])): ?>
             <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
