@@ -623,7 +623,8 @@ class CuadreService
             if (!$establecimiento) {
                 $establecimiento = $id_establecimiento;
             }
-            $fecha = isset($resultado['nubox']['fecha']) ? date('Y-d-01', strtotime($resultado['nubox']['fecha'])) : date('Y-d-01');
+            $fecha = isset($resultado['nubox']['fecha']) ? date('Y-m-01', strtotime($resultado['nubox']['fecha'])) : date('Y-m-01');
+            
             $estado_sire = $resultado['sire']['estado'];
             if ($estado_sire == 1) {
                 $estado_sire = 'Aceptado';
