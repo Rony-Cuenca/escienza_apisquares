@@ -540,7 +540,7 @@ class CuadreService
                 $establecimientosApi = SerieSucursal::listarSeriesPorCliente($id_establecimiento);
                 if ($establecimientosApi && is_array($establecimientosApi)) {
                     foreach ($establecimientosApi as $archivoData) {
-                        $api_almacen_id = explode('-', $archivoData['codigo_establecimiento']); // eliminar concatenación
+                        $api_almacen_id = explode('-', $archivoData['codigo']); // eliminar concatenación
                         if (in_array($resultado['api_almacen_id'], $api_almacen_id)) {
                             $establecimiento = $archivoData['id_establecimiento'];
                             break;
@@ -590,7 +590,6 @@ class CuadreService
                     'estado' => 1
                 ];
                 SerieSucursal::Insertar($data);
-                Establecimiento::actualizar_codigo_establecimiento($id_establecimiento, $codigo);
             }
         }
 
@@ -625,12 +624,18 @@ class CuadreService
                 $establecimiento = $id_establecimiento;
             }
             $fecha = isset($resultado['nubox']['fecha']) ? date('Y-d-01', strtotime($resultado['nubox']['fecha'])) : date('Y-d-01');
+            $estado_sire = $resultado['sire']['estado'];
+            if ($estado_sire == 1) {
+                $estado_sire = 'Aceptado';
+            } else {
+                $estado_sire = 'Anulado';
+            }
             $data = [
                 'serie' => $resultado['sire']['serie'],
                 'numero' => $resultado['sire']['numero'],
                 'total_sire' => $resultado['sire']['total'],
                 'total_nubox' => $resultado['nubox']['total'],
-                'estado_sire' => $resultado['sire']['estado'],
+                'estado_sire' => $estado_sire,
                 'estado_nubox' => $resultado['nubox']['estado'],
                 'user_create' => $user_create,
                 'user_update' => $user_update,

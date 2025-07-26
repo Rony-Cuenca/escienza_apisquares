@@ -32,7 +32,7 @@ class SerieSucursal
         $conn = Conexion::conectar();
 
         $sql = "
-            SELECT ss.serie, ss.id_establecimiento, e.codigo_establecimiento
+            SELECT ss.serie, ss.id_establecimiento, ss.codigo
             FROM series_sucursales ss
             JOIN establecimiento e ON ss.id_establecimiento = e.id
             WHERE e.id_cliente = (

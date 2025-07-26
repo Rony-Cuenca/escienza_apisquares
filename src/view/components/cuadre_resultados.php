@@ -240,7 +240,14 @@
                                                     <td class="border border-gray-300 px-3 py-2 text-gray-900 text-center whitespace-nowrap"><?php echo $resultado['sire']['serie']; ?></td>
                                                     <td class="border border-gray-300 px-3 py-2 text-gray-900 text-center whitespace-nowrap"><?php echo $resultado['sire']['numero']; ?></td>
                                                     <td class="border border-gray-300 px-3 py-2 text-gray-900 text-center whitespace-nowrap"><?php echo $resultado['sire']['total']; ?></td>
-                                                    <td class="border border-gray-300 px-3 py-2 text-gray-900 text-center whitespace-nowrap"><?php echo $resultado['sire']['estado']; ?></td>
+                                                    <td class="border border-gray-300 px-3 py-2 text-gray-900 text-center whitespace-nowrap">
+                                                        <?php 
+                                                        if ($resultado['sire']['estado'] ==  1) {
+                                                            echo 'Aceptado';
+                                                        } else {
+                                                            echo 'Anulado';
+                                                        }?>
+                                                    </td>
                                                     <td class="border border-gray-300 px-3 py-2 text-gray-900 text-center whitespace-nowrap"><?php echo $resultado['nubox']['total']; ?></td>
                                                     <td class="border border-gray-300 px-3 py-2 text-gray-900 text-center whitespace-nowrap"><?php echo $resultado['nubox']['estado']; ?></td>
                                                 </tr>
