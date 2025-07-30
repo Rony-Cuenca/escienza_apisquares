@@ -36,7 +36,6 @@ class Usuario
         return $result->num_rows > 0;
     }
 
-    // Crear Super Admin 
     public static function crearSuperAdmin($usuario, $correo, $contrasena)
     {
         $conn = Conexion::conectar();
@@ -168,8 +167,8 @@ class Usuario
         $dir = $dir === 'DESC' ? 'DESC' : 'ASC';
         $sql = "
         SELECT u.id, u.usuario, u.correo, u.estado, u.rol, 
-               CONCAT(e.etiqueta, ' (', e.codigo_establecimiento, ')') AS establecimiento, 
-               u.id_establecimiento
+            CONCAT(e.etiqueta, ' (', e.codigo_establecimiento, ')') AS establecimiento, 
+            u.id_establecimiento
         FROM usuario u
         INNER JOIN establecimiento e ON u.id_establecimiento = e.id
         INNER JOIN cliente c ON e.id_cliente = c.id
@@ -231,7 +230,6 @@ class Usuario
         return $res->fetch_assoc() ? true : false;
     }
 
-    // Obtener todos los clientes
     public static function obtenerTodosLosClientes($limit = 10, $offset = 0, $sort = 'razon_social', $dir = 'ASC')
     {
         $conn = Conexion::conectar();
@@ -248,7 +246,6 @@ class Usuario
         return $result->fetch_all(MYSQLI_ASSOC);
     }
 
-    // Contar todos los clientes
     public static function contarTodosLosClientes()
     {
         $conn = Conexion::conectar();
@@ -267,5 +264,41 @@ class Usuario
         $stmt->execute();
         $res = $stmt->get_result();
         return $res->fetch_assoc();
+    }
+
+    public static function obtenerPaginadoPorCliente($id_cliente, $limit, $offset, $sort, $dir)
+    {
+        $conn = Conexion::conectar();
+        $allowed = ['usuario', 'correo', 'estado', 'rol', 'establecimiento', 'id'];
+        $sort = in_array($sort, $allowed) ? $sort : 'establecimiento';
+        $dir = $dir === 'DESC' ? 'DESC' : 'ASC';
+        $sql = "
+        SELECT u.id, u.usuario, u.correo, u.estado, u.rol, 
+            CONCAT(e.etiqueta, ' (', e.codigo_establecimiento, ')') AS establecimiento, 
+            u.id_establecimiento
+        FROM usuario u
+        INNER JOIN establecimiento e ON u.id_establecimiento = e.id
+        INNER JOIN cliente c ON e.id_cliente = c.id
+        WHERE u.id_cliente = ?
+        ORDER BY $sort $dir
+        LIMIT ? OFFSET ?
+        ";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("iii", $id_cliente, $limit, $offset);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        return $res->fetch_all(MYSQLI_ASSOC);
+    }
+
+    public static function contarPorCliente($id_cliente)
+    {
+        $conn = Conexion::conectar();
+        $sql = "SELECT COUNT(*) as total FROM usuario WHERE id_cliente = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i", $id_cliente);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        $row = $res->fetch_assoc();
+        return $row['total'];
     }
 }

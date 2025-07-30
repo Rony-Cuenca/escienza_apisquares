@@ -129,7 +129,7 @@ require_once __DIR__ . '/../../helpers/permisos_helper.php';
                                                     data-rol="<?= htmlspecialchars($row['rol']) ?>"
                                                     data-establecimiento="<?= $row['id_establecimiento'] ?>"
                                                     data-estado="<?= $row['estado'] ?>"
-                                                    class="block w-full text-left px-4 py-2 hover:bg-gray-100 text-black">
+                                                    class="block w-full text-left px-4 py-2 hover:bg-gray-100 text-blue-600">
                                                     Editar
                                                 </a>
                                                 <?php if ($row['id'] != obtenerUsuarioActualSeguro() && puedeCambiarEstadoUsuarios()): ?>
@@ -205,13 +205,8 @@ require_once __DIR__ . '/../../helpers/permisos_helper.php';
                     <label class="block mb-1 font-semibold text-sm text-gray-700">Rol</label>
                     <select name="rol" id="modalUsuarioRol" required class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400">
                         <option value="">Selecciona un rol</option>
-                        <?php if (esSuperAdmin()): ?>
-                            <option value="SuperAdmin">Super Administrador</option>
-                        <?php endif; ?>
-                        <?php if (tieneAccesoCompleto()): ?>
-                            <option value="Administrador">Administrador</option>
-                            <option value="Contador">Contador</option>
-                        <?php endif; ?>
+                        <option value="Administrador">Administrador</option>
+                        <option value="Contador">Contador</option>
                     </select>
                 </div>
                 <div>

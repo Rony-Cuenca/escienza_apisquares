@@ -59,43 +59,43 @@ $contexto = obtenerContextoActual();
             </a>
           </li>
           <?php if (puedeHacerCuadres()): ?>
-          <li>
-            <a href="index.php?controller=cuadres&action=index"
-              class="block py-2 px-3 rounded-sm transition-colors <?= $controller === 'cuadres' ? 'text-blue-700 font-bold' : 'hover:text-blue-700' ?>">
-              Cuadre
-            </a>
-          </li>
+            <li>
+              <a href="index.php?controller=cuadres&action=index"
+                class="block py-2 px-3 rounded-sm transition-colors <?= $controller === 'cuadres' ? 'text-blue-700 font-bold' : 'hover:text-blue-700' ?>">
+                Cuadre
+              </a>
+            </li>
           <?php endif; ?>
           <?php if (puedeGestionarUsuarios() || puedeGestionarEstablecimientos()): ?>
-          <li class="relative">
-            <button type="button"
-              class="flex items-center gap-1 py-2 px-3 rounded-sm transition-colors hover:text-blue-700 focus:outline-none"
-              id="btnUsuariosEstablecimientos">
-              Usuarios & Establecimientos
-              <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-            <div class="absolute left-0 mt-2 w-56 bg-white rounded-lg shadow-lg border hidden z-50"
-              id="submenuUsuariosEstablecimientos">
-              <?php if (puedeGestionarUsuarios()): ?>
-              <a href="index.php?controller=usuario&action=index"
-                class="block px-4 py-2 hover:bg-blue-50 text-gray-900">Usuarios</a>
-              <?php endif; ?>
-              <?php if (puedeGestionarEstablecimientos()): ?>
-              <a href="index.php?controller=establecimiento"
-                class="block px-4 py-2 hover:bg-blue-50 text-gray-900">Establecimientos</a>
-              <?php endif; ?>
-            </div>
-          </li>
+            <li class="relative">
+              <button type="button"
+                class="flex items-center gap-1 py-2 px-3 rounded-sm transition-colors hover:text-blue-700 focus:outline-none"
+                id="btnUsuariosEstablecimientos">
+                Usuarios & Establecimientos
+                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              <div class="absolute left-0 mt-2 w-56 bg-white rounded-lg shadow-lg border hidden z-50"
+                id="submenuUsuariosEstablecimientos">
+                <?php if (puedeGestionarUsuarios()): ?>
+                  <a href="index.php?controller=usuario&action=index"
+                    class="block px-4 py-2 hover:bg-blue-50 text-gray-900">Usuarios</a>
+                <?php endif; ?>
+                <?php if (puedeGestionarEstablecimientos()): ?>
+                  <a href="index.php?controller=establecimiento"
+                    class="block px-4 py-2 hover:bg-blue-50 text-gray-900">Establecimientos</a>
+                <?php endif; ?>
+              </div>
+            </li>
           <?php endif; ?>
           <?php if (puedeVerReportes()): ?>
-          <li>
-            <a href="index.php?controller=reporte&action=index"
-              class="block py-2 px-3 rounded-sm transition-colors <?= $controller === 'reporte' ? 'text-blue-700 font-bold' : 'hover:text-blue-700' ?>">
-              Reportes
-            </a>
-          </li>
+            <li>
+              <a href="index.php?controller=reporte&action=index"
+                class="block py-2 px-3 rounded-sm transition-colors <?= $controller === 'reporte' ? 'text-blue-700 font-bold' : 'hover:text-blue-700' ?>">
+                Reportes
+              </a>
+            </li>
           <?php endif; ?>
         <?php endif; ?>
       </ul>
@@ -136,11 +136,6 @@ $contexto = obtenerContextoActual();
           <li>
             <a href="index.php?controller=home&action=<?= $contexto['es_modo_directo'] ? 'dashboard' : 'index' ?>" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Dashboard</a>
           </li>
-          <?php if (!$contexto['es_modo_directo'] || $contexto['es_superadmin']): ?>
-            <li>
-              <a href="index.php?controller=configuracion&action=index" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Configuración</a>
-            </li>
-          <?php endif; ?>
           <li>
             <a href="index.php?controller=auth&action=logout" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Cerrar Sesión</a>
           </li>
@@ -159,7 +154,7 @@ $contexto = obtenerContextoActual();
     <div class="py-3 border-b">
       <span class="block text-sm text-gray-900">
         <?php if ($contexto['es_modo_directo']): ?>
-          superadmin_direct - <?= htmlspecialchars($nombreUsuario) ?>
+          Super Admin - <?= htmlspecialchars($nombreUsuario) ?>
         <?php else: ?>
           <?= htmlspecialchars($rolUsuario) ?><?= $rolUsuario && $nombreUsuario ? ' - ' : '' ?><?= htmlspecialchars($nombreUsuario) ?>
         <?php endif; ?>
@@ -224,7 +219,7 @@ $contexto = obtenerContextoActual();
         </li>
         <li>
           <a href="index.php?controller=reporte&action=index"
-            class="block py-2 px-3 rounded-sm transition-colors <?= $controller === 'establecimiento' ? 'text-blue-700 font-bold' : 'hover:text-blue-700' ?>">
+            class="block py-2 px-3 rounded-sm transition-colors <?= $controller === 'reporte' ? 'text-blue-700 font-bold' : 'hover:text-blue-700' ?>">
             Reportes
           </a>
         </li>

@@ -35,11 +35,35 @@ class SerieAjena
     public static function obtenerPorMes($mesSeleccionado, $idEstablecimiento)
     {
         $conn = Conexion::conectar();
-        if ($idEstablecimiento === null) {
-            $idEstablecimiento = $_SESSION['id_establecimiento'] ?? null;
-        }
-        if (empty($mesSeleccionado)) {
-            $sql = "SELECT 
+        if (empty($idEstablecimiento)) {
+            if (empty($mesSeleccionado)) {
+                $sql = "SELECT 
+                    serie,
+                    SUM(conteo) as total_conteo,
+                    SUM(total) as total_importe,
+                    COUNT(*) as cantidad_registros
+                FROM series_ajenas 
+                WHERE estado = 1
+                GROUP BY serie
+                ORDER BY serie";
+                $stmt = $conn->prepare($sql);
+            } else {
+                $sql = "SELECT 
+                    serie,
+                    SUM(conteo) as total_conteo,
+                    SUM(total) as total_importe,
+                    COUNT(*) as cantidad_registros
+                FROM series_ajenas 
+                WHERE DATE_FORMAT(fecha_registro, '%Y-%m') = ? 
+                AND estado = 1
+                GROUP BY serie
+                ORDER BY serie";
+                $stmt = $conn->prepare($sql);
+                $stmt->bind_param('s', $mesSeleccionado);
+            }
+        } else {
+            if (empty($mesSeleccionado)) {
+                $sql = "SELECT 
                     serie,
                     SUM(conteo) as total_conteo,
                     SUM(total) as total_importe,
@@ -49,10 +73,10 @@ class SerieAjena
                 AND estado = 1
                 GROUP BY serie
                 ORDER BY serie";
-            $stmt = $conn->prepare($sql);
-            $stmt->bind_param('i', $idEstablecimiento);
-        } else {
-            $sql = "SELECT 
+                $stmt = $conn->prepare($sql);
+                $stmt->bind_param('i', $idEstablecimiento);
+            } else {
+                $sql = "SELECT 
                     serie,
                     SUM(conteo) as total_conteo,
                     SUM(total) as total_importe,
@@ -63,8 +87,9 @@ class SerieAjena
                 AND estado = 1
                 GROUP BY serie
                 ORDER BY serie";
-            $stmt = $conn->prepare($sql);
-            $stmt->bind_param('si', $mesSeleccionado, $idEstablecimiento);
+                $stmt = $conn->prepare($sql);
+                $stmt->bind_param('si', $mesSeleccionado, $idEstablecimiento);
+            }
         }
         $stmt->execute();
         $result = $stmt->get_result();

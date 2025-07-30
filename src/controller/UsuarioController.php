@@ -27,7 +27,6 @@ class UsuarioController
 
     private function obtenerEstablecimientoActual()
     {
-        // Usar SesionHelper de manera consistente
         return SesionHelper::obtenerEstablecimientoActual();
     }
 
@@ -35,11 +34,8 @@ class UsuarioController
     {
         $this->verificarSesion();
 
+        $id_cliente = SesionHelper::obtenerClienteActual();
         $id_establecimiento = $this->obtenerEstablecimientoActual();
-        if (!$id_establecimiento) {
-            header('Location: index.php?controller=home&action=index');
-            exit;
-        }
 
         $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
         $limit = isset($_GET['limit']) ? max(1, intval($_GET['limit'])) : 10;
@@ -47,11 +43,18 @@ class UsuarioController
         $sort = $_GET['sort'] ?? 'establecimiento';
         $dir = ($_GET['dir'] ?? 'ASC') === 'DESC' ? 'DESC' : 'ASC';
 
-        $usuarios = Usuario::obtenerPaginadoPorEstablecimiento($id_establecimiento, $limit, $offset, $sort, $dir);
-        $total = Usuario::contarPorEstablecimiento($id_establecimiento);
-        
-        // Usar SesionHelper para obtener datos de manera consistente
-        $id_cliente = SesionHelper::obtenerClienteActual();
+        if (Usuario::esSuperAdmin()) {
+            $usuarios = Usuario::obtenerPaginadoPorCliente($id_cliente, $limit, $offset, $sort, $dir);
+            $total = Usuario::contarPorCliente($id_cliente);
+        } else {
+            if (!$id_establecimiento) {
+                header('Location: index.php?controller=home&action=index');
+                exit;
+            }
+            $usuarios = Usuario::obtenerPaginadoPorEstablecimiento($id_establecimiento, $limit, $offset, $sort, $dir);
+            $total = Usuario::contarPorEstablecimiento($id_establecimiento);
+        }
+
         $establecimientos = Usuario::obtenerEstablecimientosPorCliente($id_cliente);
         $correo_cliente = Usuario::obtenerCorreoCliente($id_cliente);
         $nombre_establecimiento_logueado = Usuario::obtenerNombreEstablecimiento($id_establecimiento);
@@ -97,7 +100,7 @@ class UsuarioController
                 $datos['rol'],
                 $datos['id_establecimiento'],
                 1,
-                SesionHelper::obtenerClienteActual(), // Usar SesionHelper consistente
+                SesionHelper::obtenerClienteActual(),
                 $hashed_password,
                 SesionHelper::obtenerNombreUsuario()
             );
@@ -159,7 +162,7 @@ class UsuarioController
                 $datos['rol'],
                 $datos['id_establecimiento'],
                 intval($datos['estado']),
-                SesionHelper::obtenerClienteActual(), // Usar SesionHelper consistente
+                SesionHelper::obtenerClienteActual(),
                 SesionHelper::obtenerNombreUsuario(),
                 $hashed_password
             );
@@ -292,7 +295,6 @@ class UsuarioController
 
     private function verificarSesion()
     {
-        // Usar SesionHelper de manera consistente
         if (!SesionHelper::obtenerClienteActual()) {
             header('Location: index.php?controller=auth&action=login');
             exit;
