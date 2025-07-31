@@ -40,13 +40,13 @@ $contexto = obtenerContextoActual();
           <!-- Menú SuperAdmin -->
           <li>
             <a href="index.php?controller=superadmin"
-              class="block py-2 px-3 rounded-sm transition-colors <?= $controller === 'superadmin' && $action !== 'clientes' ? 'text-blue-700 font-bold' : 'hover:text-blue-700' ?>">
+              class="block py-2 px-3 rounded-sm transition-colors <?= $controller === 'superadmin' && ($action !== 'clientes' && $action !== 'verCliente') ? 'text-blue-700 font-bold' : 'hover:text-blue-700' ?>">
               Panel de Control
             </a>
           </li>
           <li>
             <a href="index.php?controller=superadmin&action=clientes"
-              class="block py-2 px-3 rounded-sm transition-colors <?= $controller === 'superadmin' && $action === 'clientes' ? 'text-blue-700 font-bold' : 'hover:text-blue-700' ?>">
+              class="block py-2 px-3 rounded-sm transition-colors <?= $controller === 'superadmin' && ($action === 'clientes' || $action === 'verCliente') ? 'text-blue-700 font-bold' : 'hover:text-blue-700' ?>">
               Clientes
             </a>
           </li>

@@ -21,7 +21,7 @@ $sinSeries = $idEstablecimiento && empty($cuadresNUBOX) && empty($cuadresEDSUITE
                         type="text"
                         id="mesPicker"
                         name="mes"
-                        class="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 w-full max-w-[180px] md:max-w-[160px]"
+                        class="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 w-full max-w-[100px] md:max-w-[100px]"
                         placeholder="Seleccione un mes"
                         value="<?= isset($_GET['mes']) ? htmlspecialchars($_GET['mes']) : '' ?>"
                         readonly
@@ -85,9 +85,9 @@ $sinSeries = $idEstablecimiento && empty($cuadresNUBOX) && empty($cuadresEDSUITE
             else: ?>
                 <!-- ANÁLISIS COMPARATIVO POR SISTEMA DE FACTURACIÓN -->
                 <h3 class="text-xl font-bold text-gray-800 mt-8 mb-4">ANÁLISIS COMPARATIVO POR SISTEMA DE FACTURACIÓN</h3>
-                <div class="flex flex-col md:flex-row gap-5 mb-8 items-start">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-8 items-stretch w-full">
                     <!-- Tabla NUBOX360 -->
-                    <div class="relative w-full md:w-[300px] flex-shrink-0">
+                    <div class="relative w-full min-w-0 flex flex-col">
                         <div class="overflow-x-auto bg-white rounded-xl border border-[#2563EB] shadow">
                             <table class="min-w-max w-full text-xs">
                                 <thead>
@@ -137,7 +137,7 @@ $sinSeries = $idEstablecimiento && empty($cuadresNUBOX) && empty($cuadresEDSUITE
                     </div>
 
                     <!-- Tabla EDSUITE -->
-                    <div class="relative flex-1 min-w-0">
+                    <div class="relative w-full min-w-0 flex flex-col">
                         <div class="overflow-x-auto bg-white rounded-xl border border-[#2563EB] shadow">
                             <table class="min-w-max w-full text-xs">
                                 <thead>
@@ -194,7 +194,7 @@ $sinSeries = $idEstablecimiento && empty($cuadresNUBOX) && empty($cuadresEDSUITE
                     </div>
 
                     <!-- Tabla SIRE -->
-                    <div class="relative flex-1 min-w-0">
+                    <div class="relative w-full min-w-0 flex flex-col">
                         <div class="overflow-x-auto bg-white rounded-xl border border-[#2563EB] shadow">
                             <table class="min-w-max w-full text-xs">
                                 <thead>
@@ -253,9 +253,9 @@ $sinSeries = $idEstablecimiento && empty($cuadresNUBOX) && empty($cuadresEDSUITE
 
                 <!-- RESUMEN FACTURAS, BOLETAS Y NOTAS DE CRÉDITO -->
                 <h3 class="text-xl font-bold text-gray-800 mt-8 mb-4">RESUMEN DE COMPROBANTES</h3>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-8 w-full items-stretch">
                     <!-- FACTURAS -->
-                    <div class="bg-white rounded-xl border border-[#2563EB] shadow overflow-hidden">
+                    <div class="bg-white rounded-xl border border-[#2563EB] shadow overflow-hidden w-full min-w-0 flex flex-col">
                         <table class="w-full min-w-max text-sm">
                             <thead>
                                 <tr class="bg-[#A9C3E8]">
@@ -283,7 +283,7 @@ $sinSeries = $idEstablecimiento && empty($cuadresNUBOX) && empty($cuadresEDSUITE
                         </table>
                     </div>
                     <!-- BOLETAS -->
-                    <div class="bg-white rounded-xl border border-[#2563EB] shadow overflow-hidden">
+                    <div class="bg-white rounded-xl border border-[#2563EB] shadow overflow-hidden w-full min-w-0 flex flex-col">
                         <table class="w-full min-w-max text-sm">
                             <thead>
                                 <tr class="bg-[#A9C3E8]">
@@ -311,7 +311,7 @@ $sinSeries = $idEstablecimiento && empty($cuadresNUBOX) && empty($cuadresEDSUITE
                         </table>
                     </div>
                     <!-- NOTAS DE CRÉDITO -->
-                    <div class="bg-white rounded-xl border border-[#2563EB] shadow overflow-hidden">
+                    <div class="bg-white rounded-xl border border-[#2563EB] shadow overflow-hidden w-full min-w-0 flex flex-col">
                         <table class="w-full min-w-max text-sm">
                             <thead>
                                 <tr class="bg-[#A9C3E8]">
@@ -342,10 +342,11 @@ $sinSeries = $idEstablecimiento && empty($cuadresNUBOX) && empty($cuadresEDSUITE
 
                 <!-- REPORTES GLOBALES -->
                 <h3 class="text-xl font-bold text-gray-800 mt-8 mb-4">REPORTES GLOBALES</h3>
-                <div class="flex flex-col md:flex-row gap-8 mb-8 items-start justify-center">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8 w-full items-stretch">
                     <!-- Tabla PRODUCTOS TOTALES -->
-                    <div class="overflow-x-auto rounded-xl border border-[#2563EB] bg-white">
-                        <table class="w-full min-w-max text-sm">
+                    <div class="relative w-full min-w-0">
+                        <div class="overflow-x-auto bg-white rounded-xl border border-[#2563EB] shadow">
+                            <table class="min-w-max w-full text-xs">
                             <thead>
                                 <tr class="bg-yellow-300 text-gray-900 font-bold">
                                     <th class="py-2 px-3 text-center text-sm" colspan="3">PRODUCTOS TOTALES</th>
@@ -382,11 +383,13 @@ $sinSeries = $idEstablecimiento && empty($cuadresNUBOX) && empty($cuadresEDSUITE
                                     </tr>
                                 <?php endif; ?>
                             </tbody>
-                        </table>
+                            </table>
+                        </div>
                     </div>
                     <!-- Tabla REPORTES GLOBALES -->
-                    <div class="overflow-x-auto rounded-xl border border-[#2563EB] bg-white">
-                        <table class="w-full min-w-max text-sm">
+                    <div class="relative w-full min-w-0">
+                        <div class="overflow-x-auto bg-white rounded-xl border border-[#2563EB] shadow">
+                            <table class="min-w-max w-full text-xs">
                             <thead>
                                 <tr class="bg-yellow-300 text-gray-900 font-bold">
                                     <th class="py-2 px-3 text-center text-sm" colspan="5">REPORTES GLOBALES</th>
@@ -436,16 +439,18 @@ $sinSeries = $idEstablecimiento && empty($cuadresNUBOX) && empty($cuadresEDSUITE
                                     </tr>
                                 <?php endif; ?>
                             </tbody>
-                        </table>
+                            </table>
+                        </div>
                     </div>
                 </div>
 
                 <!-- DIFERENCIAS Y SERIES AJENAS -->
                 <h3 class="text-xl font-bold text-gray-800 mt-8 mb-4">DIFERENCIAS Y SERIES AJENAS</h3>
-                <div class="flex flex-col md:flex-row gap-8 mb-8 items-start justify-center">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-8 w-full items-stretch">
                     <!-- Tabla DIFERENCIAS -->
-                    <div class="overflow-x-auto rounded-xl border border-[#2563EB] bg-white w-full md:w-[500px]">
-                        <table class="w-full min-w-max text-sm">
+                    <div class="relative w-full min-w-0 flex flex-col">
+                        <div class="overflow-x-auto bg-white rounded-xl border border-[#2563EB] shadow">
+                            <table class="min-w-max w-full text-xs">
                             <thead>
                                 <tr class="bg-yellow-300 text-gray-900 font-bold">
                                     <th class="py-2 px-3 text-center text-sm" colspan="4">DIFERENCIAS</th>
@@ -488,13 +493,13 @@ $sinSeries = $idEstablecimiento && empty($cuadresNUBOX) && empty($cuadresEDSUITE
                                     </tr>
                                 <?php endif; ?>
                             </tbody>
-                        </table>
+                            </table>
+                        </div>
                     </div>
-
-                    <div class="flex flex-col gap-6 w-full md:w-[600px]">
-                        <!-- Tabla SERIES AJENAS -->
-                        <div class="overflow-x-auto rounded-xl border border-[#2563EB] bg-white">
-                            <table class="w-full min-w-max text-sm">
+                    <!-- Tabla SERIES AJENAS -->
+                    <div class="relative w-full min-w-0 flex flex-col">
+                        <div class="overflow-x-auto bg-white rounded-xl border border-[#2563EB] shadow">
+                            <table class="min-w-max w-full text-xs">
                                 <thead>
                                     <tr class="bg-yellow-300 text-gray-900 font-bold">
                                         <th class="py-2 px-3 text-center text-sm" colspan="3">SERIES AJENAS</th>
@@ -533,10 +538,11 @@ $sinSeries = $idEstablecimiento && empty($cuadresNUBOX) && empty($cuadresEDSUITE
                                 </tbody>
                             </table>
                         </div>
-
-                        <!-- Tabla INCIDENCIAS -->
-                        <div class="overflow-x-auto rounded-xl border border-[#2563EB] bg-white">
-                            <table class="w-full min-w-max text-sm">
+                    </div>
+                    <!-- Tabla INCIDENCIAS -->
+                    <div class="relative w-full min-w-0 flex flex-col">
+                        <div class="overflow-x-auto bg-white rounded-xl border border-[#2563EB] shadow">
+                            <table class="min-w-max w-full text-xs">
                                 <thead>
                                     <tr class="bg-yellow-300 text-gray-900 font-bold">
                                         <th class="py-2 px-3 text-center text-sm" colspan="7">INCIDENCIAS</th>
