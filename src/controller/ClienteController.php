@@ -301,7 +301,7 @@ class ClienteController
             exit;
         }
 
-        if (!in_array($estado, [1, 2])) {
+        if (!in_array($estado, [1, 2, 3])) {
             echo json_encode(['success' => false, 'error' => 'Estado inválido']);
             exit;
         }

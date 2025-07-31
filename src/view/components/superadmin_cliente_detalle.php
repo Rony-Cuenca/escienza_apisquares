@@ -82,12 +82,16 @@
                             <label class="text-sm font-semibold text-slate-600 uppercase tracking-wider">Estado</label>
                             <div class="flex items-center">
                                 <?php if ($cliente['estado'] == 1): ?>
-                                    <span class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-bold bg-gradient-to-r from-green-100 to-emerald-200 text-green-800 border border-green-300">
+                                    <span class="inline-flex items-center min-w-[140px] justify-center px-4 py-2 rounded-lg text-sm font-bold bg-gradient-to-r from-green-100 to-emerald-200 text-green-800 border border-green-300">
                                         <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>Cliente Activo
                                     </span>
-                                <?php else: ?>
-                                    <span class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-bold bg-gradient-to-r from-red-100 to-pink-200 text-red-800 border border-red-300">
+                                <?php elseif ($cliente['estado'] == 2): ?>
+                                    <span class="inline-flex items-center min-w-[140px] justify-center px-4 py-2 rounded-lg text-sm font-bold bg-gradient-to-r from-red-100 to-pink-200 text-red-800 border border-red-300">
                                         <span class="w-2 h-2 bg-red-500 rounded-full mr-2"></span>Cliente Inactivo
+                                    </span>
+                                <?php else: ?>
+                                    <span class="inline-flex items-center min-w-[140px] justify-center px-4 py-2 rounded-lg text-sm font-bold bg-gray-200 text-gray-500 border border-gray-300 cursor-not-allowed select-none">
+                                        <span class="w-2 h-2 bg-gray-400 rounded-full mr-2"></span>Cliente Deshabilitado
                                     </span>
                                 <?php endif; ?>
                             </div>
@@ -168,12 +172,16 @@
                                     </div>
                                     <div class="flex items-center">
                                         <?php if ($establecimiento['estado'] == 1): ?>
-                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            <span class="inline-flex items-center min-w-[90px] justify-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                                 <span class="w-1.5 h-1.5 bg-green-500 rounded-full mr-1"></span>Activo
                                             </span>
-                                        <?php else: ?>
-                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                        <?php elseif ($establecimiento['estado'] == 2): ?>
+                                            <span class="inline-flex items-center min-w-[90px] justify-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
                                                 <span class="w-1.5 h-1.5 bg-red-500 rounded-full mr-1"></span>Inactivo
+                                            </span>
+                                        <?php else: ?>
+                                            <span class="inline-flex items-center min-w-[90px] justify-center px-2 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-500 border border-gray-300 cursor-not-allowed select-none">
+                                                <span class="w-1.5 h-1.5 bg-gray-400 rounded-full mr-1"></span>Deshabilitado
                                             </span>
                                         <?php endif; ?>
                                     </div>
