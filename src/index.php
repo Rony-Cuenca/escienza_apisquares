@@ -17,7 +17,6 @@ if (!isset($_SESSION['id_cliente']) || $_SESSION['id_cliente'] === 0) {
     ];
 
     if (isset($_SESSION['is_super_admin']) && $_SESSION['is_super_admin'] === true) {
-        // SuperAdmin tiene acceso completo
     } elseif (!isset($accionesPublicas[$controller]) || !in_array($action, $accionesPublicas[$controller])) {
         header('Location: index.php?controller=auth&action=login');
         exit;

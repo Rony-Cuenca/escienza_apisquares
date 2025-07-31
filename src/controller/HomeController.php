@@ -1,6 +1,7 @@
 <?php
 require_once 'config/conexion.php';
 require_once 'model/Usuario.php';
+require_once 'model/Cuadre.php';
 require_once 'helpers/sesion_helper.php';
 
 class HomeController
@@ -105,49 +106,63 @@ class HomeController
 
     public function resumenVentas()
     {
-        $conn = Conexion::conectar();
-        $establecimiento = $_GET['establecimiento'] ?? '';
-        $anio = $_GET['anio'] ?? date('Y');
+        header('Content-Type: application/json; charset=utf-8');
         
-        // Usar SesionHelper de manera consistente
-        $id_cliente = SesionHelper::obtenerClienteActual();
-        
-        $sql = "SELECT DATE_FORMAT(rc.fecha_registro, '%m') AS mes, 
-                       tr.descripcion AS tipo, 
-                       SUM(CASE 
-                           WHEN rc.monto_total > 1000000 THEN 0  
-                           ELSE rc.monto_total 
-                       END) AS total,
-                       COUNT(CASE WHEN rc.monto_total > 1000000 THEN 1 END) AS registros_anomalos
-                FROM resumen_comprobante rc
-                JOIN establecimiento e ON rc.id_establecimiento = e.id
-                JOIN tipo_reportedoc tr ON rc.id_reporte = tr.id
-                WHERE e.id_cliente = ? 
-                  AND YEAR(rc.fecha_registro) = ?
-                  AND rc.estado = 1
-                GROUP BY mes, tipo
-                ORDER BY mes, tipo";
-
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("ii", $id_cliente, $anio);
-        $stmt->execute();
-        $result = $stmt->get_result();
-
-        $datos = [];
-        while ($row = $result->fetch_assoc()) {
-            if ($row['registros_anomalos'] > 0) {
-                error_log("REGISTROS ANÓMALOS DETECTADOS: Cliente=$id_cliente, Mes={$row['mes']}, Tipo={$row['tipo']}, Cantidad={$row['registros_anomalos']}");
+        try {
+            $anio = $_GET['anio'] ?? date('Y');
+            $establecimiento = $_GET['establecimiento'] ?? '';
+            
+            error_log("resumenVentas llamada - Año: $anio, Establecimiento: $establecimiento");
+            
+            $conn = Conexion::conectar();
+            $id_cliente = SesionHelper::obtenerClienteActual();
+            
+            if (!$id_cliente) {
+                error_log("Error: Cliente no identificado");
+                echo json_encode([]);
+                exit;
             }
-
-            $datos[] = [
-                'mes' => $row['mes'],
-                'tipo' => $row['tipo'],
-                'total' => $row['total']
-            ];
+            
+            error_log("Cliente identificado: $id_cliente");
+            
+            // Consulta corregida
+            $sql = "SELECT DATE_FORMAT(rc.fecha_registro, '%m') AS mes, 
+                           tr.descripcion AS tipo, 
+                           SUM(rc.monto_total) AS total
+                    FROM resumen_comprobante rc
+                    INNER JOIN establecimiento e ON rc.id_establecimiento = e.id
+                    INNER JOIN tipo_reportedoc tr ON rc.id_reporte = tr.id
+                    WHERE e.id_cliente = ? 
+                      AND YEAR(rc.fecha_registro) = ?
+                      AND rc.estado = 1
+                      AND tr.estado = 1
+                    GROUP BY mes, tipo, tr.id
+                    ORDER BY mes ASC, tr.id ASC
+                    LIMIT 50";
+            
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("ii", $id_cliente, $anio);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            $datos = [];
+            while ($row = $result->fetch_assoc()) {
+                $datos[] = [
+                    'mes' => $row['mes'],
+                    'tipo' => $row['tipo'],
+                    'total' => floatval($row['total'])
+                ];
+            }
+            
+            error_log("resumenVentas - Total datos procesados: " . count($datos));
+            echo json_encode($datos);
+            
+        } catch (Exception $e) {
+            error_log("Error en resumenVentas: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            echo json_encode([]);
         }
-
-        header('Content-Type: application/json');
-        echo json_encode($datos);
+        
         exit;
     }
 
@@ -234,57 +249,89 @@ class HomeController
         exit;
     }
 
+
     public function variacionVentasMensual()
     {
-        $conn = Conexion::conectar();
-        $establecimiento = $_GET['establecimiento'] ?? '';
-        $anio = $_GET['anio'] ?? date('Y');
-        $tipovar = $_GET['tipo'] ?? 'NUBOX360';
+        header('Content-Type: application/json; charset=utf-8');
         
-        // Usar SesionHelper de manera consistente
-        $id_cliente = SesionHelper::obtenerClienteActual();
-        
-        $sql = "SELECT DATE_FORMAT(rc.fecha_registro, '%m') AS mes, SUM(rc.monto_total) AS total
-            FROM resumen_comprobante rc
-            JOIN establecimiento e ON rc.id_establecimiento = e.id
-            JOIN tipo_reportedoc tr ON rc.id_reporte = tr.id
-            WHERE e.id_cliente = ? AND YEAR(rc.fecha_registro) = ? AND tr.descripcion = ?
-            GROUP BY mes
-            ORDER BY mes";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("iis", $id_cliente, $anio, $tipovar);
-        $stmt->execute();
-        $result = $stmt->get_result();
-
-        $ventas = [];
-        while ($row = $result->fetch_assoc()) {
-            $ventas[$row['mes']] = floatval($row['total']);
-        }
-
-        $meses = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
-        $data = [];
-        $anterior = null;
-        foreach ($meses as $mes) {
-            $actual = $ventas[$mes] ?? 0;
-            if ($anterior === null) {
-                $variacion = null;
-            } else {
-                $variacion = $anterior == 0 ? null : round((($actual - $anterior) / abs($anterior)) * 100, 2);
+        try {
+            $anio = $_GET['anio'] ?? date('Y');
+            $tipovar = $_GET['tipo'] ?? 'NUBOX360';
+            
+            $conn = Conexion::conectar();
+            $id_cliente = SesionHelper::obtenerClienteActual();
+            
+            if (!$id_cliente) {
+                echo json_encode([]);
+                exit;
             }
-            $data[] = [
-                'mes' => $mes,
-                'total' => $actual,
-                'variacion' => $variacion
-            ];
-            $anterior = $actual;
-        }
+            
+            // Mapear tipo a id_reporte (corrigiendo según la base de datos)
+            $idReporte = 1; // NUBOX360 por defecto
+            switch ($tipovar) {
+                case 'NUBOX360': $idReporte = 1; break;
+                case 'SIRE': $idReporte = 2; break;
+                case 'EDSUITE': $idReporte = 3; break;
+            }
+            
+            // Consulta simple por mes - sin excluir series ajenas por ahora para debug
+            $sql = "SELECT MONTH(rc.fecha_registro) AS mes,
+                           SUM(rc.monto_total) AS total
+                    FROM resumen_comprobante rc
+                    INNER JOIN establecimiento e ON rc.id_establecimiento = e.id
+                    WHERE e.id_cliente = ?
+                      AND YEAR(rc.fecha_registro) = ?
+                      AND rc.id_reporte = ?
+                      AND rc.estado = 1
+                    GROUP BY mes
+                    ORDER BY mes ASC";
+            
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("iii", $id_cliente, $anio, $idReporte);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            $ventas = [];
+            while ($row = $result->fetch_assoc()) {
+                $ventas[sprintf('%02d', $row['mes'])] = floatval($row['total']);
+            }
 
-        header('Content-Type: application/json');
-        echo json_encode($data);
+            // Generar datos para todos los meses del año
+            $meses = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
+            $data = [];
+            $anterior = null;
+            
+            foreach ($meses as $mes) {
+                $actual = $ventas[$mes] ?? 0;
+                $variacion = null;
+                
+                if ($anterior !== null && $anterior > 0) {
+                    $variacion = round((($actual - $anterior) / $anterior) * 100, 2);
+                } elseif ($anterior !== null && $anterior == 0 && $actual > 0) {
+                    $variacion = 100;
+                } elseif ($anterior !== null) {
+                    $variacion = 0;
+                }
+                
+                $data[] = [
+                    'mes' => $mes,
+                    'total' => $actual,
+                    'variacion' => $variacion
+                ];
+                $anterior = $actual;
+            }
+
+            echo json_encode($data);
+            
+        } catch (Exception $e) {
+            error_log("Error en variacionVentasMensual: " . $e->getMessage());
+            echo json_encode([]);
+        }
+        
         exit;
     }
 
-    public function promedioVentaPorSerie()
+      public function promedioVentaPorSerie()
     {
         $conn = Conexion::conectar();
         $establecimiento = $_GET['establecimiento'] ?? '';

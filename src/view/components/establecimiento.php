@@ -133,25 +133,27 @@ require_once __DIR__ . '/../../helpers/permisos_helper.php';
                                 </td>
                                 <td class="py-2 px-1 text-center relative">
                                     <?php if (puedeEditarEstablecimientos()): ?>
-                                        <button data-action="toggleMenu" type="button" class="focus:outline-none" aria-label="Abrir menú de establecimiento">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24">
-                                                <circle cx="12" cy="5" r="2" fill="#000" />
-                                                <circle cx="12" cy="12" r="2" fill="#000" />
-                                                <circle cx="12" cy="19" r="2" fill="#000" />
-                                            </svg>
-                                        </button>
-                                        <div id="menuEstablecimiento" class="hidden fixed z-50 w-32 bg-white rounded-lg shadow-lg border min-w-[120px]">
-                                            <a href="javascript:void(0);" data-action="editarEstablecimiento" data-id="<?= $row['id'] ?>"
-                                                class="block w-full text-left px-4 py-2 text-blue-600 hover:bg-gray-100">Editar</a>
-                                            <?php if (puedeCambiarEstadoEstablecimientos()): ?>
-                                                <?php if ($row['estado'] != 3): ?>
-                                                    <a href="javascript:void(0);" data-action="cambiarEstado" data-id="<?= $row['id'] ?>" data-estado="3"
-                                                        class="block w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100">Deshabilitar</a>
-                                                <?php else: ?>
-                                                    <a href="javascript:void(0);" data-action="cambiarEstado" data-id="<?= $row['id'] ?>" data-estado="1"
-                                                        class="block w-full text-left px-4 py-2 text-green-600 hover:bg-gray-100">Habilitar</a>
+                                        <div class="relative inline-block text-left">
+                                            <button data-action="toggleMenu" type="button" class="focus:outline-none" aria-label="Abrir menú de establecimiento">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24">
+                                                    <circle cx="12" cy="5" r="2" fill="#000" />
+                                                    <circle cx="12" cy="12" r="2" fill="#000" />
+                                                    <circle cx="12" cy="19" r="2" fill="#000" />
+                                                </svg>
+                                            </button>
+                                            <div id="menuEstablecimiento" class="hidden absolute right-0 z-50 w-32 bg-white rounded-lg shadow-lg border min-w-[120px]">
+                                                <a href="javascript:void(0);" data-action="editarEstablecimiento" data-id="<?= $row['id'] ?>"
+                                                    class="block w-full text-left px-4 py-2 text-blue-600 hover:bg-gray-100">Editar</a>
+                                                <?php if (puedeCambiarEstadoEstablecimientos()): ?>
+                                                    <?php if ($row['estado'] != 3): ?>
+                                                        <a href="javascript:void(0);" data-action="cambiarEstado" data-id="<?= $row['id'] ?>" data-estado="3"
+                                                            class="block w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100">Deshabilitar</a>
+                                                    <?php else: ?>
+                                                        <a href="javascript:void(0);" data-action="cambiarEstado" data-id="<?= $row['id'] ?>" data-estado="1"
+                                                            class="block w-full text-left px-4 py-2 text-green-600 hover:bg-gray-100">Habilitar</a>
+                                                    <?php endif; ?>
                                                 <?php endif; ?>
-                                            <?php endif; ?>
+                                            </div>
                                         </div>
                                     <?php endif; ?>
                                 </td>

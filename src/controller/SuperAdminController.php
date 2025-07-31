@@ -37,12 +37,20 @@ class SuperAdminController
         $offset = ($page - 1) * $limit;
         $sort = $_GET['sort'] ?? 'razon_social';
         $dir = ($_GET['dir'] ?? 'ASC') === 'DESC' ? 'DESC' : 'ASC';
-
         $clientes = Cliente::obtenerClientesConEstablecimientos($limit, $offset, $sort, $dir);
         $total = Usuario::contarTodosLosClientes();
-
         $contenido = 'view/components/superadmin_clientes.php';
         require 'view/layout.php';
+    }
+
+    public function buscarClientesAjax()
+    {
+        $busqueda = $_GET['busqueda'] ?? '';
+        require_once 'model/Cliente.php';
+        $clientes = Cliente::filtrarClientes($busqueda, 10);
+        header('Content-Type: application/json');
+        echo json_encode($clientes);
+        exit;
     }
 
     public function verCliente()
@@ -190,7 +198,6 @@ class SuperAdminController
             exit;
         }
 
-        // Verificar que el cliente existe
         $cliente = $this->obtenerClientePorId($id_cliente);
         if (!$cliente) {
             $_SESSION['error'] = 'Cliente no encontrado';
@@ -198,7 +205,6 @@ class SuperAdminController
             exit;
         }
 
-        // Guardar información original del superadmin
         $_SESSION['superadmin_original'] = [
             'user_id' => $_SESSION['user_id'] ?? null,
             'id_usuario' => $_SESSION['id_usuario'] ?? null,
@@ -208,15 +214,12 @@ class SuperAdminController
             'is_super_admin' => $_SESSION['is_super_admin'] ?? null
         ];
 
-        // Establecer el modo superadmin manteniendo el ID del superadmin
         $_SESSION['superadmin_mode'] = true;
         $_SESSION['acting_as_establecimiento'] = $id_establecimiento;
-        $_SESSION['id_establecimiento'] = $id_establecimiento; // Corregido: usar id_establecimiento
-        $_SESSION['establecimiento_id'] = $id_establecimiento; // Mantener por compatibilidad
+        $_SESSION['id_establecimiento'] = $id_establecimiento;
+        $_SESSION['establecimiento_id'] = $id_establecimiento;
         $_SESSION['id_cliente'] = $id_cliente;
-        // MANTENER el ID del SuperAdmin como usuario activo
-        // $_SESSION['id_usuario'] y $_SESSION['user_id'] se mantienen igual
-        $_SESSION['rol'] = 'SuperAdmin'; // Mantener rol de superadmin
+        $_SESSION['rol'] = 'SuperAdmin';
 
         header('Location: index.php?controller=home&action=dashboard');
         exit;

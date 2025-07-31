@@ -3,11 +3,10 @@ require_once 'config/conexion.php';
 
 class DiferenciaComprobante
 {
-    public function index()
-    {
-    }
+    public function index() {}
 
-    public static function Insertar($data){
+    public static function Insertar($data)
+    {
         $conn = Conexion::conectar();
         $sql = "INSERT INTO diferencia_comprobante (
             serie,
@@ -37,5 +36,35 @@ class DiferenciaComprobante
             $data['estado']
         ]);
         return true;
+    }
+
+    public static function obtenerIncidencias($mes, $idEstablecimiento = null)
+    {
+        $conn = Conexion::conectar();
+        $params = [$mes];
+        $sql = "SELECT 
+        e.etiqueta AS establecimiento,
+        dc.serie,
+        dc.numero,
+        dc.total_sire,
+        dc.total_nubox,
+        dc.estado_sire,
+        dc.estado_nubox
+    FROM diferencia_comprobante dc
+    INNER JOIN establecimiento e ON e.id = dc.id_establecimiento
+    WHERE LEFT(dc.fecha_registro, 7) = ?";
+        if ($idEstablecimiento) {
+            $sql .= " AND dc.id_establecimiento = ?";
+            $params[] = $idEstablecimiento;
+        }
+        $sql .= " ORDER BY e.etiqueta, dc.serie, dc.numero";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute($params);
+        $result = $stmt->get_result();
+        $incidencias = [];
+        while ($row = $result->fetch_assoc()) {
+            $incidencias[] = $row;
+        }
+        return $incidencias;
     }
 }

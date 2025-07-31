@@ -72,12 +72,10 @@ class ModalCrudController {
         const isEdicion = !!values.id;
         this.establecimientoOriginal = values.establecimiento || '';
 
-        // Configurar permisos según el usuario
         if (values.id && window.ID_USUARIO_LOGUEADO && String(values.id) === String(window.ID_USUARIO_LOGUEADO)) {
             this.inputs.rol.disabled = true;
             this.inputs.establecimiento.disabled = true;
 
-            // Agregar campos hidden para asegurar que los valores se envíen
             let hiddenRol = document.querySelector('input[name="rol_hidden"]');
             if (!hiddenRol) {
                 hiddenRol = document.createElement('input');
@@ -109,7 +107,6 @@ class ModalCrudController {
             this.inputs.rol.disabled = false;
             this.inputs.establecimiento.disabled = false;
 
-            // Eliminar campos hidden si existen
             const hiddenRol = document.querySelector('input[name="rol_hidden"]');
             const hiddenEstablecimiento = document.querySelector('input[name="id_establecimiento_hidden"]');
             const hiddenEstado = document.querySelector('input[name="estado_hidden"]');
@@ -118,7 +115,6 @@ class ModalCrudController {
             if (hiddenEstado) hiddenEstado.remove();
         }
 
-        // Configurar campos de contraseña
         if (values.id) {
             this.cambiarContrasenaWrapper.classList.remove('hidden');
             this.checkCambiarContrasena.checked = false;
@@ -297,24 +293,7 @@ class ModalCrudController {
                 e.stopPropagation();
                 this.cerrarMenus();
                 const menu = btn.nextElementSibling;
-                if (menu) {
-                    menu.classList.toggle('hidden');
-                    menu.style.left = '';
-                    menu.style.right = '';
-                    const rect = menu.getBoundingClientRect();
-                    if (rect.right > window.innerWidth) {
-                        menu.style.right = 'auto';
-                        menu.style.left = '0';
-                    } else {
-                        menu.style.right = '0';
-                        menu.style.left = 'auto';
-                    }
-                    if (window.innerWidth < 640) {
-                        menu.style.minWidth = '60vw';
-                    } else {
-                        menu.style.minWidth = '120px';
-                    }
-                }
+                if (menu) menu.classList.toggle('hidden');
             });
         });
         document.addEventListener('click', () => this.cerrarMenus());
@@ -328,19 +307,15 @@ class ModalCrudController {
                     return;
                 }
 
-                // Determinar la acción basada en el estado objetivo
                 let textoAccion, textoEstado;
 
                 if (estadoUsuario === '1') {
-                    // Cambiar a activo
                     textoAccion = 'activar';
                     textoEstado = 'activó';
                 } else if (estadoUsuario === '2') {
-                    // Cambiar a inactivo
                     textoAccion = 'desactivar';
                     textoEstado = 'desactivó';
                 } else if (estadoUsuario === '3') {
-                    // Cambiar a deshabilitado
                     textoAccion = 'deshabilitar';
                     textoEstado = 'deshabilitó';
                 } else {

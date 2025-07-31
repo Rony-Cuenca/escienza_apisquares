@@ -779,6 +779,53 @@ date_default_timezone_set('America/Lima');
         </div>
     </div>
 
+    <!-- PÁGINA 4: INCIDENCIAS -->
+    <div class="page-break"></div>
+    <div>
+        <div>
+            <div class="corporate-header">
+                <h3>INCIDENCIAS</h3>
+            </div>
+            <div class="tablas-comparativas-contenedor">
+                <div class="tabla-comparativa" style="min-width: 600px;">
+                    <div class="tabla-titulo nubox-header">INCIDENCIAS</div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Establecimiento</th>
+                                <th>Serie</th>
+                                <th>Número</th>
+                                <th>Total SIRE</th>
+                                <th>Total NUBOX</th>
+                                <th>Estado SIRE</th>
+                                <th>Estado NUBOX</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (!empty($incidencias)): ?>
+                                <?php foreach ($incidencias as $inc): ?>
+                                    <tr>
+                                        <td><?= htmlspecialchars($inc['establecimiento']) ?></td>
+                                        <td><?= htmlspecialchars($inc['serie']) ?></td>
+                                        <td><?= htmlspecialchars($inc['numero']) ?></td>
+                                        <td style="text-align:right;">S/. <?= number_format($inc['total_sire'], 2) ?></td>
+                                        <td style="text-align:right;">S/. <?= number_format($inc['total_nubox'], 2) ?></td>
+                                        <td><?= htmlspecialchars($inc['estado_sire']) ?></td>
+                                        <td><?= htmlspecialchars($inc['estado_nubox']) ?></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="6" style="text-align:center; color:#888;">No hay incidencias para este mes.</td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <footer>
         Reporte Mensual | <?= htmlspecialchars($nombreEstablecimiento) ?> | © <?= date('Y') ?> Escienza - Todos los derechos reservados
     </footer>

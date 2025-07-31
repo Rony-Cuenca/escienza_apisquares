@@ -18,19 +18,22 @@
     <script>
 function drawVariacionVentasChart() {
     let anio = document.getElementById('select-anio').value;
-  let tipovar = document.getElementById('select-tipo-vari').value;
+    let tipovar = document.getElementById('select-tipo-vari').value;
 
-    let establecimiento = document.getElementById('select-establecimiento').value;
-    fetch(`index.php?controller=home&action=variacionVentasMensual&establecimiento=${establecimiento}&anio=${anio}&tipo=${tipovar}`)
+    console.log('Cargando variación mensual:', {anio, tipo: tipovar});
+    
+    fetch(`index.php?controller=home&action=variacionVentasMensual&anio=${anio}&tipo=${tipovar}`)
         .then(r => r.json())
         .then(datos => {
+            console.log('Datos recibidos:', datos);
+            
             // Solo meses con datos
             const mesesNombres = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-            // Filtrar solo los meses con ventas > 0
-            const datosFiltrados = datos.filter(d => d.total > 0);
-            const labels = datosFiltrados.map(d => mesesNombres[parseInt(d.mes, 10) - 1]);
-            const variaciones = datosFiltrados.map(d => d.variacion === null || d.variacion === undefined ? 0 : d.variacion);
-            const totales = datosFiltrados.map(d => d.total);
+            
+            // No filtrar aquí, usar todos los datos recibidos
+            const labels = datos.map(d => mesesNombres[parseInt(d.mes, 10) - 1]);
+            const variaciones = datos.map(d => d.variacion === null || d.variacion === undefined ? 0 : d.variacion);
+            const totales = datos.map(d => d.total);
             const colores = variaciones.map(v => v > 0 ? '#22c55e' : v < 0 ? '#ef4444' : '#2563eb');
             // Destruir gráfico anterior si existe
             if(window.variacionVentasChartObj) window.variacionVentasChartObj.destroy();
@@ -141,6 +144,11 @@ function drawVariacionVentasChart() {
                     }
                 }]
             });
+        })
+        .catch(error => {
+            console.error('Error al cargar datos de variación mensual:', error);
+            // Destruir gráfico anterior si existe
+            if(window.variacionVentasChartObj) window.variacionVentasChartObj.destroy();
         });
 }
 document.getElementById('select-anio').addEventListener('change', drawVariacionVentasChart);

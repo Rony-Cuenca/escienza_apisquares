@@ -6,44 +6,57 @@ unset($_SESSION['errores'], $_SESSION['form_data']);
 <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
     <div class="w-full px-4 md:px-8 py-8">
         <!-- Header -->
-        <div class="bg-white rounded-2xl shadow-xl border border-slate-200/60 p-8 mb-8">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-4">
-                    <div class="bg-gradient-to-br from-blue-600 to-indigo-600 p-4 rounded-xl shadow-lg">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div class="bg-white rounded-2xl shadow-xl border border-slate-200/60 p-4 sm:p-8 mb-8">
+            <div class="flex flex-wrap sm:flex-nowrap items-center justify-between gap-4">
+                <div class="flex items-center gap-3 w-full sm:w-auto">
+                    <div class="bg-gradient-to-br from-blue-600 to-indigo-600 p-3 sm:p-4 rounded-xl shadow-lg flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 sm:w-8 sm:h-8 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                         </svg>
                     </div>
-                    <div>
-                        <h1 class="text-3xl font-bold text-black">
+                    <div class="min-w-0">
+                        <h1 class="text-xl sm:text-3xl font-bold text-black break-words">
                             Gestión de Clientes
                         </h1>
-                        <p class="text-slate-600 mt-1 font-medium">Administración completa de todos los clientes del sistema</p>
+                        <p class="text-slate-600 mt-1 font-medium text-sm sm:text-base">Administración completa de todos los clientes del sistema</p>
                     </div>
                 </div>
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-end">
                     <button onclick="abrirModalCliente()"
-                        class="inline-flex items-center gap-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-black px-6 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        class="inline-flex items-center gap-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-black px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 text-sm sm:text-base">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                         </svg>
-                        Agregar Cliente
+                        <span class="xs:inline">Agregar Cliente</span>
                     </button>
                 </div>
             </div>
         </div>
-
+        <div class="relative w-full max-w-md mb-8">
+            <input
+                type="text"
+                id="busquedaCliente"
+                placeholder="Buscar por RUC o Razón Social..."
+                autocomplete="off"
+                class="w-full px-4 sm:px-5 py-2 sm:py-3 pl-10 sm:pl-12 rounded-xl border border-slate-300 bg-gradient-to-r from-slate-50 to-blue-50 shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-800 font-medium transition-all duration-200 text-sm sm:text-base">
+            <span class="absolute left-2 sm:left-3 top-0 h-full flex items-center text-blue-500">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2" fill="none" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                </svg>
+            </span>
+        </div>
         <!-- Mensajes de éxito/error -->
         <?php if (isset($_SESSION['mensaje'])): ?>
-            <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-                <div class="flex">
-                    <div class="flex-shrink-0">
-                        <svg class="h-5 w-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4 mb-6">
+                <div class="flex flex-wrap items-center gap-2">
+                    <div class="flex-shrink-0 flex items-center justify-center">
+                        <svg class="w-4 h-4 sm:w-5 sm:h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                     </div>
-                    <div class="ml-3">
-                        <p class="text-sm font-medium text-green-800">
+                    <div class="min-w-0 flex-1">
+                        <p class="text-xs sm:text-sm font-medium text-green-800 break-words">
                             <?= htmlspecialchars($_SESSION['mensaje']) ?>
                         </p>
                     </div>
@@ -53,15 +66,15 @@ unset($_SESSION['errores'], $_SESSION['form_data']);
         <?php endif; ?>
 
         <?php if (isset($_SESSION['error'])): ?>
-            <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-                <div class="flex">
-                    <div class="flex-shrink-0">
-                        <svg class="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4 mb-6">
+                <div class="flex flex-wrap items-center gap-2">
+                    <div class="flex-shrink-0 flex items-center justify-center">
+                        <svg class="w-4 h-4 sm:w-5 sm:h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                     </div>
-                    <div class="ml-3">
-                        <p class="text-sm font-medium text-red-800">
+                    <div class="min-w-0 flex-1">
+                        <p class="text-xs sm:text-sm font-medium text-red-800 break-words">
                             <?= htmlspecialchars($_SESSION['error']) ?>
                         </p>
                     </div>
@@ -111,7 +124,9 @@ unset($_SESSION['errores'], $_SESSION['form_data']);
                     <tbody class="bg-white divide-y divide-slate-200">
                         <?php if ($clientes): ?>
                             <?php $i = ($page - 1) * $limit + 1;
-                            foreach ($clientes as $cliente): ?>
+                            foreach ($clientes as $cliente) {
+                                if ($cliente['id'] == 1) continue;
+                            ?>
                                 <!-- Fila principal del cliente -->
                                 <tr class="hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-200">
                                     <td class="py-4 px-6 text-center text-slate-600 font-medium">
@@ -138,121 +153,110 @@ unset($_SESSION['errores'], $_SESSION['form_data']);
                                             </span>
                                         </div>
                                     </td>
-                                    <td class="py-4 px-6">
+                                    <td class="py-4 px-6 text-left align-middle">
                                         <?php if ($cliente['estado'] == 1): ?>
                                             <button onclick="cambiarEstadoCliente(<?= $cliente['id'] ?>, 2)"
-                                                class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-green-100 to-emerald-200 text-green-800 border border-green-300 hover:from-green-200 hover:to-emerald-300 transition-all duration-200 cursor-pointer"
+                                                class="inline-flex items-center min-w-[120px] justify-center px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-green-100 to-emerald-200 text-green-800 border border-green-300 hover:from-green-200 hover:to-emerald-300 transition-all duration-200 cursor-pointer"
                                                 title="Hacer clic para desactivar">
                                                 <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>Activo
                                             </button>
-                                        <?php else: ?>
+                                        <?php elseif ($cliente['estado'] == 2): ?>
                                             <button onclick="cambiarEstadoCliente(<?= $cliente['id'] ?>, 1)"
-                                                class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-red-100 to-pink-200 text-red-800 border border-red-300 hover:from-red-200 hover:to-pink-300 transition-all duration-200 cursor-pointer"
+                                                class="inline-flex items-center min-w-[120px] justify-center px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-red-100 to-pink-200 text-red-800 border border-red-300 hover:from-red-200 hover:to-pink-300 transition-all duration-200 cursor-pointer"
                                                 title="Hacer clic para activar">
                                                 <span class="w-2 h-2 bg-red-500 rounded-full mr-2"></span>Inactivo
                                             </button>
+                                        <?php else: ?>
+                                            <span class="inline-flex items-center min-w-[120px] justify-center px-3 py-1 rounded-full text-xs font-bold bg-gray-200 text-gray-500 border border-gray-300 cursor-not-allowed select-none" title="Cliente deshabilitado">
+                                                <span class="w-2 h-2 bg-gray-400 rounded-full mr-2"></span>Deshabilitado
+                                            </span>
                                         <?php endif; ?>
                                     </td>
                                     <td class="py-4 px-6">
-                                        <div class="flex gap-2">
-                                            <!-- Botón Ver para el cliente -->
-                                            <a href="index.php?controller=superadmin&action=verCliente&id=<?= $cliente['id'] ?>"
-                                                class="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
-                                                title="Ver detalles del cliente">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                                </svg>
-                                                Ver
-                                            </a>
-
-                                            <!-- Botón Editar -->
-                                            <button onclick="abrirModalEdicion(<?= $cliente['id'] ?>)"
-                                                class="inline-flex items-center gap-1 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
-                                                title="Editar cliente">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                </svg>
-                                                Editar
-                                            </button>
-
-                                            <!-- Flecha expandible para todos los clientes -->
-                                            <button onclick="toggleEstablecimientos(<?= $cliente['id'] ?>); event.stopPropagation();"
-                                                class="inline-flex items-center gap-1 px-3 py-1.5 bg-slate-500 hover:bg-slate-600 text-white text-xs font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
-                                                title="Ver establecimientos">
-                                                <svg id="arrow-<?= $cliente['id'] ?>" class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                                                </svg>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-
-                                <!-- Filas de establecimientos (ocultas por defecto) - Para todos los clientes -->
-                                <?php if (!empty($cliente['establecimientos'])): ?>
-                                    <?php foreach ($cliente['establecimientos'] as $index => $establecimiento): ?>
-                                        <?php if (!empty($establecimiento) && isset($establecimiento['id'])): ?>
-                                            <tr id="establecimientos-<?= $cliente['id'] ?>-<?= $index ?>" class="hidden bg-slate-50 border-l-4 border-blue-300 establecimientos-<?= $cliente['id'] ?>">
-                                                <td class="py-3 px-6 text-center">
-                                                    <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
-                                                        <svg class="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                                                        </svg>
-                                                    </div>
-                                                </td>
-                                                <td class="py-3 px-6">
-                                                    <div class="pl-4">
-                                                        <div class="font-medium text-slate-700"><?= htmlspecialchars($establecimiento['etiqueta']) ?></div>
-                                                        <div class="text-sm text-slate-500">Código: <?= htmlspecialchars($establecimiento['codigo_establecimiento']) ?></div>
-                                                    </div>
-                                                </td>
-                                                <td class="py-3 px-6">
-                                                    <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-slate-200 text-slate-600">
-                                                        <?= htmlspecialchars($establecimiento['tipo_establecimiento']) ?>
-                                                    </span>
-                                                </td>
-                                                <td class="py-3 px-6">
-                                                    <div class="flex items-center gap-1 text-slate-500 text-sm">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 text-slate-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                        </svg>
-                                                        <span class="truncate" title="<?= htmlspecialchars($establecimiento['distrito'] . ' - ' . $establecimiento['provincia']) ?>">
-                                                            <?= htmlspecialchars($establecimiento['distrito'] . ' - ' . $establecimiento['provincia']) ?>
-                                                        </span>
-                                                    </div>
-                                                </td>
-                                                <td class="py-3 px-6">
-                                                    <?php if ($establecimiento['estado'] == 1): ?>
-                                                        <button onclick="cambiarEstadoEstablecimiento(<?= $establecimiento['id'] ?>, 2)"
-                                                            class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-green-100 to-emerald-200 text-green-800 border border-green-300 hover:from-green-200 hover:to-emerald-300 transition-all duration-200 cursor-pointer"
-                                                            title="Hacer clic para desactivar">
-                                                            <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>Activo
-                                                        </button>
-                                                    <?php else: ?>
-                                                        <button onclick="cambiarEstadoEstablecimiento(<?= $establecimiento['id'] ?>, 1)"
-                                                            class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-red-100 to-pink-200 text-red-800 border border-red-300 hover:from-red-200 hover:to-pink-300 transition-all duration-200 cursor-pointer"
-                                                            title="Hacer clic para activar">
-                                                            <span class="w-2 h-2 bg-red-500 rounded-full mr-2"></span>Inactivo
-                                                        </button>
-                                                    <?php endif; ?>
-                                                </td>
-                                                <td class="py-3 px-6">
+                                        <?php
+                                        $establecimiento_principal = null;
+                                        if (!empty($cliente['establecimientos'])) {
+                                            foreach ($cliente['establecimientos'] as $est) {
+                                                if ($est['codigo_establecimiento'] === '0000') {
+                                                    $establecimiento_principal = $est;
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                        ?>
+                                        <div class="grid grid-cols-2 gap-2">
+                                            <!-- Fila 1: Ver | Ingresar -->
+                                            <div>
+                                                <a href="index.php?controller=superadmin&action=verCliente&id=<?= $cliente['id'] ?>"
+                                                    class="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md w-full justify-center"
+                                                    title="Ver detalles del cliente">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                    </svg>
+                                                </a>
+                                            </div>
+                                            <div>
+                                                <?php if ($establecimiento_principal && $establecimiento_principal['estado'] != 3): ?>
                                                     <button type="button"
-                                                        class="inline-flex items-center gap-1 px-3 py-1.5 bg-purple-500 hover:bg-purple-600 text-white text-xs font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
-                                                        title="Acceso a este establecimiento"
-                                                        onclick="entrarEstablecimientoSweet(<?= $cliente['id'] ?>, <?= $establecimiento['id'] ?>)">
+                                                        class="inline-flex items-center gap-1 px-3 py-1.5 bg-purple-500 hover:bg-purple-600 text-white text-xs font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md w-full justify-center"
+                                                        title="Ingresar al establecimiento principal"
+                                                        onclick="entrarEstablecimientoSweet(<?= $cliente['id'] ?>, <?= $establecimiento_principal['id'] ?>)">
                                                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                                             <path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                                                         </svg>
-                                                        Entrar
                                                     </button>
-                                                </td>
-                                            </tr>
-                                        <?php endif; ?>
-                                    <?php endforeach; ?>
-                                <?php endif; ?>
-                            <?php endforeach; ?>
+                                                <?php elseif ($establecimiento_principal && $establecimiento_principal['estado'] == 3): ?>
+                                                    <button type="button" class="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-400 text-white text-xs font-medium rounded-lg w-full justify-center cursor-not-allowed" title="Establecimiento deshabilitado" disabled>
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                                                        </svg>
+                                                    </button>
+                                                <?php else: ?>
+                                                    <button type="button" class="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-400 text-white text-xs font-medium rounded-lg w-full justify-center cursor-not-allowed" title="No hay un establecimiento" disabled>
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                                                        </svg>
+                                                    </button>
+                                                <?php endif; ?>
+                                            </div>
+                                            <!-- Fila 2: Editar | Deshabilitar/Habilitar Cliente -->
+                                            <div>
+                                                <button onclick="abrirModalEdicion(<?= $cliente['id'] ?>)"
+                                                    class="inline-flex items-center gap-1 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md w-full justify-center"
+                                                    title="Editar cliente"
+                                                    <?= $cliente['estado'] == 3 ? 'disabled class="opacity-50 cursor-not-allowed"' : '' ?>>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                            <div>
+                                            <?php if ($cliente['estado'] != 3): ?>
+                                                <button type="button"
+                                                    class="inline-flex items-center gap-1 px-3 py-1.5 bg-red-700 hover:bg-red-800 text-white text-xs font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md w-full justify-center"
+                                                    title="Deshabilitar cliente"
+                                                    onclick="cambiarEstadoCliente(<?= $cliente['id'] ?>, 3)">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M18 6L6 18" />
+                                                        <circle cx="12" cy="12" r="9" />
+                                                    </svg>
+                                                </button>
+                                            <?php else: ?>
+                                                <button type="button"
+                                                    class="inline-flex items-center gap-1 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md w-full justify-center"
+                                                    title="Habilitar cliente"
+                                                    onclick="cambiarEstadoCliente(<?= $cliente['id'] ?>, 1)">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                                    </svg>
+                                                </button>
+                                            <?php endif; ?>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <?php } ?>
                         <?php else: ?>
                             <tr>
                                 <td colspan="8" class="py-12 text-center">
@@ -292,8 +296,8 @@ unset($_SESSION['errores'], $_SESSION['form_data']);
                         <?php for ($i = 1; $i <= ceil($total / $limit); $i++): ?>
                             <a href="index.php?controller=superadmin&action=clientes&page=<?= $i ?>&limit=<?= $limit ?>"
                                 class="<?= $i == $page
-                                            ? 'px-4 py-2 bg-blue-600 font-bold rounded-xl shadow-lg text-white'
-                                            : 'px-4 py-2 font-medium rounded-xl hover:from-blue-100 hover:to-indigo-100 hover:text-blue-600 transition-all duration-200' ?> 
+                                            ? 'px-4 bg-blue-600 rounded-xl hover:bg-blue-700 shadow-lg text-white'
+                                            : 'px-4 font-medium rounded-xl hover:bg-gray-200 hover:text-blue-500 transition-all duration-200' ?> 
                                 inline-flex items-center justify-center min-w-[40px] h-10">
                                 <?= $i ?>
                             </a>
@@ -332,7 +336,7 @@ unset($_SESSION['errores'], $_SESSION['form_data']);
                 <div id="mensajesModal" class="hidden mb-4"></div>
 
                 <!-- Formulario -->
-                <form id="formCliente" method="POST" action="?controller=cliente&action=store" class="space-y-6">
+                <form id="formCliente" method="POST" action="?controller=cliente&action=crear" class="space-y-6">
                     <!-- RUC y Razón Social -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
@@ -395,6 +399,8 @@ unset($_SESSION['errores'], $_SESSION['form_data']);
                             <input type="tel"
                                 id="telefono"
                                 name="telefono"
+                                maxlength="9"
+                                pattern="[0-9]{9}"
                                 value="<?= htmlspecialchars($form_data['telefono'] ?? '') ?>"
                                 placeholder="999 999 999"
                                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
@@ -464,8 +470,6 @@ unset($_SESSION['errores'], $_SESSION['form_data']);
                                 <p class="mt-1 text-sm text-blue-700">
                                     • Use el botón 🔍 para consultar RUC y autocompletar datos básicos<br>
                                     • Se creará automáticamente un <strong>establecimiento principal</strong> con código "0000"<br>
-                                    • Los establecimientos adicionales deben agregarse desde el módulo de gestión<br>
-                                    • Solo se consulta información básica por optimización de API
                                 </p>
                             </div>
                         </div>

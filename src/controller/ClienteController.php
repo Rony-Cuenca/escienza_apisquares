@@ -140,7 +140,7 @@ class ClienteController
         }
     }
 
-    public function store()
+    public function crear()
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $ruc = trim($_POST['ruc'] ?? '');
@@ -218,7 +218,7 @@ class ClienteController
         }
     }
 
-    public function show($id)
+    public function listar($id)
     {
         $cliente = Cliente::obtenerPorId($id);
         if (!$cliente) {
@@ -244,7 +244,6 @@ class ClienteController
 
             $errores = [];
 
-            // Validaciones básicas
             if ($id <= 0) {
                 $errores[] = 'ID de cliente inválido';
             }
@@ -263,7 +262,6 @@ class ClienteController
                 $errores[] = 'El email no es válido';
             }
 
-            // Verificar RUC duplicado (excluyendo el cliente actual)
             if (empty($errores) && Cliente::existeRucParaEdicion($ruc, $id)) {
                 $errores[] = 'Ya existe otro cliente con este RUC';
             }
@@ -303,14 +301,13 @@ class ClienteController
             exit;
         }
 
-        if (!in_array($estado, [1, 2])) { // 1=Activo, 2=Inactivo
+        if (!in_array($estado, [1, 2, 3])) {
             echo json_encode(['success' => false, 'error' => 'Estado inválido']);
             exit;
         }
 
         try {
             $resultado = Cliente::cambiarEstado($id, $estado);
-            // Cambiar estado de todos los establecimientos del cliente
             require_once 'model/Establecimiento.php';
             $resEstablecimientos = Establecimiento::cambiarEstadoPorCliente($id, $estado);
 
@@ -329,7 +326,6 @@ class ClienteController
         exit;
     }
 
-    // Nuevo endpoint para cambiar el estado de un establecimiento desde la tabla de clientes
     public function cambiarEstadoEstablecimiento()
     {
         header('Content-Type: application/json');
@@ -349,7 +345,6 @@ class ClienteController
 
         try {
             require_once 'model/Establecimiento.php';
-            // Se requiere el id_cliente, pero para simplificar, se puede buscar el id_cliente por id de establecimiento
             $conn = \Conexion::conectar();
             $sql = "SELECT id_cliente FROM establecimiento WHERE id = ? LIMIT 1";
             $stmt = $conn->prepare($sql);

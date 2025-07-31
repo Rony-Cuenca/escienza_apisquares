@@ -149,19 +149,15 @@ class EstablecimientoController {
     }
 
     cambiarEstado(id, estado) {
-        // Determinar la acción basada en el estado objetivo
         let textoAccion, textoEstado;
         
         if (estado === '1') {
-            // Cambiar a activo
             textoAccion = 'activar';
             textoEstado = 'activó';
         } else if (estado === '2') {
-            // Cambiar a inactivo
             textoAccion = 'desactivar';
             textoEstado = 'desactivó';
         } else if (estado === '3') {
-            // Cambiar a deshabilitado
             textoAccion = 'deshabilitar';
             textoEstado = 'deshabilitó';
         } else {
@@ -201,13 +197,11 @@ class EstablecimientoController {
     }
 
     abrirModalEdicion(idEstablecimiento) {
-        // Obtener datos del establecimiento
         fetch(`index.php?controller=establecimiento&action=editarEstablecimiento&id=${idEstablecimiento}`)
             .then(response => response.json())
             .then(data => {
                 if (data.id) {
                     document.getElementById('editId').value = data.id;
-                    // La etiqueta debería tener siempre un valor (razón social por defecto)
                     document.getElementById('editEtiqueta').value = data.etiqueta || data.cliente_razon_social || '';
                     document.getElementById('editDireccion').value = data.direccion || '';
                     document.getElementById('modalEditarEstablecimiento').classList.remove('hidden');

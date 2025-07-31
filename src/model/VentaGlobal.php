@@ -32,44 +32,46 @@ class VentaGlobal
         return true;
     }
 
-    public static function obtenerPorMes($mesSeleccionado)
+    public static function obtenerPorMes($mesSeleccionado, $id_establecimiento)
     {
         $conn = Conexion::conectar();
-        $id_establecimiento = $_SESSION['id_establecimiento'] ?? null;
         if (empty($mesSeleccionado)) {
             $sql = "SELECT 
-                        producto,
-                        SUM(cantidad) as total_cantidad,
-                        SUM(total) as total_importe,
-                        COUNT(*) as cantidad_registros
-                    FROM ventas_globales 
-                    WHERE id_establecimiento = ? 
-                    AND estado = 1
-                    GROUP BY producto
-                    ORDER BY producto";
-
+                    producto,
+                    SUM(cantidad) as total_cantidad,
+                    SUM(total) as total_importe,
+                    COUNT(*) as cantidad_registros
+                FROM ventas_globales 
+                WHERE estado = 1";
+            if ($id_establecimiento) {
+                $sql .= " AND id_establecimiento = ?";
+            }
+            $sql .= " GROUP BY producto ORDER BY producto";
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param('i', $id_establecimiento);
+            if ($id_establecimiento) {
+                $stmt->bind_param('i', $id_establecimiento);
+            }
         } else {
             $sql = "SELECT 
-                        producto,
-                        SUM(cantidad) as total_cantidad,
-                        SUM(total) as total_importe,
-                        COUNT(*) as cantidad_registros
-                    FROM ventas_globales 
-                    WHERE DATE_FORMAT(fecha_registro, '%Y-%m') = ? 
-                    AND id_establecimiento = ? 
-                    AND estado = 1
-                    GROUP BY producto
-                    ORDER BY producto";
-
-            $stmt = $conn->prepare($sql);
-            $stmt->bind_param('si', $mesSeleccionado, $id_establecimiento);
+                    producto,
+                    SUM(cantidad) as total_cantidad,
+                    SUM(total) as total_importe,
+                    COUNT(*) as cantidad_registros
+                FROM ventas_globales 
+                WHERE DATE_FORMAT(fecha_registro, '%Y-%m') = ? AND estado = 1";
+            if ($id_establecimiento) {
+                $sql .= " AND id_establecimiento = ?";
+                $sql .= " GROUP BY producto ORDER BY producto";
+                $stmt = $conn->prepare($sql);
+                $stmt->bind_param('si', $mesSeleccionado, $id_establecimiento);
+            } else {
+                $sql .= " GROUP BY producto ORDER BY producto";
+                $stmt = $conn->prepare($sql);
+                $stmt->bind_param('s', $mesSeleccionado);
+            }
         }
-
         $stmt->execute();
         $result = $stmt->get_result();
-
         $datos = [];
         while ($row = $result->fetch_assoc()) {
             $datos[] = $row;
