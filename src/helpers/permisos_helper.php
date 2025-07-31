@@ -112,7 +112,7 @@ if (!function_exists('puedeCambiarEstadoEstablecimientos')) {
 if (!function_exists('puedeGenerarReportes')) {
     function puedeGenerarReportes()
     {
-        return esSuperAdmin() || esAdministrador();
+        return esSuperAdmin() || esAdministrador() || esContador();
     }
 }
 
