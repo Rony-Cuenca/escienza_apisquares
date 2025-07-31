@@ -49,6 +49,13 @@
             <h2 class="text-2xl md:text-4xl font-bold text-gray-800 text-center w-full md:w-auto uppercase">
                 Comparación de Reportes
             </h2>
+            <?php 
+                require_once __DIR__ . '/../../model/Establecimiento.php';
+                require_once __DIR__ . '/../../helpers/sesion_helper.php';
+                $id_cliente = SesionHelper::obtenerClienteActual();
+                $establecimiento = Establecimiento::obtenerEstablecimientoPorCliente($id_cliente);
+                if ($establecimiento && count($establecimiento) > 1) {
+            ?>
             <button onclick="abrirModal()" id="btnNuevoEstablecimiento" class="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold 
                     py-2.5 px-5 rounded-xl shadow-md transition duration-200">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none"
@@ -60,64 +67,67 @@
                 </svg>
                 Unir Excel
             </button>
+            <?php
+            }
+            ?>
         </div>
-                    <?php
-                    // Obtener el ID de usuario usando el helper unificado
-                    require_once __DIR__ . '/../../helpers/sesion_helper.php';
-                    $userId = SesionHelper::obtenerUsuarioActual();
-                    
-                    // Validar que tenemos un userId válido
-                    if (empty($userId)) {
-                        echo '<div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-4">
-                                <strong>Advertencia:</strong> No se pudo determinar el usuario para procesar el cuadre.
-                              </div>';
-                    }
-                    ?>
-                    <form action="index.php?controller=cuadres&action=cuadre" method="post" enctype="multipart/form-data">
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 mt-8">
-                            <div class="w-full">
-                                <label class="block font-medium mb-1">Archivo SIRE</label>
-                                <div class="flex">
-                                    <input type="text" id="file-sire" class="flex-grow px-2 py-2 border rounded-l-lg bg-gray-50" readonly placeholder="Ningún archivo seleccionado">
-                                    <label for="sire" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-r-lg border border-l-0 hover:bg-gray-300 whitespace-nowrap">
-                                        Seleccionar archivo
-                                    </label>
-                                    <input type="file" name="exe_sire" id="sire" accept=".csv" class="hidden" onchange="update(this, 'file-sire')">
-                                </div>
-                            </div>
-                            <div class="w-full">
-                                <label class="block font-medium mb-1">Archivo Nubox360</label>
-                                <div class="flex">
-                                    <input type="text" id="file-nubox" class="flex-grow px-2 py-2 border rounded-l-lg bg-gray-50" readonly placeholder="Ningún archivo seleccionado">
-                                    <label for="nubox" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-r-lg border border-l-0 hover:bg-gray-300 whitespace-nowrap">
-                                        Seleccionar archivo
-                                    </label>
-                                    <input type="file" name="exe_nubox" id="nubox" accept=".xlsx" class="hidden" onchange="update(this, 'file-nubox')">
-                                </div>
-                            </div>
-                            <div class="w-full">
-                                <label class="block font-medium mb-1">Archivo EDSuite</label>
-                                <div class="flex">
-                                    <input type="text" id="file-edsuite" class="flex-grow px-2 py-2 border rounded-l-lg bg-gray-50" readonly placeholder="Ningún archivo seleccionado">
-                                    <label for="edsuite" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-r-lg border border-l-0 hover:bg-gray-300 whitespace-nowrap">
-                                        Seleccionar archivo
-                                    </label>
-                                    <input type="file" name="exe_edsuite" id="edsuite" accept=".xlsx" class="hidden" onchange="update(this, 'file-edsuite')">
-                                </div>
+                <?php
+                // Obtener el ID de usuario usando el helper unificado
+                require_once __DIR__ . '/../../helpers/sesion_helper.php';
+                $userId = SesionHelper::obtenerUsuarioActual();
+                
+                // Validar que tenemos un userId válido
+                if (empty($userId)) {
+                    echo '<div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-4">
+                            <strong>Advertencia:</strong> No se pudo determinar el usuario para procesar el cuadre.
+                            </div>';
+                }
+                ?>
+                <form action="index.php?controller=cuadres&action=cuadre" method="post" enctype="multipart/form-data">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 mt-8">
+                        <div class="w-full">
+                            <label class="block font-medium mb-1">Archivo SIRE</label>
+                            <div class="flex">
+                                <input type="text" id="file-sire" class="flex-grow px-2 py-2 border rounded-l-lg bg-gray-50" readonly placeholder="Ningún archivo seleccionado">
+                                <label for="sire" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-r-lg border border-l-0 hover:bg-gray-300 whitespace-nowrap">
+                                    Seleccionar archivo
+                                </label>
+                                <input type="file" name="exe_sire" id="sire" accept=".csv" class="hidden" onchange="update(this, 'file-sire')">
                             </div>
                         </div>
+                        <div class="w-full">
+                            <label class="block font-medium mb-1">Archivo Nubox360</label>
+                            <div class="flex">
+                                <input type="text" id="file-nubox" class="flex-grow px-2 py-2 border rounded-l-lg bg-gray-50" readonly placeholder="Ningún archivo seleccionado">
+                                <label for="nubox" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-r-lg border border-l-0 hover:bg-gray-300 whitespace-nowrap">
+                                    Seleccionar archivo
+                                </label>
+                                <input type="file" name="exe_nubox" id="nubox" accept=".xlsx" class="hidden" onchange="update(this, 'file-nubox')">
+                            </div>
+                        </div>
+                        <div class="w-full">
+                            <label class="block font-medium mb-1">Archivo EDSuite</label>
+                            <div class="flex">
+                                <input type="text" id="file-edsuite" class="flex-grow px-2 py-2 border rounded-l-lg bg-gray-50" readonly placeholder="Ningún archivo seleccionado">
+                                <label for="edsuite" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-r-lg border border-l-0 hover:bg-gray-300 whitespace-nowrap">
+                                    Seleccionar archivo
+                                </label>
+                                <input type="file" name="exe_edsuite" id="edsuite" accept=".xlsx" class="hidden" onchange="update(this, 'file-edsuite')">
+                            </div>
+                        </div>
+                    </div>
 
-                        <div class="text-center" id="botonesContainer">
-                            <button type="submit" id="btnSubirArchivos"
-                                class="py-2 px-6 border text-white rounded-lg bg-blue-600 hover:bg-blue-700 
-                                focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                Procesar Archivos
-                            </button>
-                        </div>
-                    </form>
-                </div>
+                    <div class="text-center" id="botonesContainer">
+                        <button type="submit" id="btnSubirArchivos"
+                            class="py-2 px-6 border text-white rounded-lg bg-blue-600 hover:bg-blue-700 
+                            focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            Procesar Archivos
+                        </button>
+                    </div>
+                </form>
             </div>
-            <?php include __DIR__ . '/cuadre_resultados.php'; ?>
+        </div>
+        <?php include __DIR__ . '/cuadre_resultados.php'; ?>
     </div>
 </div>
 
