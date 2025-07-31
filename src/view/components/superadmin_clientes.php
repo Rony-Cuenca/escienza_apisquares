@@ -294,7 +294,7 @@ unset($_SESSION['errores'], $_SESSION['form_data']);
                 <div id="mensajesModal" class="hidden mb-4"></div>
 
                 <!-- Formulario -->
-                <form id="formCliente" method="POST" action="?controller=cliente&action=store" class="space-y-6">
+                <form id="formCliente" method="POST" action="?controller=cliente&action=crear" class="space-y-6">
                     <!-- RUC y Razón Social -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
@@ -426,7 +426,6 @@ unset($_SESSION['errores'], $_SESSION['form_data']);
                                 <p class="mt-1 text-sm text-blue-700">
                                     • Use el botón 🔍 para consultar RUC y autocompletar datos básicos<br>
                                     • Se creará automáticamente un <strong>establecimiento principal</strong> con código "0000"<br>
-                                    • Los establecimientos adicionales deben agregarse desde el módulo de gestión<br>
                                 </p>
                             </div>
                         </div>
