@@ -121,7 +121,7 @@ class ReporteController
             $cuadresNUBOX = $this->procesarSeriesConNotasCredito($cuadresNUBOX);
             $cuadresEDSUITE = $this->procesarSeriesConNotasCredito($cuadresEDSUITE);
             $cuadresSIRE = $this->procesarSeriesConNotasCredito($cuadresSIRE);
-            $totalesTipoDoc = Cuadre::obtenerTotalesPorTipoComprobante($mesSeleccionado, $id_establecimiento ?: null);
+            $totalesTipoDoc = Cuadre::obtenerTotalesPorTipoComprobanteExcluyendoAjenas($mesSeleccionado, $id_establecimiento ?: null);
             $seriesTotales = Cuadre::obtenerTotalesPorSerieExcluyendoAjenas($mesSeleccionado, $id_establecimiento ?: null);
             $seriesAjenas = SerieAjena::obtenerPorMes($mesSeleccionado, $id_establecimiento ?: null);
             $ventasGlobales = VentaGlobal::obtenerPorMes($mesSeleccionado, $id_establecimiento ?: null);
