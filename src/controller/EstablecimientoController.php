@@ -56,7 +56,7 @@ class EstablecimientoController
     public function index()
     {
         $this->verificarSesion();
-        $this->verificarPermisosGestion(); // Añadir verificación de permisos
+        $this->verificarPermisosGestion();
 
         $id_cliente = SesionHelper::obtenerClienteActual();
         $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
@@ -112,7 +112,7 @@ class EstablecimientoController
     public function sincronizarEstablecimientos()
     {
         $this->verificarSesion();
-        $this->verificarPermisosSincronizacion(); // Añadir verificación de permisos
+        $this->verificarPermisosSincronizacion();
 
         $id_cliente = SesionHelper::obtenerClienteActual();
         $cliente = Establecimiento::obtenerClientePorId($id_cliente);
@@ -233,7 +233,6 @@ class EstablecimientoController
     {
         $this->verificarSesion();
         
-        // Verificar permisos para cambiar estado
         if (!puedeCambiarEstadoEstablecimientos()) {
             $this->responseJson(['success' => false, 'error' => 'No tienes permisos para cambiar el estado de establecimientos.']);
         }

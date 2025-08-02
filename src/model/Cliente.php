@@ -59,14 +59,18 @@ class Cliente
     public static function crearCompleto($ruc, $razon_social, $email = null, $telefono = null, $direccion = null, $departamento = null, $provincia = null, $distrito = null)
     {
         $conn = Conexion::conectar();
+        error_log("Datos para crear cliente: RUC=$ruc, Razón Social=$razon_social, Email=$email, Teléfono=$telefono, Dirección=$direccion, Departamento=$departamento, Provincia=$provincia, Distrito=$distrito");
 
         $sql = "INSERT INTO cliente (ruc, razon_social, correo, telefono, direccion, departamento, provincia, distrito, user_create, user_update) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'sistema', 'sistema')";
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'sistema', 'sistema')";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("ssssssss", $ruc, $razon_social, $email, $telefono, $direccion, $departamento, $provincia, $distrito);
 
         if ($stmt->execute()) {
+            error_log("Cliente creado correctamente: ID=" . $conn->insert_id);
             return $conn->insert_id;
+        } else {
+            error_log("Error MySQL cliente: " . $stmt->error);
         }
 
         return false;
