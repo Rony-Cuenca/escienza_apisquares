@@ -190,7 +190,6 @@ class CuadresController
         $_SESSION['ResultsValidarSeries'] = $ResultsValidarSeries ?? [];
         $_SESSION['resultsVentaGlobal'] = $resultsVentaGlobal ?? [];
         $_SESSION['diferenciaGlobales'] = $diferenciaGlobales ?? [];
-        // Si NO hay coincidencias, mostrar el modal para asignar establecimiento
         if (empty($coincidentes)) {
             if (!empty($resultsSerieArchivos)) {
                 $_SESSION['resultsSerieArchivos'] = $resultsSerieArchivos;

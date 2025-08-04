@@ -140,7 +140,6 @@ class AuthController
             session_unset();
             session_destroy();
             header('Location: index.php?controller=auth&action=login');
-            //header('Location: index.php?controller=auth&action=login&error=Sesión expirada por inactividad');
             exit;
         }
         $_SESSION['ultima_actividad'] = time();

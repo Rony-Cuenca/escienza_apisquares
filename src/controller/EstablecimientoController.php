@@ -56,7 +56,7 @@ class EstablecimientoController
     public function index()
     {
         $this->verificarSesion();
-        $this->verificarPermisosGestion(); // Añadir verificación de permisos
+        $this->verificarPermisosGestion();
 
         $id_cliente = SesionHelper::obtenerClienteActual();
         $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
@@ -112,7 +112,7 @@ class EstablecimientoController
     public function sincronizarEstablecimientos()
     {
         $this->verificarSesion();
-        $this->verificarPermisosSincronizacion(); // Añadir verificación de permisos
+        $this->verificarPermisosSincronizacion();
 
         $id_cliente = SesionHelper::obtenerClienteActual();
         $cliente = Establecimiento::obtenerClientePorId($id_cliente);
@@ -185,8 +185,6 @@ class EstablecimientoController
         $departamento = $datosEstablecimiento['departamento'] ?? '';
         $provincia = $datosEstablecimiento['provincia'] ?? '';
         $distrito = $datosEstablecimiento['distrito'] ?? '';
-        
-        // Obtener la razón social del cliente para usar como etiqueta por defecto
         $cliente = Establecimiento::obtenerClientePorId($id_cliente);
         $etiquetaPorDefecto = $cliente['razon_social'] ?? 'Establecimiento';
         
@@ -208,10 +206,7 @@ class EstablecimientoController
         ];
 
         if ($establecimientoExistente) {
-            // Solo actualizar los datos de SUNAT, preservar la etiqueta existente
             Establecimiento::actualizarPorCodigo($establecimientoExistente['id'], $datosCompletos);
-            
-            // Si el establecimiento existente no tiene etiqueta, establecer la razón social
             if (empty($establecimientoExistente['etiqueta'])) {
                 Establecimiento::actualizarEtiquetaYDireccion(
                     $establecimientoExistente['id'],
@@ -232,8 +227,6 @@ class EstablecimientoController
     public function cambiarEstado($id, $estado)
     {
         $this->verificarSesion();
-        
-        // Verificar permisos para cambiar estado
         if (!puedeCambiarEstadoEstablecimientos()) {
             $this->responseJson(['success' => false, 'error' => 'No tienes permisos para cambiar el estado de establecimientos.']);
         }
@@ -521,14 +514,12 @@ class EstablecimientoController
     public function editarEstablecimiento()
     {
         $this->verificarSesion();
-        $this->verificarPermisosEdicion(); // Añadir verificación de permisos
+        $this->verificarPermisosEdicion();
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $id = intval($_POST['id'] ?? 0);
             $etiqueta = trim($_POST['etiqueta'] ?? '');
             $direccion = trim($_POST['direccion'] ?? '');
-            
-            // Usar SesionHelper de manera consistente
             $id_cliente = SesionHelper::obtenerClienteActual();
 
             if ($id <= 0) {
@@ -570,7 +561,6 @@ class EstablecimientoController
                 exit;
             }
 
-            // Agregar información del cliente para usar como etiqueta por defecto
             $cliente = Establecimiento::obtenerClientePorId($id_cliente);
             $establecimiento['cliente_razon_social'] = $cliente['razon_social'] ?? '';
 
@@ -582,10 +572,9 @@ class EstablecimientoController
     public function crearEstablecimiento()
     {
         $this->verificarSesion();
-        $this->verificarPermisosCreacion(); // Añadir verificación de permisos
+        $this->verificarPermisosCreacion();
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // Usar SesionHelper de manera consistente
             $id_cliente = SesionHelper::obtenerClienteActual();
 
             $datos = [
@@ -668,7 +657,6 @@ class EstablecimientoController
         $date_update = date('Y-m-d H:i:s');
         $user_update = SesionHelper::obtenerNombreUsuario();
         
-        // Actualizar todos los establecimientos sin etiqueta
         $sql = "UPDATE establecimiento SET 
                 etiqueta = ?, 
                 user_update = ?, 

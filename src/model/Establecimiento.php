@@ -3,7 +3,6 @@ require_once 'config/conexion.php';
 
 class Establecimiento
 {
-    // Cambia el estado de todos los establecimientos de un cliente
     public static function cambiarEstadoPorCliente($id_cliente, $estado)
     {
         $conn = Conexion::conectar();
@@ -13,8 +12,6 @@ class Establecimiento
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("issi", $estado, $user_update, $date_update, $id_cliente);
         $result = $stmt->execute();
-
-        // Opcional: también desactivar usuarios de esos establecimientos
         if ($result) {
             $sqlUsuarios = "UPDATE usuario SET estado = ?, user_update = ?, date_update = ? WHERE id_cliente = ?";
             $stmtUsuarios = $conn->prepare($sqlUsuarios);
@@ -26,8 +23,6 @@ class Establecimiento
     public static function obtenerPorCliente($id_cliente, $limit = 10, $offset = 0, $sort = 'codigo_establecimiento', $dir = 'ASC')
     {
         $conn = Conexion::conectar();
-        
-        // Campos permitidos para ordenamiento
         $allowed = ['codigo_establecimiento', 'tipo_establecimiento', 'etiqueta', 'direccion', 'estado', 'origen'];
         $sort = in_array($sort, $allowed) ? $sort : 'codigo_establecimiento';
         $dir = $dir === 'DESC' ? 'DESC' : 'ASC';
@@ -90,7 +85,7 @@ class Establecimiento
         $stmt->bind_param("i", $id_cliente);
         $stmt->execute();
         $res = $stmt->get_result();
-        
+
         $establecimientos = [];
         while ($row = $res->fetch_assoc()) {
             $establecimientos[] = $row;
@@ -125,15 +120,16 @@ class Establecimiento
         }
 
         $sql = "INSERT INTO establecimiento (
-                    id_cliente, codigo_establecimiento, tipo_establecimiento, 
-                    direccion, direccion_completa, departamento, provincia, distrito,
-                    user_create, user_update, date_create, date_update, estado, origen
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'SUNAT')";
+                id_cliente, codigo_establecimiento, tipo_establecimiento, 
+                etiqueta, direccion, direccion_completa, departamento, provincia, distrito,
+                user_create, user_update, date_create, date_update, estado, origen
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'SUNAT')";
 
         $stmt = $conn->prepare($sql);
         $id_cliente = $data['id_cliente'];
         $codigo_establecimiento = $data['codigo_establecimiento'] ?? '0000';
         $tipo_establecimiento = $data['tipo_establecimiento'] ?? 'MATRIZ';
+        $etiqueta = $data['etiqueta'] ?? $cliente['razon_social'] ?? 'Sin etiqueta';
         $direccion = $data['direccion'];
         $direccion_completa = $data['direccion_completa'] ?? $data['direccion'];
         $departamento = $data['departamento'] ?? null;
@@ -144,10 +140,11 @@ class Establecimiento
         $estado = $data['estado'];
 
         $stmt->bind_param(
-            "isssssssssssi",
+            "issssssssssssi",
             $id_cliente,
             $codigo_establecimiento,
             $tipo_establecimiento,
+            $etiqueta,
             $direccion,
             $direccion_completa,
             $departamento,
@@ -447,13 +444,12 @@ class Establecimiento
             JOIN establecimiento e ON c.id = e.id_cliente
             WHERE e.id = ?
         ";
-    
+
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("i", $id_establecimiento);
         $stmt->execute();
         $res = $stmt->get_result();
-    
+
         return $res->fetch_assoc();
     }
-
 }
