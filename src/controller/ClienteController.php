@@ -35,7 +35,7 @@ class ClienteController
         }
 
         try {
-            $apiResponse = $this->consultarApiFactiliza($ruc);
+            $apiResponse = $this->consultarApiPeruDev($ruc);
 
             if (!$apiResponse['success']) {
                 echo json_encode($apiResponse);
@@ -52,16 +52,16 @@ class ClienteController
         exit;
     }
 
-    private function consultarApiFactiliza($ruc)
+    private function consultarApiPeruDev($ruc)
     {
-        if (empty(ApiConfig::FACTILIZA_TOKEN)) {
+        if (empty(ApiConfig::PERUDEV_TOKEN)) {
             return [
                 'success' => false,
                 'error' => 'Token de API no configurado. Contacte al administrador.'
             ];
         }
 
-        $infoBasica = $this->consultarRucInfo($ruc);
+        $infoBasica = $this->consultarRucInfoPeruDev($ruc);
 
         if (!$infoBasica['success']) {
             return $infoBasica;
@@ -74,31 +74,28 @@ class ClienteController
         ];
     }
 
-    private function consultarRucInfo($ruc)
+    private function consultarRucInfoPeruDev($ruc)
     {
-        $url = ApiConfig::FACTILIZA_API_URL . '/ruc/info/' . $ruc;
-        return $this->ejecutarConsultaApi($url);
+        $url = "https://apiperu.dev/api/ruc";
+        return $this->ejecutarConsultaApiPeruDev($url, $ruc);
     }
 
-    private function ejecutarConsultaApi($url)
+    private function ejecutarConsultaApiPeruDev($url, $ruc)
     {
+        $params = json_encode(['ruc' => $ruc]);
         $curl = curl_init();
 
         curl_setopt_array($curl, [
             CURLOPT_URL => $url,
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING => "",
-            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 30,
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => "GET",
-            CURLOPT_HTTPHEADER => [
-                "Authorization: Bearer " . ApiConfig::FACTILIZA_TOKEN,
-                "Content-Type: application/json"
-            ],
+            CURLOPT_CUSTOMREQUEST => "POST",
             CURLOPT_SSL_VERIFYPEER => false,
-            CURLOPT_SSL_VERIFYHOST => false,
-            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_POSTFIELDS => $params,
+            CURLOPT_HTTPHEADER => [
+                'Accept: application/json',
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . ApiConfig::PERUDEV_TOKEN
+            ],
         ]);
 
         $response = curl_exec($curl);
@@ -116,7 +113,7 @@ class ClienteController
 
         $data = json_decode($response, true);
 
-        if ($httpCode === 200 && isset($data['status']) && $data['status'] === 200) {
+        if ($httpCode === 200 && isset($data['success']) && $data['success'] === true) {
             return [
                 'success' => true,
                 'data' => $data['data']
@@ -181,53 +178,53 @@ class ClienteController
             }
 
             try {
-    error_log("Iniciando creación de cliente: RUC=$ruc, Razón Social=$razon_social");
-    $id_cliente = Cliente::crearCompleto($ruc, $razon_social, $email, $telefono, $direccion, $departamento, $provincia, $distrito);
+                error_log("Iniciando creación de cliente: RUC=$ruc, Razón Social=$razon_social");
+                $id_cliente = Cliente::crearCompleto($ruc, $razon_social, $email, $telefono, $direccion, $departamento, $provincia, $distrito);
 
-    error_log("ID cliente creado: " . var_export($id_cliente, true));
+                error_log("ID cliente creado: " . var_export($id_cliente, true));
 
-    if ($id_cliente) {
-        $user_create = isset($_SESSION['usuario']) ? $_SESSION['usuario'] : 'sistema';
-        $user_update = $user_create;
+                if ($id_cliente) {
+                    $user_create = isset($_SESSION['usuario']) ? $_SESSION['usuario'] : 'sistema';
+                    $user_update = $user_create;
 
-        $establecimiento_principal = [
-            'id_cliente' => $id_cliente,
-            'codigo_establecimiento' => '0000',
-            'tipo_establecimiento' => 'MATRIZ',
-            'etiqueta' => $razon_social,
-            'direccion' => $direccion ?: 'Sin dirección especificada',
-            'direccion_completa' => $direccion ?: 'Sin dirección especificada',
-            'departamento' => $departamento,
-            'provincia' => $provincia,
-            'distrito' => $distrito,
-            'estado' => 1,
-            'origen' => 'MANUAL',
-            'user_create' => $user_create,
-            'user_update' => $user_update
-        ];
+                    $establecimiento_principal = [
+                        'id_cliente' => $id_cliente,
+                        'codigo_establecimiento' => '0000',
+                        'tipo_establecimiento' => 'MATRIZ',
+                        'etiqueta' => $razon_social,
+                        'direccion' => $direccion ?: 'Sin dirección especificada',
+                        'direccion_completa' => $direccion ?: 'Sin dirección especificada',
+                        'departamento' => $departamento,
+                        'provincia' => $provincia,
+                        'distrito' => $distrito,
+                        'estado' => 1,
+                        'origen' => 'MANUAL',
+                        'user_create' => $user_create,
+                        'user_update' => $user_update
+                    ];
 
-        error_log("Datos establecimiento principal: " . print_r($establecimiento_principal, true));
+                    error_log("Datos establecimiento principal: " . print_r($establecimiento_principal, true));
 
-        $resEstablecimiento = Establecimiento::insertar($establecimiento_principal);
+                    $resEstablecimiento = Establecimiento::insertar($establecimiento_principal);
 
-        error_log("Resultado creación establecimiento: " . var_export($resEstablecimiento, true));
+                    error_log("Resultado creación establecimiento: " . var_export($resEstablecimiento, true));
 
-        if (!$resEstablecimiento) {
-            error_log("Error al crear establecimiento principal para cliente $id_cliente");
-        }
+                    if (!$resEstablecimiento) {
+                        error_log("Error al crear establecimiento principal para cliente $id_cliente");
+                    }
 
-        header('Location: ?controller=superadmin&action=clientes');
-    } else {
-        error_log("Error al crear cliente");
-        $_SESSION['errores'] = ['Error al crear el cliente'];
-        header('Location: ?controller=superadmin&action=clientes');
-    }
-} catch (Exception $e) {
-    error_log("Excepción en creación de cliente: " . $e->getMessage());
-    $_SESSION['errores'] = ['Error interno: ' . $e->getMessage()];
-    header('Location: ?controller=superadmin&action=clientes');
-}
-exit;
+                    header('Location: ?controller=superadmin&action=clientes');
+                } else {
+                    error_log("Error al crear cliente");
+                    $_SESSION['errores'] = ['Error al crear el cliente'];
+                    header('Location: ?controller=superadmin&action=clientes');
+                }
+            } catch (Exception $e) {
+                error_log("Excepción en creación de cliente: " . $e->getMessage());
+                $_SESSION['errores'] = ['Error interno: ' . $e->getMessage()];
+                header('Location: ?controller=superadmin&action=clientes');
+            }
+            exit;
         }
     }
 
