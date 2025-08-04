@@ -487,96 +487,156 @@ function consultarRucBasico(ruc) {
     }
 }
 
-let timerBusqueda;
-document.getElementById('busquedaCliente').addEventListener('input', function (e) {
-    clearTimeout(timerBusqueda);
-    const query = e.target.value;
-    timerBusqueda = setTimeout(() => {
-        fetch(`index.php?controller=superadmin&action=buscarClientesAjax&busqueda=${encodeURIComponent(query)}`)
-            .then(res => res.json())
-            .then(data => actualizarTablaClientes(data));
-    }, 300);
-});
-
-function actualizarTablaClientes(clientes) {
+document.addEventListener('DOMContentLoaded', function () {
+    const inputBusqueda = document.getElementById('busquedaCliente');
     const tbody = document.querySelector('table tbody');
-    tbody.innerHTML = '';
-    if (clientes.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" class="py-12 text-center">No hay clientes que coincidan</td></tr>`;
-        return;
-    }
-    clientes.forEach((cliente, i) => {
-        let estadoBtn = '';
-        if (cliente.estado == 1) {
-            estadoBtn = `<button onclick="cambiarEstadoCliente(${cliente.id}, 2)"
-                class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-green-100 to-emerald-200 text-green-800 border border-green-300 hover:from-green-200 hover:to-emerald-300 transition-all duration-200 cursor-pointer"
-                title="Hacer clic para desactivar">
-                <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>Activo
-            </button>`;
-        } else {
-            estadoBtn = `<button onclick="cambiarEstadoCliente(${cliente.id}, 1)"
-                class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-red-100 to-pink-200 text-red-800 border border-red-300 hover:from-red-200 hover:to-pink-300 transition-all duration-200 cursor-pointer"
-                title="Hacer clic para activar">
-                <span class="w-2 h-2 bg-red-500 rounded-full mr-2"></span>Inactivo
-            </button>`;
+    let timerBusqueda;
+
+    inputBusqueda.addEventListener('input', function (e) {
+        clearTimeout(timerBusqueda);
+        const query = e.target.value.trim();
+
+        // Si el input está vacío, recarga la página para mostrar la paginación normal
+        if (query === '') {
+            window.location.reload();
+            return;
         }
 
-        let establecimientoPrincipal = null;
-        if (Array.isArray(cliente.establecimientos)) {
-            establecimientoPrincipal = cliente.establecimientos.find(est => est.codigo_establecimiento === '0000');
-        }
-
-        let acciones = `
-            <div class="flex gap-2">
-                <a href="index.php?controller=superadmin&action=verCliente&id=${cliente.id}"
-                    class="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
-                    title="Ver detalles del cliente">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                    Ver
-                </a>
-                <button onclick="abrirModalEdicion(${cliente.id})"
-                    class="inline-flex items-center gap-1 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
-                    title="Editar cliente">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
-                    Editar
-                </button>
-                ${establecimientoPrincipal ? `
-                    <button type="button"
-                        class="inline-flex items-center gap-1 px-3 py-1.5 bg-purple-500 hover:bg-purple-600 text-white text-xs font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
-                        title="Ingresar al establecimiento principal"
-                        onclick="entrarEstablecimientoSweet(${cliente.id}, ${establecimientoPrincipal.id})">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                        </svg>
-                        Ingresar
-                    </button>
-                ` : `<span class="text-xs text-gray-400">Sin establecimiento</span>`}
-            </div>
-        `;
-
-        tbody.innerHTML += `
-            <tr class="hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-200">
-                <td class="py-4 px-6 text-center text-slate-600 font-medium">${i + 1}</td>
-                <td class="py-4 px-6"><div class="flex items-center gap-3"><div class="font-semibold text-slate-900">${cliente.razon_social}</div></div></td>
-                <td class="py-4 px-6"><span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">${cliente.ruc}</span></td>
-                <td class="py-4 px-6"><div class="flex items-center gap-1 text-slate-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    <span class="truncate" title="${cliente.distrito} - ${cliente.provincia}">${cliente.distrito} - ${cliente.provincia}</span>
-                </div></td>
-                <td class="py-4 px-6">${estadoBtn}</td>
-                <td class="py-4 px-6">${acciones}</td>
-            </tr>
-        `;
+        timerBusqueda = setTimeout(() => {
+            fetch(`index.php?controller=superadmin&action=buscarClientesAjax&busqueda=${encodeURIComponent(query)}`)
+                .then(res => res.json())
+                .then(clientes => actualizarTablaClientes(clientes));
+        }, 300);
     });
-}
+
+    function actualizarTablaClientes(clientes) {
+        if (!clientes.length) {
+            tbody.innerHTML = `<tr><td colspan="8" class="py-12 text-center">No hay clientes que coincidan</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = clientes.map((cliente, idx) => {
+            // Buscar el establecimiento principal
+            let establecimiento_principal = null;
+            if (Array.isArray(cliente.establecimientos)) {
+                establecimiento_principal = cliente.establecimientos.find(est => est.codigo_establecimiento === '0000');
+            }
+
+            return `
+            <tr class="hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-200">
+                <td class="py-4 px-6 text-center text-slate-600 font-medium">${idx + 1}</td>
+                <td class="py-4 px-6">
+                    <div class="flex items-center gap-3">
+                        <div class="font-semibold text-slate-900">${cliente.razon_social}</div>
+                    </div>
+                </td>
+                <td class="py-4 px-6">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                        ${cliente.ruc}
+                    </span>
+                </td>
+                <td class="py-4 px-6">
+                    <div class="flex items-center gap-1 text-slate-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <span class="truncate" title="${cliente.distrito} - ${cliente.provincia}">
+                            ${cliente.distrito} - ${cliente.provincia}
+                        </span>
+                    </div>
+                </td>
+                <td class="py-4 px-6 text-left align-middle">
+                    ${cliente.estado == 1
+                    ? `<button onclick="cambiarEstadoCliente(${cliente.id}, 2)"
+                            class="inline-flex items-center min-w-[120px] justify-center px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-green-100 to-emerald-200 text-green-800 border border-green-300 hover:from-green-200 hover:to-emerald-300 transition-all duration-200 cursor-pointer"
+                            title="Hacer clic para desactivar">
+                            <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>Activo
+                        </button>`
+                    : cliente.estado == 2
+                        ? `<button onclick="cambiarEstadoCliente(${cliente.id}, 1)"
+                            class="inline-flex items-center min-w-[120px] justify-center px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-red-100 to-pink-200 text-red-800 border border-red-300 hover:from-red-200 hover:to-pink-300 transition-all duration-200 cursor-pointer"
+                            title="Hacer clic para activar">
+                            <span class="w-2 h-2 bg-red-500 rounded-full mr-2"></span>Inactivo
+                        </button>`
+                        : `<span class="inline-flex items-center min-w-[120px] justify-center px-3 py-1 rounded-full text-xs font-bold bg-gray-200 text-gray-500 border border-gray-300 cursor-not-allowed select-none" title="Cliente deshabilitado">
+                            <span class="w-2 h-2 bg-gray-400 rounded-full mr-2"></span>Deshabilitado
+                        </span>`
+                }
+                </td>
+                <td class="py-4 px-6">
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <a href="index.php?controller=superadmin&action=verCliente&id=${cliente.id}"
+                                class="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md w-full justify-center"
+                                title="Ver detalles del cliente">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                            </a>
+                        </div>
+                        <div>
+                            ${establecimiento_principal && establecimiento_principal.estado != 3
+                    ? `<button type="button"
+                                    class="inline-flex items-center gap-1 px-3 py-1.5 bg-purple-500 hover:bg-purple-600 text-white text-xs font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md w-full justify-center"
+                                    title="Ingresar al establecimiento principal"
+                                    onclick="entrarEstablecimientoSweet(${cliente.id}, ${establecimiento_principal.id})">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                                    </svg>
+                                </button>`
+                    : establecimiento_principal && establecimiento_principal.estado == 3
+                        ? `<button type="button" class="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-400 text-white text-xs font-medium rounded-lg w-full justify-center cursor-not-allowed" title="Establecimiento deshabilitado" disabled>
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                                    </svg>
+                                </button>`
+                        : `<button type="button" class="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-400 text-white text-xs font-medium rounded-lg w-full justify-center cursor-not-allowed" title="No hay un establecimiento" disabled>
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                                    </svg>
+                                </button>`
+                }
+                        </div>
+                        <div>
+                            <button onclick="abrirModalEdicion(${cliente.id})"
+                                class="inline-flex items-center gap-1 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md w-full justify-center"
+                                title="Editar cliente"
+                                ${cliente.estado == 3 ? 'disabled class="opacity-50 cursor-not-allowed"' : ''}>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div>
+                            ${cliente.estado != 3
+                    ? `<button type="button"
+                                    class="inline-flex items-center gap-1 px-3 py-1.5 bg-red-700 hover:bg-red-800 text-white text-xs font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md w-full justify-center"
+                                    title="Deshabilitar cliente"
+                                    onclick="cambiarEstadoCliente(${cliente.id}, 3)">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M18 6L6 18" />
+                                        <circle cx="12" cy="12" r="9" />
+                                    </svg>
+                                </button>`
+                    : `<button type="button"
+                                    class="inline-flex items-center gap-1 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md w-full justify-center"
+                                    title="Habilitar cliente"
+                                    onclick="cambiarEstadoCliente(${cliente.id}, 1)">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </button>`
+                }
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            `;
+        }).join('');
+    }
+});
 
 
 // FUNCION VARIOS ESTABLECIMIENTOS

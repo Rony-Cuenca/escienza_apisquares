@@ -64,7 +64,7 @@ class EstablecimientoController
         $offset = ($page - 1) * $limit;
         $sort = $_GET['sort'] ?? 'codigo_establecimiento';
         $dir = ($_GET['dir'] ?? 'ASC') === 'DESC' ? 'DESC' : 'ASC';
-        
+
         $this->asegurarEstablecimientoPrincipal($id_cliente);
         $this->actualizarEtiquetasVacias($id_cliente);
 
@@ -187,7 +187,7 @@ class EstablecimientoController
         $distrito = $datosEstablecimiento['distrito'] ?? '';
         $cliente = Establecimiento::obtenerClientePorId($id_cliente);
         $etiquetaPorDefecto = $cliente['razon_social'] ?? 'Establecimiento';
-        
+
         $establecimientoExistente = Establecimiento::obtenerPorCodigoYCliente($codigo, $id_cliente);
 
         $datosCompletos = [
@@ -216,7 +216,7 @@ class EstablecimientoController
                     SesionHelper::obtenerNombreUsuario()
                 );
             }
-            
+
             return ['accion' => 'actualizado', 'codigo' => $codigo];
         } else {
             Establecimiento::insertar($datosCompletos);

@@ -181,40 +181,53 @@ class ClienteController
             }
 
             try {
-                $id_cliente = Cliente::crearCompleto($ruc, $razon_social, $email, $telefono, $direccion, $departamento, $provincia, $distrito);
+    error_log("Iniciando creación de cliente: RUC=$ruc, Razón Social=$razon_social");
+    $id_cliente = Cliente::crearCompleto($ruc, $razon_social, $email, $telefono, $direccion, $departamento, $provincia, $distrito);
 
-                if ($id_cliente) {
-                    $user_create = isset($_SESSION['usuario']) ? $_SESSION['usuario'] : 'sistema';
-                    $user_update = $user_create;
+    error_log("ID cliente creado: " . var_export($id_cliente, true));
 
-                    $establecimiento_principal = [
-                        'id_cliente' => $id_cliente,
-                        'codigo_establecimiento' => '0000',
-                        'tipo_establecimiento' => 'MATRIZ',
-                        'etiqueta' => $razon_social,
-                        'direccion' => $direccion ?: 'Sin dirección especificada',
-                        'direccion_completa' => $direccion ?: 'Sin dirección especificada',
-                        'departamento' => $departamento,
-                        'provincia' => $provincia,
-                        'distrito' => $distrito,
-                        'estado' => 1,
-                        'origen' => 'MANUAL',
-                        'user_create' => $user_create,
-                        'user_update' => $user_update
-                    ];
+    if ($id_cliente) {
+        $user_create = isset($_SESSION['usuario']) ? $_SESSION['usuario'] : 'sistema';
+        $user_update = $user_create;
 
-                    Establecimiento::insertar($establecimiento_principal);
+        $establecimiento_principal = [
+            'id_cliente' => $id_cliente,
+            'codigo_establecimiento' => '0000',
+            'tipo_establecimiento' => 'MATRIZ',
+            'etiqueta' => $razon_social,
+            'direccion' => $direccion ?: 'Sin dirección especificada',
+            'direccion_completa' => $direccion ?: 'Sin dirección especificada',
+            'departamento' => $departamento,
+            'provincia' => $provincia,
+            'distrito' => $distrito,
+            'estado' => 1,
+            'origen' => 'MANUAL',
+            'user_create' => $user_create,
+            'user_update' => $user_update
+        ];
 
-                    header('Location: ?controller=superadmin&action=clientes');
-                } else {
-                    $_SESSION['errores'] = ['Error al crear el cliente'];
-                    header('Location: ?controller=superadmin&action=clientes');
-                }
-            } catch (Exception $e) {
-                $_SESSION['errores'] = ['Error interno: ' . $e->getMessage()];
-                header('Location: ?controller=superadmin&action=clientes');
-            }
-            exit;
+        error_log("Datos establecimiento principal: " . print_r($establecimiento_principal, true));
+
+        $resEstablecimiento = Establecimiento::insertar($establecimiento_principal);
+
+        error_log("Resultado creación establecimiento: " . var_export($resEstablecimiento, true));
+
+        if (!$resEstablecimiento) {
+            error_log("Error al crear establecimiento principal para cliente $id_cliente");
+        }
+
+        header('Location: ?controller=superadmin&action=clientes');
+    } else {
+        error_log("Error al crear cliente");
+        $_SESSION['errores'] = ['Error al crear el cliente'];
+        header('Location: ?controller=superadmin&action=clientes');
+    }
+} catch (Exception $e) {
+    error_log("Excepción en creación de cliente: " . $e->getMessage());
+    $_SESSION['errores'] = ['Error interno: ' . $e->getMessage()];
+    header('Location: ?controller=superadmin&action=clientes');
+}
+exit;
         }
     }
 

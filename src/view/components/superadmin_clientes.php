@@ -234,7 +234,7 @@ unset($_SESSION['errores'], $_SESSION['form_data']);
                                             <div>
                                             <?php if ($cliente['estado'] != 3): ?>
                                                 <button type="button"
-                                                    class="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-700 hover:bg-gray-800 text-white text-xs font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md w-full justify-center"
+                                                    class="inline-flex items-center gap-1 px-3 py-1.5 bg-red-700 hover:bg-red-800 text-white text-xs font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md w-full justify-center"
                                                     title="Deshabilitar cliente"
                                                     onclick="cambiarEstadoCliente(<?= $cliente['id'] ?>, 3)">
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">

@@ -3,6 +3,7 @@ require_once 'config/conexion.php';
 
 class Establecimiento
 {
+    // Cambia el estado de todos los establecimientos de un cliente
     public static function cambiarEstadoPorCliente($id_cliente, $estado)
     {
         $conn = Conexion::conectar();
@@ -12,6 +13,8 @@ class Establecimiento
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("issi", $estado, $user_update, $date_update, $id_cliente);
         $result = $stmt->execute();
+
+        // Opcional: también desactivar usuarios de esos establecimientos
         if ($result) {
             $sqlUsuarios = "UPDATE usuario SET estado = ?, user_update = ?, date_update = ? WHERE id_cliente = ?";
             $stmtUsuarios = $conn->prepare($sqlUsuarios);
@@ -23,6 +26,8 @@ class Establecimiento
     public static function obtenerPorCliente($id_cliente, $limit = 10, $offset = 0, $sort = 'codigo_establecimiento', $dir = 'ASC')
     {
         $conn = Conexion::conectar();
+        
+        // Campos permitidos para ordenamiento
         $allowed = ['codigo_establecimiento', 'tipo_establecimiento', 'etiqueta', 'direccion', 'estado', 'origen'];
         $sort = in_array($sort, $allowed) ? $sort : 'codigo_establecimiento';
         $dir = $dir === 'DESC' ? 'DESC' : 'ASC';
@@ -85,7 +90,7 @@ class Establecimiento
         $stmt->bind_param("i", $id_cliente);
         $stmt->execute();
         $res = $stmt->get_result();
-
+        
         $establecimientos = [];
         while ($row = $res->fetch_assoc()) {
             $establecimientos[] = $row;
@@ -115,7 +120,9 @@ class Establecimiento
         $conn = Conexion::conectar();
         $date_create = date('Y-m-d H:i:s');
         $cliente = self::obtenerClientePorId($data['id_cliente']);
+        error_log("Verificando cliente para establecimiento: " . var_export($cliente, true));
         if (!$cliente) {
+            error_log("Cliente no encontrado para establecimiento: " . $data['id_cliente']);
             return false;
         }
 
@@ -138,7 +145,6 @@ class Establecimiento
         $user_create = $data['user_create'];
         $user_update = $data['user_update'];
         $estado = $data['estado'];
-
         $stmt->bind_param(
             "issssssssssssi",
             $id_cliente,
@@ -157,7 +163,13 @@ class Establecimiento
             $estado
         );
 
-        return $stmt->execute();
+        $res = $stmt->execute();
+        if (!$res) {
+            error_log("Error MySQL establecimiento: " . $stmt->error);
+        } else {
+            error_log("Establecimiento creado correctamente para cliente $id_cliente");
+        }
+        return $res;
     }
 
     public static function actualizar($id, $data)
@@ -444,12 +456,13 @@ class Establecimiento
             JOIN establecimiento e ON c.id = e.id_cliente
             WHERE e.id = ?
         ";
-
+    
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("i", $id_establecimiento);
         $stmt->execute();
         $res = $stmt->get_result();
-
+    
         return $res->fetch_assoc();
     }
+
 }
