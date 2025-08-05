@@ -120,20 +120,23 @@ class Establecimiento
         $conn = Conexion::conectar();
         $date_create = date('Y-m-d H:i:s');
         $cliente = self::obtenerClientePorId($data['id_cliente']);
+        error_log("Verificando cliente para establecimiento: " . var_export($cliente, true));
         if (!$cliente) {
+            error_log("Cliente no encontrado para establecimiento: " . $data['id_cliente']);
             return false;
         }
 
         $sql = "INSERT INTO establecimiento (
-                    id_cliente, codigo_establecimiento, tipo_establecimiento, 
-                    direccion, direccion_completa, departamento, provincia, distrito,
-                    user_create, user_update, date_create, date_update, estado, origen
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'SUNAT')";
+                id_cliente, codigo_establecimiento, tipo_establecimiento, 
+                etiqueta, direccion, direccion_completa, departamento, provincia, distrito,
+                user_create, user_update, date_create, date_update, estado, origen
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'SUNAT')";
 
         $stmt = $conn->prepare($sql);
         $id_cliente = $data['id_cliente'];
         $codigo_establecimiento = $data['codigo_establecimiento'] ?? '0000';
         $tipo_establecimiento = $data['tipo_establecimiento'] ?? 'MATRIZ';
+        $etiqueta = $data['etiqueta'] ?? $cliente['razon_social'] ?? 'Sin etiqueta';
         $direccion = $data['direccion'];
         $direccion_completa = $data['direccion_completa'] ?? $data['direccion'];
         $departamento = $data['departamento'] ?? null;
@@ -142,12 +145,12 @@ class Establecimiento
         $user_create = $data['user_create'];
         $user_update = $data['user_update'];
         $estado = $data['estado'];
-
         $stmt->bind_param(
-            "isssssssssssi",
+            "issssssssssssi",
             $id_cliente,
             $codigo_establecimiento,
             $tipo_establecimiento,
+            $etiqueta,
             $direccion,
             $direccion_completa,
             $departamento,
@@ -160,7 +163,13 @@ class Establecimiento
             $estado
         );
 
-        return $stmt->execute();
+        $res = $stmt->execute();
+        if (!$res) {
+            error_log("Error MySQL establecimiento: " . $stmt->error);
+        } else {
+            error_log("Establecimiento creado correctamente para cliente $id_cliente");
+        }
+        return $res;
     }
 
     public static function actualizar($id, $data)

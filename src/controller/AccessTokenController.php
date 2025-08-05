@@ -9,32 +9,27 @@ use Firebase\JWT\Key;
 
 class AccessTokenController
 {
-    // Función para verificar si es SuperAdmin (usa helper)
     private function esSuperAdmin()
     {
         return SesionHelper::esSuperAdmin();
     }
 
-    // Función para verificar si es Administrador (usa helper)
     private function esAdministrador()
     {
         $rol = SesionHelper::obtenerRolActual();
         return $rol === 'Administrador';
     }
 
-    // Función para verificar si puede generar tokens
     private function puedeGenerarTokens()
     {
         return $this->esSuperAdmin() || $this->esAdministrador();
     }
 
-    // Función para obtener usuario actual (usa helper)
     private function obtenerUsuarioActualSeguro()
     {
         return SesionHelper::obtenerUsuarioActual();
     }
 
-    // Función para verificar sesión y permisos (usa helper)
     private function verificarSesionYPermisos()
     {
         if (!SesionHelper::obtenerClienteActual()) {

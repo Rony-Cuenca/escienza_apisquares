@@ -6,13 +6,11 @@ require_once 'helpers/sesion_helper.php';
 
 class HomeController
 {
-    // Función inline para verificar si es SuperAdmin (usa helper)
     private function esSuperAdmin()
     {
         return SesionHelper::esSuperAdmin();
     }
 
-    // Función inline para obtener contexto actual
     private function obtenerContextoActual()
     {
         $es_modo_directo = SesionHelper::esModoSuperAdmin();
@@ -28,13 +26,11 @@ class HomeController
         ];
     }
 
-    // Función inline para obtener establecimiento actual (usa helper)
     private function obtenerEstablecimientoActual()
     {
         return SesionHelper::obtenerEstablecimientoActual();
     }
 
-    // Función inline para obtener usuario actual (usa helper)
     private function obtenerUsuarioActual()
     {
         return SesionHelper::obtenerUsuarioActual();
@@ -47,11 +43,8 @@ class HomeController
             session_start();
         }
 
-        // Usar SesionHelper para obtener el cliente actual
         $id_cliente = SesionHelper::obtenerClienteActual();
         $establecimientos = Usuario::obtenerEstablecimientosPorCliente($id_cliente);
-
-        // Obtener información del contexto
         $contexto = $this->obtenerContextoActual();
 
         $anios = [];
@@ -80,8 +73,6 @@ class HomeController
         }
 
         $contexto = $this->obtenerContextoActual();
-        
-        // Usar SesionHelper para obtener datos de manera consistente
         $id_cliente = SesionHelper::obtenerClienteActual();
         $establecimiento_id = SesionHelper::obtenerEstablecimientoActual();
         $establecimientos = Usuario::obtenerEstablecimientosPorCliente($id_cliente);
@@ -125,7 +116,6 @@ class HomeController
             
             error_log("Cliente identificado: $id_cliente");
             
-            // Consulta corregida
             $sql = "SELECT DATE_FORMAT(rc.fecha_registro, '%m') AS mes, 
                            tr.descripcion AS tipo, 
                            SUM(rc.monto_total) AS total
@@ -173,8 +163,6 @@ class HomeController
         $anio = $_GET['anio'] ?? date('Y');
         $mes = $_GET['mes'] ?? date('m');
         $tipo = $_GET['tipo'] ?? 'NUBOX360';
-        
-        // Usar SesionHelper de manera consistente
         $id_cliente = SesionHelper::obtenerClienteActual();
 
         $sql = "SELECT rc.serie, SUM(rc.monto_total) AS total
@@ -214,8 +202,6 @@ class HomeController
             $conn = Conexion::conectar();
             $establecimiento = $_GET['establecimiento'] ?? '';
             $anio = $_GET['anio'] ?? date('Y');
-            
-            // Usar SesionHelper de manera consistente
             $id_cliente = SesionHelper::obtenerClienteActual();
 
             $sql = "SELECT rc.serie, 
@@ -266,15 +252,13 @@ class HomeController
                 exit;
             }
             
-            // Mapear tipo a id_reporte (corrigiendo según la base de datos)
-            $idReporte = 1; // NUBOX360 por defecto
+            $idReporte = 1;
             switch ($tipovar) {
                 case 'NUBOX360': $idReporte = 1; break;
                 case 'SIRE': $idReporte = 2; break;
                 case 'EDSUITE': $idReporte = 3; break;
             }
             
-            // Consulta simple por mes - sin excluir series ajenas por ahora para debug
             $sql = "SELECT MONTH(rc.fecha_registro) AS mes,
                            SUM(rc.monto_total) AS total
                     FROM resumen_comprobante rc
@@ -296,7 +280,6 @@ class HomeController
                 $ventas[sprintf('%02d', $row['mes'])] = floatval($row['total']);
             }
 
-            // Generar datos para todos los meses del año
             $meses = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
             $data = [];
             $anterior = null;
@@ -338,8 +321,6 @@ class HomeController
         $anio = $_GET['anio'] ?? date('Y');
         $mes = $_GET['mes'] ?? date('m');
         $tipo = $_GET['tipo'] ?? 'NUBOX360';
-        
-        // Usar SesionHelper de manera consistente
         $id_cliente = SesionHelper::obtenerClienteActual();
 
         $sql = "SELECT rc.serie, 
