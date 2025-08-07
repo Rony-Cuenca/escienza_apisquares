@@ -134,7 +134,10 @@ def procesar():
                 col_producto = header.index('Producto')
                 col_cantidad = header.index('Cantidad')
 
-                col_api = header.index('api_almacen_id')
+                if 'api_almacen_id' in header:
+                    col_api = header.index('api_almacen_id')
+                else:
+                    col_api = None
 
                 if 'Archivo_Origen' in header:
                     col_archivo = header.index('Archivo_Origen')
