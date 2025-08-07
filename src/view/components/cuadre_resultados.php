@@ -253,6 +253,13 @@
                                                 </tr>
                                             <?php endforeach; ?>
                                         </tbody>
+                                        <tfoot class="bg-gray-100">
+                                            <tr>
+                                                <td class="border border-gray-300 px-3 py-2 text-gray-900 col-span-2 text-center font-bold whitespace-nowrap">Total</td>
+                                                <td class="border border-gray-300 px-3 py-2 text-gray-900 col-span-2 text-center font-bold whitespace-nowrap"><?php echo array_sum(array_column($diferenciaGlobales, 'sire.total')); ?></td>
+                                                <td class="border border-gray-300 px-3 py-2 text-gray-900 col-span-2 text-center font-bold whitespace-nowrap"><?php echo array_sum(array_column($diferenciaGlobales, 'nubox.total')); ?></td>
+                                            </tr>
+                                        </tfoot>
                                     </table>
                                 </div>
                             </div>
