@@ -273,6 +273,12 @@ class ReporteController
         $fechaActual = date('Y-m-d');
         $nombreMes = $this->obtenerNombreMes($mesSeleccionado, $mesesDisponibles);
 
+        $razonSocialCliente = '';
+        if ($id_cliente) {
+            $cliente = \Establecimiento::obtenerClientePorId($id_cliente);
+            $razonSocialCliente = $cliente['razon_social'] ?? '';
+        }
+
         if ($esGlobal) {
             $rucEstablecimiento = '';
             $nombreEstablecimiento = '';
@@ -290,7 +296,7 @@ class ReporteController
             ob_start();
             include __DIR__ . '/../view/components/reporte_pdf.php';
             $htmlFinal = ob_get_clean();
-            $nombreArchivo = "Reporte_Global_{$nombreMes}_{$fechaActual}.pdf";
+            $nombreArchivo = "Reporte Global {$razonSocialCliente} - {$nombreMes} - {$fechaActual}.pdf";
         } else if (empty($id_establecimientos)) {
             $id_establecimiento = $_GET['id_establecimiento'] ?? '';
             $rucEstablecimiento = '';
@@ -323,12 +329,12 @@ class ReporteController
             include __DIR__ . '/../view/components/reporte_pdf.php';
             $htmlFinal = ob_get_clean();
             $nombreArchivo = $id_establecimiento
-                ? "Reporte {$nombreEstablecimiento} - {$nombreMes} - {$fechaActual}.pdf"
-                : "Reporte General {$nombreEstablecimiento} - {$nombreMes} - {$fechaActual}.pdf";
+                ? "Reporte_{$razonSocialCliente}_{$nombreEstablecimiento}_{$nombreMes}_{$fechaActual}.pdf"
+                : "Reporte_General_{$razonSocialCliente}_{$nombreMes}_{$fechaActual}.pdf";
         } else {
             foreach ($id_establecimientos as $id_estab) {
                 $establecimiento = \Establecimiento::obtenerEstablecimiento($id_estab);
-                $nombreEstablecimiento = $establecimiento['etiqueta'] ?? '';
+                $nombreEstablecimiento = $establecimiento['etiqueta'] ?? 'Establecimiento';
                 $id_cliente = $establecimiento['id_cliente'] ?? null;
                 $rucEstablecimiento = '';
                 if ($id_cliente) {
@@ -351,7 +357,7 @@ class ReporteController
                     }
                 }
             }
-            $nombreArchivo = "Reporte_{$nombreMes}_{$fechaActual}.pdf";
+            $nombreArchivo = "Reporte por Establecimientos {$razonSocialCliente} - {$nombreMes} - {$fechaActual}.pdf";
         }
 
         $dompdf = new \Dompdf\Dompdf();
@@ -375,7 +381,6 @@ class ReporteController
         $this->verificarSesion();
         $this->verificarPermisosGeneracion();
 
-
         $mesSeleccionado = $_GET['mes'] ?? '';
         $mesesDisponibles = Cuadre::obtenerMesesDisponibles();
         $usuarioNombre = SesionHelper::obtenerNombreUsuario();
@@ -388,6 +393,13 @@ class ReporteController
         $spreadsheet->removeSheetByIndex(0);
         $nombreMes = $this->obtenerNombreMes($mesSeleccionado, $mesesDisponibles);
         $fechaActual = date('d/m/Y H:i');
+
+        $razonSocialCliente = '';
+        $id_cliente = SesionHelper::obtenerClienteActual();
+        if ($id_cliente) {
+            $cliente = \Establecimiento::obtenerClientePorId($id_cliente);
+            $razonSocialCliente = $cliente['razon_social'] ?? '';
+        }
 
         $headerPrincipalStyle = [
             'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 16],
@@ -465,7 +477,6 @@ class ReporteController
         ];
 
         if ($esGlobal) {
-            $id_cliente = SesionHelper::obtenerClienteActual();
             $cliente = \Establecimiento::obtenerClientePorId($id_cliente);
             $rucEstablecimiento = $cliente['ruc'] ?? '';
             $nombreEstablecimiento = $cliente['razon_social'] ?? '';
@@ -529,7 +540,6 @@ class ReporteController
             $header = '&C&"Arial,Bold,10"REPORTE EJECUTIVO DE CONCILIACIÓN DE VENTAS';
             $sheet->getHeaderFooter()->setOddHeader($header);
         } else if (empty($id_establecimientos)) {
-            $id_cliente = SesionHelper::obtenerClienteActual();
             $cliente = \Establecimiento::obtenerClientePorId($id_cliente);
             $rucEstablecimiento = $cliente['ruc'] ?? '';
             $nombreEstablecimiento = $cliente['razon_social'] ?? '';
@@ -666,12 +676,13 @@ class ReporteController
         }
         $spreadsheet->setActiveSheetIndex(0);
         if ($esGlobal) {
-            $nombreArchivo = 'Reporte_Global_' . $nombreMes . '_' . date('Y-m-d') . '.xlsx';
+            $nombreArchivo = "Reporte Global {$razonSocialCliente} - {$nombreMes} - " . date('Y-m-d') . '.xlsx';
         } else if (empty($id_establecimientos)) {
-            $nombreArchivo = 'Reporte_General_' . $nombreMes . '_' . date('Y-m-d') . '.xlsx';
+            $nombreArchivo = "Reporte General {$razonSocialCliente} - {$nombreMes} - " . date('Y-m-d') . '.xlsx';
         } else {
-            $nombreArchivo = 'Reporte_' . $nombreMes . '_' . date('Y-m-d') . '.xlsx';
+            $nombreArchivo = "Reporte por Establecimientos {$razonSocialCliente} - {$nombreMes} - " . date('Y-m-d') . '.xlsx';
         }
+
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment;filename="' . $nombreArchivo . '"');
         header('Cache-Control: max-age=0');
