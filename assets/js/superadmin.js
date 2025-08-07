@@ -225,9 +225,35 @@ class SuperAdminController {
         if (this.forms.cliente) {
             this.forms.cliente.reset();
         }
+
+        this.resetearIndicadoresVisuales();
         this.limpiarMensajes();
     }
 
+    resetearIndicadoresVisuales() {
+        const estadoDiv = document.getElementById('estadoContribuyente');
+        const condicionDiv = document.getElementById('condicionContribuyente');
+
+        if (estadoDiv) {
+            estadoDiv.className = 'flex items-center px-4 py-3 bg-gray-50 rounded-lg border border-gray-200';
+            estadoDiv.innerHTML = `
+            <div class="flex items-center gap-2">
+                <div class="w-3 h-3 bg-gray-400 rounded-full"></div>
+                <span class="text-gray-500 font-medium">No consultado</span>
+            </div>
+        `;
+        }
+
+        if (condicionDiv) {
+            condicionDiv.className = 'flex items-center px-4 py-3 bg-gray-50 rounded-lg border border-gray-200';
+            condicionDiv.innerHTML = `
+            <div class="flex items-center gap-2">
+                <div class="w-3 h-3 bg-gray-400 rounded-full"></div>
+                <span class="text-gray-500 font-medium">No consultado</span>
+            </div>
+        `;
+        }
+    }
     llenarFormularioEdicion(data) {
         const campos = {
             'edit_id': data.id,
@@ -387,6 +413,45 @@ class SuperAdminController {
                 element.value = value;
             }
         });
+
+        this.actualizarEstadoContribuyente(datos.estado || 'ACTIVO');
+        this.actualizarCondicionContribuyente(datos.condicion || 'HABIDO');
+    }
+
+    actualizarEstadoContribuyente(estado) {
+        const estadoDiv = document.getElementById('estadoContribuyente');
+        if (!estadoDiv) return;
+
+        const esActivo = estado.toUpperCase() === 'ACTIVO';
+        const colorClass = esActivo ? 'bg-green-500' : 'bg-red-500';
+        const bgClass = esActivo ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200';
+        const textClass = esActivo ? 'text-green-800' : 'text-red-800';
+
+        estadoDiv.className = `flex items-center px-4 py-3 rounded-lg border ${bgClass}`;
+        estadoDiv.innerHTML = `
+        <div class="flex items-center gap-2">
+            <div class="w-3 h-3 ${colorClass} rounded-full"></div>
+            <span class="${textClass} font-medium">${esActivo ? 'ACTIVO' : 'INACTIVO'}</span>
+        </div>
+    `;
+    }
+
+    actualizarCondicionContribuyente(condicion) {
+        const condicionDiv = document.getElementById('condicionContribuyente');
+        if (!condicionDiv) return;
+
+        const esHabido = condicion.toUpperCase() === 'HABIDO';
+        const colorClass = esHabido ? 'bg-green-500' : 'bg-red-500';
+        const bgClass = esHabido ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200';
+        const textClass = esHabido ? 'text-green-800' : 'text-red-800';
+
+        condicionDiv.className = `flex items-center px-4 py-3 rounded-lg border ${bgClass}`;
+        condicionDiv.innerHTML = `
+        <div class="flex items-center gap-2">
+            <div class="w-3 h-3 ${colorClass} rounded-full"></div>
+            <span class="${textClass} font-medium">${esHabido ? 'HABIDO' : 'NO HABIDO'}</span>
+        </div>
+    `;
     }
 
     validarRuc(ruc) {
