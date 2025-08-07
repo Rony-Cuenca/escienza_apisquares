@@ -798,7 +798,7 @@ date_default_timezone_set('America/Lima');
                                 <th>Total SIRE</th>
                                 <th>Total NUBOX</th>
                                 <th>Estado SIRE</th>
-                                <th>Estado NUBOX</th>
+                                <th>Estado NUBOX/SUNAT</th>
                             </tr>
                         </thead>
                         <tbody>

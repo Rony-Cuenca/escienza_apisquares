@@ -1424,7 +1424,7 @@ class ReporteController
         $sheet->setCellValue($col++ . ($startRow + 1), "TOTAL SIRE");
         $sheet->setCellValue($col++ . ($startRow + 1), "TOTAL NUBOX");
         $sheet->setCellValue($col++ . ($startRow + 1), "ESTADO SIRE");
-        $sheet->setCellValue($col++ . ($startRow + 1), "ESTADO NUBOX");
+        $sheet->setCellValue($col++ . ($startRow + 1), "ESTADO NUBOX/SUNAT");
         $sheet->getStyle("C" . ($startRow + 1) . ":{$lastCol}" . ($startRow + 1))->applyFromArray($blueHeaderStyle);
 
         $currentRow = $startRow + 2;
