@@ -296,7 +296,7 @@ class ReporteController
             ob_start();
             include __DIR__ . '/../view/components/reporte_pdf.php';
             $htmlFinal = ob_get_clean();
-            $nombreArchivo = "Reporte Global {$razonSocialCliente} - {$nombreMes} - {$fechaActual}.pdf";
+            $nombreArchivo = "{$razonSocialCliente} - {$nombreMes}.pdf";
         } else if (empty($id_establecimientos)) {
             $id_establecimiento = $_GET['id_establecimiento'] ?? '';
             $rucEstablecimiento = '';
@@ -329,8 +329,8 @@ class ReporteController
             include __DIR__ . '/../view/components/reporte_pdf.php';
             $htmlFinal = ob_get_clean();
             $nombreArchivo = $id_establecimiento
-                ? "Reporte_{$razonSocialCliente}_{$nombreEstablecimiento}_{$nombreMes}_{$fechaActual}.pdf"
-                : "Reporte_General_{$razonSocialCliente}_{$nombreMes}_{$fechaActual}.pdf";
+                ? "{$razonSocialCliente} - {$nombreMes}.pdf"
+                : "{$razonSocialCliente} - {$nombreMes}.pdf";
         } else {
             foreach ($id_establecimientos as $id_estab) {
                 $establecimiento = \Establecimiento::obtenerEstablecimiento($id_estab);
@@ -357,7 +357,7 @@ class ReporteController
                     }
                 }
             }
-            $nombreArchivo = "Reporte por Establecimientos {$razonSocialCliente} - {$nombreMes} - {$fechaActual}.pdf";
+            $nombreArchivo = "{$razonSocialCliente} - {$nombreMes}.pdf";
         }
 
         $dompdf = new \Dompdf\Dompdf();
@@ -676,11 +676,11 @@ class ReporteController
         }
         $spreadsheet->setActiveSheetIndex(0);
         if ($esGlobal) {
-            $nombreArchivo = "Reporte Global {$razonSocialCliente} - {$nombreMes} - " . date('Y-m-d') . '.xlsx';
+            $nombreArchivo = "{$razonSocialCliente} - {$nombreMes}.xlsx";
         } else if (empty($id_establecimientos)) {
-            $nombreArchivo = "Reporte General {$razonSocialCliente} - {$nombreMes} - " . date('Y-m-d') . '.xlsx';
+            $nombreArchivo = "{$razonSocialCliente} - {$nombreMes}.xlsx";
         } else {
-            $nombreArchivo = "Reporte por Establecimientos {$razonSocialCliente} - {$nombreMes} - " . date('Y-m-d') . '.xlsx';
+            $nombreArchivo = "{$razonSocialCliente} - {$nombreMes}.xlsx";
         }
 
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
