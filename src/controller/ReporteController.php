@@ -1099,15 +1099,11 @@ class ReporteController
         $sheet->getStyle("D" . ($startRow + 2))->getNumberFormat()->setFormatCode($monedaFormat);
         $sheet->getStyle("C" . ($startRow + 2) . ":D" . ($startRow + 2))->applyFromArray($borderStyle);
 
-        $faltanteFact = $valorSIREFact - $valorNUBOXFact;
-        $sheet->setCellValue("C" . ($startRow + 3), "FALTANTE");
-        $sheet->setCellValue("D" . ($startRow + 3), $faltanteFact);
+        $sheet->setCellValue("C" . ($startRow + 3), "EDSUITE");
+        $valorEDSUITEFact = isset($totalesTipoDoc[2][3]) ? $totalesTipoDoc[2][3] : 0;
+        $sheet->setCellValue("D" . ($startRow + 3), $valorEDSUITEFact);
         $sheet->getStyle("D" . ($startRow + 3))->getNumberFormat()->setFormatCode($monedaFormat);
-        if ($faltanteFact == 0) {
-            $sheet->getStyle("C" . ($startRow + 3) . ":D" . ($startRow + 3))->applyFromArray($greenTotalStyle);
-        } else {
-            $sheet->getStyle("C" . ($startRow + 3) . ":D" . ($startRow + 3))->applyFromArray($redStyle);
-        }
+        $sheet->getStyle("C" . ($startRow + 3) . ":D" . ($startRow + 3))->applyFromArray($borderStyle);
 
         // BOLETAS (G-H)
         $sheet->setCellValue("G$startRow", "BOLETAS");
@@ -1126,15 +1122,11 @@ class ReporteController
         $sheet->getStyle("H" . ($startRow + 2))->getNumberFormat()->setFormatCode($monedaFormat);
         $sheet->getStyle("G" . ($startRow + 2) . ":H" . ($startRow + 2))->applyFromArray($borderStyle);
 
-        $faltanteBoleta = $valorSIREBol - $valorNUBOXBol;
-        $sheet->setCellValue("G" . ($startRow + 3), "FALTANTE");
-        $sheet->setCellValue("H" . ($startRow + 3), $faltanteBoleta);
+        $sheet->setCellValue("G" . ($startRow + 3), "EDSUITE");
+        $valorEDSUITEBol = isset($totalesTipoDoc[1][3]) ? $totalesTipoDoc[1][3] : 0;
+        $sheet->setCellValue("H" . ($startRow + 3), $valorEDSUITEBol);
         $sheet->getStyle("H" . ($startRow + 3))->getNumberFormat()->setFormatCode($monedaFormat);
-        if ($faltanteBoleta == 0) {
-            $sheet->getStyle("G" . ($startRow + 3) . ":H" . ($startRow + 3))->applyFromArray($greenTotalStyle);
-        } else {
-            $sheet->getStyle("G" . ($startRow + 3) . ":H" . ($startRow + 3))->applyFromArray($redStyle);
-        }
+        $sheet->getStyle("G" . ($startRow + 3) . ":H" . ($startRow + 3))->applyFromArray($borderStyle);
 
         // NOTAS DE CRÉDITO (K-L)
         $sheet->setCellValue("K$startRow", "NOTAS DE CRÉDITO");
@@ -1153,15 +1145,11 @@ class ReporteController
         $sheet->getStyle("L" . ($startRow + 2))->getNumberFormat()->setFormatCode($monedaFormat);
         $sheet->getStyle("K" . ($startRow + 2) . ":L" . ($startRow + 2))->applyFromArray($borderStyle);
 
-        $faltanteNota = $valorSIRENota - $valorNUBOXNota;
-        $sheet->setCellValue("K" . ($startRow + 3), "FALTANTE");
-        $sheet->setCellValue("L" . ($startRow + 3), $faltanteNota);
+        $sheet->setCellValue("K" . ($startRow + 3), "EDSUITE");
+        $valorEDSUITENota = isset($totalesTipoDoc[3][3]) ? $totalesTipoDoc[3][3] : 0;
+        $sheet->setCellValue("L" . ($startRow + 3), $valorEDSUITENota);
         $sheet->getStyle("L" . ($startRow + 3))->getNumberFormat()->setFormatCode($monedaFormat);
-        if ($faltanteNota == 0) {
-            $sheet->getStyle("K" . ($startRow + 3) . ":L" . ($startRow + 3))->applyFromArray($greenTotalStyle);
-        } else {
-            $sheet->getStyle("K" . ($startRow + 3) . ":L" . ($startRow + 3))->applyFromArray($redStyle);
-        }
+        $sheet->getStyle("K" . ($startRow + 3) . ":L" . ($startRow + 3))->applyFromArray($borderStyle);
 
         $row = $startRow + 4;
     }
