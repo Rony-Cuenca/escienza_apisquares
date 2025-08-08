@@ -271,17 +271,14 @@ $sinSeries = $idEstablecimiento && empty($cuadresNUBOX) && empty($cuadresEDSUITE
                                     <td class="py-2 px-4 font-semibold border-b border-[#2563EB]">NUBOX</td>
                                     <td class="py-2 px-4 text-right border-b border-[#2563EB]"><?= isset($totalesTipoDoc[2][1]) ? 'S/ ' . number_format($totalesTipoDoc[2][1], 2) : 'S/ 0.00' ?></td>
                                 </tr>
-                                <?php
-                                $faltanteFact = (isset($totalesTipoDoc[2][2]) ? $totalesTipoDoc[2][2] : 0) - (isset($totalesTipoDoc[2][1]) ? $totalesTipoDoc[2][1] : 0);
-                                $faltanteClass = ($faltanteFact == 0) ? 'bg-[#bbf7d0] text-[#166534]' : 'bg-[#dc3545] text-white';
-                                ?>
-                                <tr class="font-bold <?= $faltanteClass ?>">
-                                    <td class="py-2 px-4 border-t border-[#2563EB]">FALTANTE</td>
-                                    <td class="py-2 px-4 text-right border-t border-[#2563EB]">S/ <?= number_format($faltanteFact, 2) ?></td>
+                                <tr class="border-b border-[#2563EB] transition hover:bg-blue-50">
+                                    <td class="py-2 px-4 font-semibold border-b border-[#2563EB]">EDSUITE</td>
+                                    <td class="py-2 px-4 text-right border-b border-[#2563EB]"><?= isset($totalesTipoDoc[2][3]) ? 'S/ ' . number_format($totalesTipoDoc[2][3], 2) : 'S/ 0.00' ?></td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
+
                     <!-- BOLETAS -->
                     <div class="bg-white rounded-xl border border-[#2563EB] shadow overflow-hidden w-full min-w-0 flex flex-col">
                         <table class="w-full min-w-max text-sm">
@@ -299,17 +296,14 @@ $sinSeries = $idEstablecimiento && empty($cuadresNUBOX) && empty($cuadresEDSUITE
                                     <td class="py-2 px-4 font-semibold border-b border-[#2563EB]">NUBOX</td>
                                     <td class="py-2 px-4 text-right border-b border-[#2563EB]"><?= isset($totalesTipoDoc[1][1]) ? 'S/ ' . number_format($totalesTipoDoc[1][1], 2) : 'S/ 0.00' ?></td>
                                 </tr>
-                                <?php
-                                $faltanteBoleta = (isset($totalesTipoDoc[1][2]) ? $totalesTipoDoc[1][2] : 0) - (isset($totalesTipoDoc[1][1]) ? $totalesTipoDoc[1][1] : 0);
-                                $faltanteClassB = ($faltanteBoleta == 0) ? 'bg-[#bbf7d0] text-[#166534]' : 'bg-[#dc3545] text-white';
-                                ?>
-                                <tr class="font-bold <?= $faltanteClassB ?>">
-                                    <td class="py-2 px-4 border-t border-[#2563EB]">FALTANTE</td>
-                                    <td class="py-2 px-4 text-right border-t border-[#2563EB]">S/ <?= number_format($faltanteBoleta, 2) ?></td>
+                                <tr class="border-b border-[#2563EB] transition hover:bg-blue-50">
+                                    <td class="py-2 px-4 font-semibold border-b border-[#2563EB]">EDSUITE</td>
+                                    <td class="py-2 px-4 text-right border-b border-[#2563EB]"><?= isset($totalesTipoDoc[1][3]) ? 'S/ ' . number_format($totalesTipoDoc[1][3], 2) : 'S/ 0.00' ?></td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
+
                     <!-- NOTAS DE CRÉDITO -->
                     <div class="bg-white rounded-xl border border-[#2563EB] shadow overflow-hidden w-full min-w-0 flex flex-col">
                         <table class="w-full min-w-max text-sm">
@@ -327,13 +321,9 @@ $sinSeries = $idEstablecimiento && empty($cuadresNUBOX) && empty($cuadresEDSUITE
                                     <td class="py-2 px-4 font-semibold border-b border-[#2563EB]">NUBOX</td>
                                     <td class="py-2 px-4 text-right border-b border-[#2563EB]"><?= isset($totalesTipoDoc[3][1]) ? 'S/ ' . number_format($totalesTipoDoc[3][1], 2) : 'S/ 0.00' ?></td>
                                 </tr>
-                                <?php
-                                $faltanteNC = (isset($totalesTipoDoc[3][2]) ? $totalesTipoDoc[3][2] : 0) - (isset($totalesTipoDoc[3][1]) ? $totalesTipoDoc[3][1] : 0);
-                                $faltanteClassNC = ($faltanteNC == 0) ? 'bg-[#bbf7d0] text-[#166534]' : 'bg-[#dc3545] text-white';
-                                ?>
-                                <tr class="font-bold <?= $faltanteClassNC ?>">
-                                    <td class="py-2 px-4 border-t border-[#2563EB]">FALTANTE</td>
-                                    <td class="py-2 px-4 text-right border-t border-[#2563EB]">S/ <?= number_format($faltanteNC, 2) ?></td>
+                                <tr class="border-b border-[#2563EB] transition hover:bg-blue-50">
+                                    <td class="py-2 px-4 font-semibold border-b border-[#2563EB]">EDSUITE</td>
+                                    <td class="py-2 px-4 text-right border-b border-[#2563EB]"><?= isset($totalesTipoDoc[3][3]) ? 'S/ ' . number_format($totalesTipoDoc[3][3], 2) : 'S/ 0.00' ?></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -347,42 +337,42 @@ $sinSeries = $idEstablecimiento && empty($cuadresNUBOX) && empty($cuadresEDSUITE
                     <div class="relative w-full min-w-0">
                         <div class="overflow-x-auto bg-white rounded-xl border border-[#2563EB] shadow">
                             <table class="min-w-max w-full text-xs">
-                            <thead>
-                                <tr class="bg-yellow-300 text-gray-900 font-bold">
-                                    <th class="py-2 px-3 text-center text-sm" colspan="3">PRODUCTOS TOTALES</th>
-                                </tr>
-                                <tr class="bg-[#A9C3E8]">
-                                    <th class="py-2 px-3 text-left">Producto</th>
-                                    <th class="py-2 px-3 text-right">Cantidad Total</th>
-                                    <th class="py-2 px-3 text-right">Importe Total</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php if (!empty($ventasGlobales)): ?>
-                                    <?php
-                                    $totalCantidad = 0;
-                                    $totalImporteVG = 0;
-                                    foreach ($ventasGlobales as $venta):
-                                        $totalCantidad += $venta['total_cantidad'];
-                                        $totalImporteVG += $venta['total_importe'];
-                                    ?>
-                                        <tr class="border-b border-[#2563EB] transition hover:bg-blue-50">
-                                            <td class="py-2 px-3 text-left font-semibold"><?= htmlspecialchars($venta['producto']) ?></td>
-                                            <td class="py-2 px-3 text-right"><?= number_format($venta['total_cantidad'], 2) ?></td>
-                                            <td class="py-2 px-3 text-right">S/ <?= number_format($venta['total_importe'], 2) ?></td>
+                                <thead>
+                                    <tr class="bg-yellow-300 text-gray-900 font-bold">
+                                        <th class="py-2 px-3 text-center text-sm" colspan="3">PRODUCTOS TOTALES</th>
+                                    </tr>
+                                    <tr class="bg-[#A9C3E8]">
+                                        <th class="py-2 px-3 text-left">Producto</th>
+                                        <th class="py-2 px-3 text-right">Cantidad Total</th>
+                                        <th class="py-2 px-3 text-right">Importe Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php if (!empty($ventasGlobales)): ?>
+                                        <?php
+                                        $totalCantidad = 0;
+                                        $totalImporteVG = 0;
+                                        foreach ($ventasGlobales as $venta):
+                                            $totalCantidad += $venta['total_cantidad'];
+                                            $totalImporteVG += $venta['total_importe'];
+                                        ?>
+                                            <tr class="border-b border-[#2563EB] transition hover:bg-blue-50">
+                                                <td class="py-2 px-3 text-left font-semibold"><?= htmlspecialchars($venta['producto']) ?></td>
+                                                <td class="py-2 px-3 text-right"><?= number_format($venta['total_cantidad'], 2) ?></td>
+                                                <td class="py-2 px-3 text-right">S/ <?= number_format($venta['total_importe'], 2) ?></td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                        <tr class="bg-gray-100 font-bold">
+                                            <td class="py-2 px-3">TOTAL</td>
+                                            <td class="py-2 px-3 text-right"><?= number_format($totalCantidad, 2) ?></td>
+                                            <td class="py-2 px-3 text-right">S/ <?= number_format($totalImporteVG, 2) ?></td>
                                         </tr>
-                                    <?php endforeach; ?>
-                                    <tr class="bg-gray-100 font-bold">
-                                        <td class="py-2 px-3">TOTAL</td>
-                                        <td class="py-2 px-3 text-right"><?= number_format($totalCantidad, 2) ?></td>
-                                        <td class="py-2 px-3 text-right">S/ <?= number_format($totalImporteVG, 2) ?></td>
-                                    </tr>
-                                <?php else: ?>
-                                    <tr>
-                                        <td colspan="3" class="py-4 text-center text-gray-500">No hay ventas globales para este mes.</td>
-                                    </tr>
-                                <?php endif; ?>
-                            </tbody>
+                                    <?php else: ?>
+                                        <tr>
+                                            <td colspan="3" class="py-4 text-center text-gray-500">No hay ventas globales para este mes.</td>
+                                        </tr>
+                                    <?php endif; ?>
+                                </tbody>
                             </table>
                         </div>
                     </div>
@@ -390,55 +380,55 @@ $sinSeries = $idEstablecimiento && empty($cuadresNUBOX) && empty($cuadresEDSUITE
                     <div class="relative w-full min-w-0">
                         <div class="overflow-x-auto bg-white rounded-xl border border-[#2563EB] shadow">
                             <table class="min-w-max w-full text-xs">
-                            <thead>
-                                <tr class="bg-yellow-300 text-gray-900 font-bold">
-                                    <th class="py-2 px-3 text-center text-sm" colspan="5">REPORTES GLOBALES</th>
-                                </tr>
-                                <tr class="bg-[#A9C3E8]">
-                                    <th class="py-2 px-3 text-left">Series</th>
-                                    <th class="py-2 px-3 text-right">Combustibles</th>
-                                    <th class="py-2 px-3 text-right">Extras</th>
-                                    <th class="py-2 px-3 text-right">Nota de Crédito</th>
-                                    <th class="py-2 px-3 text-right">Diferencia</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php if (!empty($seriesEdSuite)):
-                                    $totalCombustible = 0;
-                                    $totalExtras = 0;
-                                    $totalNotas = 0;
-                                    $totalDiferenciaEdSuite = 0;
-                                    foreach ($seriesEdSuite as $row):
-                                        $totalCombustible += $row['combustible'];
-                                        $totalExtras += $row['extras'];
-                                        $totalNotas += $row['nota_credito'];
-                                        $totalDiferenciaEdSuite += $row['diferencia'];
-                                        $diffClass = ($row['diferencia'] != 0) ? "bg-[#dc3545] text-white font-bold" : "";
-                                ?>
-                                        <tr class="border-b border-[#2563EB] transition hover:bg-blue-50">
-                                            <td class="py-2 px-3 text-left"><?= htmlspecialchars($row['serie']) ?></td>
-                                            <td class="py-2 px-3 text-right">S/. <?= number_format($row['combustible'], 2) ?></td>
-                                            <td class="py-2 px-3 text-right">S/. <?= number_format($row['extras'], 2) ?></td>
-                                            <td class="py-2 px-3 text-right">S/. <?= number_format($row['nota_credito'], 2) ?></td>
-                                            <td class="py-2 px-3 text-right <?= $diffClass ?>">S/. <?= number_format($row['diferencia'], 2) ?></td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                    <?php
-                                    $totalRowClass = ($totalDiferenciaEdSuite != 0) ? "bg-[#dc3545] text-white font-bold" : "bg-gray-100 font-bold";
+                                <thead>
+                                    <tr class="bg-yellow-300 text-gray-900 font-bold">
+                                        <th class="py-2 px-3 text-center text-sm" colspan="5">REPORTES GLOBALES</th>
+                                    </tr>
+                                    <tr class="bg-[#A9C3E8]">
+                                        <th class="py-2 px-3 text-left">Series</th>
+                                        <th class="py-2 px-3 text-right">Combustibles</th>
+                                        <th class="py-2 px-3 text-right">Extras</th>
+                                        <th class="py-2 px-3 text-right">Nota de Crédito</th>
+                                        <th class="py-2 px-3 text-right">Diferencia</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php if (!empty($seriesEdSuite)):
+                                        $totalCombustible = 0;
+                                        $totalExtras = 0;
+                                        $totalNotas = 0;
+                                        $totalDiferenciaEdSuite = 0;
+                                        foreach ($seriesEdSuite as $row):
+                                            $totalCombustible += $row['combustible'];
+                                            $totalExtras += $row['extras'];
+                                            $totalNotas += $row['nota_credito'];
+                                            $totalDiferenciaEdSuite += $row['diferencia'];
+                                            $diffClass = ($row['diferencia'] != 0) ? "bg-[#dc3545] text-white font-bold" : "";
                                     ?>
-                                    <tr class="<?= $totalRowClass ?>">
-                                        <td class="py-2 px-3">TOTAL</td>
-                                        <td class="py-2 px-3 text-right">S/ <?= number_format($totalCombustible, 2) ?></td>
-                                        <td class="py-2 px-3 text-right">S/. <?= number_format($totalExtras, 2) ?></td>
-                                        <td class="py-2 px-3 text-right">S/. <?= number_format($totalNotas, 2) ?></td>
-                                        <td class="py-2 px-3 text-right">S/. <?= number_format($totalDiferenciaEdSuite, 2) ?></td>
-                                    </tr>
-                                <?php else: ?>
-                                    <tr>
-                                        <td colspan="5" class="py-4 text-center text-gray-500">No hay ventas globales para este mes.</td>
-                                    </tr>
-                                <?php endif; ?>
-                            </tbody>
+                                            <tr class="border-b border-[#2563EB] transition hover:bg-blue-50">
+                                                <td class="py-2 px-3 text-left"><?= htmlspecialchars($row['serie']) ?></td>
+                                                <td class="py-2 px-3 text-right">S/. <?= number_format($row['combustible'], 2) ?></td>
+                                                <td class="py-2 px-3 text-right">S/. <?= number_format($row['extras'], 2) ?></td>
+                                                <td class="py-2 px-3 text-right">S/. <?= number_format($row['nota_credito'], 2) ?></td>
+                                                <td class="py-2 px-3 text-right <?= $diffClass ?>">S/. <?= number_format($row['diferencia'], 2) ?></td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                        <?php
+                                        $totalRowClass = ($totalDiferenciaEdSuite != 0) ? "bg-[#dc3545] text-white font-bold" : "bg-gray-100 font-bold";
+                                        ?>
+                                        <tr class="<?= $totalRowClass ?>">
+                                            <td class="py-2 px-3">TOTAL</td>
+                                            <td class="py-2 px-3 text-right">S/ <?= number_format($totalCombustible, 2) ?></td>
+                                            <td class="py-2 px-3 text-right">S/. <?= number_format($totalExtras, 2) ?></td>
+                                            <td class="py-2 px-3 text-right">S/. <?= number_format($totalNotas, 2) ?></td>
+                                            <td class="py-2 px-3 text-right">S/. <?= number_format($totalDiferenciaEdSuite, 2) ?></td>
+                                        </tr>
+                                    <?php else: ?>
+                                        <tr>
+                                            <td colspan="5" class="py-4 text-center text-gray-500">No hay ventas globales para este mes.</td>
+                                        </tr>
+                                    <?php endif; ?>
+                                </tbody>
                             </table>
                         </div>
                     </div>
@@ -451,48 +441,48 @@ $sinSeries = $idEstablecimiento && empty($cuadresNUBOX) && empty($cuadresEDSUITE
                     <div class="relative w-full min-w-0 flex flex-col">
                         <div class="overflow-x-auto bg-white rounded-xl border border-[#2563EB] shadow">
                             <table class="min-w-max w-full text-xs">
-                            <thead>
-                                <tr class="bg-yellow-300 text-gray-900 font-bold">
-                                    <th class="py-2 px-3 text-center text-sm" colspan="4">DIFERENCIAS</th>
-                                </tr>
-                                <tr class="bg-[#A9C3E8]">
-                                    <th class="py-2 px-3 text-left">SERIE</th>
-                                    <th class="py-2 px-3 text-right">TOTAL SIRE</th>
-                                    <th class="py-2 px-3 text-right">TOTAL NUBOX</th>
-                                    <th class="py-2 px-3 text-right">DIFERENCIA R.G</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php
-                                $totalSire = 0;
-                                $totalNubox = 0;
-                                $totalDif = 0;
-                                if (!empty($diferenciasNuboxSire)):
-                                    foreach ($diferenciasNuboxSire as $row):
-                                        $totalSire += $row['total_sire'];
-                                        $totalNubox += $row['total_nubox'];
-                                        $totalDif += $row['diferencia'];
-                                        $rowClass = ($row['diferencia'] != 0) ? 'bg-[#dc3545] text-white font-bold' : '';
-                                ?>
-                                        <tr class="border-b border-[#2563EB] transition <?= $rowClass ?>">
-                                            <td class="py-2 px-3 text-left font-semibold"><?= htmlspecialchars($row['serie']) ?></td>
-                                            <td class="py-2 px-3 text-right"><?= number_format($row['total_sire'], 2) ?></td>
-                                            <td class="py-2 px-3 text-right"><?= number_format($row['total_nubox'], 2) ?></td>
-                                            <td class="py-2 px-3 text-right"><?= number_format($row['diferencia'], 2) ?></td>
+                                <thead>
+                                    <tr class="bg-yellow-300 text-gray-900 font-bold">
+                                        <th class="py-2 px-3 text-center text-sm" colspan="4">DIFERENCIAS</th>
+                                    </tr>
+                                    <tr class="bg-[#A9C3E8]">
+                                        <th class="py-2 px-3 text-left">SERIE</th>
+                                        <th class="py-2 px-3 text-right">TOTAL SIRE</th>
+                                        <th class="py-2 px-3 text-right">TOTAL NUBOX</th>
+                                        <th class="py-2 px-3 text-right">TOTAL EDSUITE</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php
+                                    $totalSire = 0;
+                                    $totalNubox = 0;
+                                    $totalEdsuite = 0;
+                                    if (!empty($diferenciasNuboxSire)):
+                                        foreach ($diferenciasNuboxSire as $row):
+                                            $totalSire += $row['total_sire'];
+                                            $totalNubox += $row['total_nubox'];
+                                            $totalEdsuiteRow = $seriesTotales[$row['serie']][3] ?? 0;
+                                            $totalEdsuite += $totalEdsuiteRow;
+                                    ?>
+                                            <tr class="border-b border-[#2563EB] transition hover:bg-blue-50">
+                                                <td class="py-2 px-3 text-left font-semibold"><?= htmlspecialchars($row['serie']) ?></td>
+                                                <td class="py-2 px-3 text-right"><?= number_format($row['total_sire'], 2) ?></td>
+                                                <td class="py-2 px-3 text-right"><?= number_format($row['total_nubox'], 2) ?></td>
+                                                <td class="py-2 px-3 text-right"><?= number_format($totalEdsuiteRow, 2) ?></td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                        <tr class="bg-gray-100 font-bold">
+                                            <td class="py-2 px-3">TOTAL</td>
+                                            <td class="py-2 px-3 text-right"><?= number_format($totalSire, 2) ?></td>
+                                            <td class="py-2 px-3 text-right"><?= number_format($totalNubox, 2) ?></td>
+                                            <td class="py-2 px-3 text-right"><?= number_format($totalEdsuite, 2) ?></td>
                                         </tr>
-                                    <?php endforeach; ?>
-                                    <tr class="bg-gray-100 font-bold">
-                                        <td class="py-2 px-3">TOTAL</td>
-                                        <td class="py-2 px-3 text-right"><?= number_format($totalSire, 2) ?></td>
-                                        <td class="py-2 px-3 text-right"><?= number_format($totalNubox, 2) ?></td>
-                                        <td class="py-2 px-3 text-right"><?= number_format($totalDif, 2) ?></td>
-                                    </tr>
-                                <?php else: ?>
-                                    <tr>
-                                        <td colspan="4" class="py-4 text-center text-gray-500">No hay diferencias para este mes.</td>
-                                    </tr>
-                                <?php endif; ?>
-                            </tbody>
+                                    <?php else: ?>
+                                        <tr>
+                                            <td colspan="4" class="py-4 text-center text-gray-500">No hay diferencias para este mes.</td>
+                                        </tr>
+                                    <?php endif; ?>
+                                </tbody>
                             </table>
                         </div>
                     </div>
@@ -554,7 +544,7 @@ $sinSeries = $idEstablecimiento && empty($cuadresNUBOX) && empty($cuadresEDSUITE
                                         <th class="py-2 px-3 text-right">Total SIRE</th>
                                         <th class="py-2 px-3 text-right">Total NUBOX</th>
                                         <th class="py-2 px-3 text-center">Estado SIRE</th>
-                                        <th class="py-2 px-3 text-center">Estado NUBOX</th>
+                                        <th class="py-2 px-3 text-center">Estado NUBOX/SIRE</th>
                                     </tr>
                                 </thead>
                                 <tbody>
