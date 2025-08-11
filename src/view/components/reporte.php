@@ -576,7 +576,7 @@ $sinSeries = $idEstablecimiento && empty($cuadresNUBOX) && empty($cuadresEDSUITE
                                         <th class="py-2 px-3 text-right">Total SIRE</th>
                                         <th class="py-2 px-3 text-right">Total NUBOX</th>
                                         <th class="py-2 px-3 text-center">Estado SIRE</th>
-                                        <th class="py-2 px-3 text-center">Estado NUBOX/SIRE</th>
+                                        <th class="py-2 px-3 text-center">Estado NUBOX/SUNAT</th>
                                     </tr>
                                 </thead>
                                 <tbody>
