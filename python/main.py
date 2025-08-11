@@ -134,7 +134,10 @@ def procesar():
                 col_producto = header.index('Producto')
                 col_cantidad = header.index('Cantidad')
 
-                col_api = header.index('api_almacen_id')
+                if 'api_almacen_id' in header:
+                    col_api = header.index('api_almacen_id')
+                else:
+                    col_api = None
 
                 if 'Archivo_Origen' in header:
                     col_archivo = header.index('Archivo_Origen')
@@ -169,6 +172,11 @@ def procesar():
 
                     if col_archivo is not None:
                         archivo = str(row[col_archivo]).strip()
+
+                    if col_api is not None and not pd.isna(row[col_api]):
+                        api_value = str(row[col_api]).strip()
+                    else:
+                        api_value = ""
                     
                     if not serie:
                         continue
@@ -190,14 +198,13 @@ def procesar():
                         data_serie_igv[serie] = 0.0
                         conteo_series[serie] = 0
                         # Solo guardamos el valor de api_almacen_id la primera vez que vemos la serie
-                        data_serie_api[serie] = str(row[col_api]).strip() if not pd.isna(row[col_api]) else ""
+                        data_serie_api[serie] = api_value
 
                     data_serie_total[serie] += total
                     data_serie_igv[serie] += igv
                     conteo_series[serie] += 1
 
                     # Creamos una clave única basada en producto y api_almacen_id
-                    api_value = str(row[col_api]).strip() if not pd.isna(row[col_api]) else ""
                     producto_key = (producto, api_value)
                     
                     # Inicializamos los contadores si es la primera vez que vemos este producto con este api_value
@@ -214,7 +221,7 @@ def procesar():
                         if archivo not in data_cantidad_archivo:
                             data_cantidad_archivo[archivo] = 0.0
                             data_archivo_serie[archivo] = set()
-                            data_archivo_api[archivo] = str(row[col_api]).strip() if not pd.isna(row[col_api]) else ""
+                            data_archivo_api[archivo] = api_value
                         data_cantidad_archivo[archivo] += 1
                         data_archivo_serie[archivo].add(serie)
                 except Exception:
@@ -406,8 +413,6 @@ def verificar():
         'status': 'success',
         'resultados': registros
     }), 200
-
-    
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000, debug=False)

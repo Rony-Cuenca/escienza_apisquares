@@ -209,7 +209,7 @@ class Cuadre
         return $resumen;
     }
 
-    public static function obtenerTotalesPorTipoComprobanteExcluyendoAjenas($mes)
+    public static function obtenerTotalesPorTipoComprobanteExcluyendoAjenas($mes, $id_establecimiento = null)
     {
         $conn = Conexion::conectar();
         $id_cliente = $_SESSION['id_cliente'] ?? null;
@@ -228,10 +228,22 @@ class Cuadre
             AND sa.estado = 1
             AND DATE_FORMAT(sa.fecha_registro, '%Y-%m') = ?
         )
-        GROUP BY rc.tipo_comprobante, rc.id_reporte
         ";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("siis", $mes, $id_cliente, $id_cliente, $mes);
+
+        if ($id_establecimiento) {
+            $sql .= " AND rc.id_establecimiento = ?";
+        }
+
+        $sql .= " GROUP BY rc.tipo_comprobante, rc.id_reporte";
+
+        if ($id_establecimiento) {
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("siisi", $mes, $id_cliente, $id_cliente, $mes, $id_establecimiento);
+        } else {
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("siis", $mes, $id_cliente, $id_cliente, $mes);
+        }
+
         $stmt->execute();
         $result = $stmt->get_result();
         $totales = [];

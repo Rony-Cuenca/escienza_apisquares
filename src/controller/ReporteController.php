@@ -273,6 +273,12 @@ class ReporteController
         $fechaActual = date('Y-m-d');
         $nombreMes = $this->obtenerNombreMes($mesSeleccionado, $mesesDisponibles);
 
+        $razonSocialCliente = '';
+        if ($id_cliente) {
+            $cliente = \Establecimiento::obtenerClientePorId($id_cliente);
+            $razonSocialCliente = $cliente['razon_social'] ?? '';
+        }
+
         if ($esGlobal) {
             $rucEstablecimiento = '';
             $nombreEstablecimiento = '';
@@ -290,7 +296,7 @@ class ReporteController
             ob_start();
             include __DIR__ . '/../view/components/reporte_pdf.php';
             $htmlFinal = ob_get_clean();
-            $nombreArchivo = "Reporte_Global_{$nombreMes}_{$fechaActual}.pdf";
+            $nombreArchivo = "{$razonSocialCliente} - {$nombreMes}.pdf";
         } else if (empty($id_establecimientos)) {
             $id_establecimiento = $_GET['id_establecimiento'] ?? '';
             $rucEstablecimiento = '';
@@ -323,12 +329,12 @@ class ReporteController
             include __DIR__ . '/../view/components/reporte_pdf.php';
             $htmlFinal = ob_get_clean();
             $nombreArchivo = $id_establecimiento
-                ? "Reporte {$nombreEstablecimiento} - {$nombreMes} - {$fechaActual}.pdf"
-                : "Reporte General {$nombreEstablecimiento} - {$nombreMes} - {$fechaActual}.pdf";
+                ? "{$razonSocialCliente} - {$nombreMes}.pdf"
+                : "{$razonSocialCliente} - {$nombreMes}.pdf";
         } else {
             foreach ($id_establecimientos as $id_estab) {
                 $establecimiento = \Establecimiento::obtenerEstablecimiento($id_estab);
-                $nombreEstablecimiento = $establecimiento['etiqueta'] ?? '';
+                $nombreEstablecimiento = $establecimiento['etiqueta'] ?? 'Establecimiento';
                 $id_cliente = $establecimiento['id_cliente'] ?? null;
                 $rucEstablecimiento = '';
                 if ($id_cliente) {
@@ -351,7 +357,7 @@ class ReporteController
                     }
                 }
             }
-            $nombreArchivo = "Reporte_{$nombreMes}_{$fechaActual}.pdf";
+            $nombreArchivo = "{$razonSocialCliente} - {$nombreMes}.pdf";
         }
 
         $dompdf = new \Dompdf\Dompdf();
@@ -375,7 +381,6 @@ class ReporteController
         $this->verificarSesion();
         $this->verificarPermisosGeneracion();
 
-
         $mesSeleccionado = $_GET['mes'] ?? '';
         $mesesDisponibles = Cuadre::obtenerMesesDisponibles();
         $usuarioNombre = SesionHelper::obtenerNombreUsuario();
@@ -388,6 +393,13 @@ class ReporteController
         $spreadsheet->removeSheetByIndex(0);
         $nombreMes = $this->obtenerNombreMes($mesSeleccionado, $mesesDisponibles);
         $fechaActual = date('d/m/Y H:i');
+
+        $razonSocialCliente = '';
+        $id_cliente = SesionHelper::obtenerClienteActual();
+        if ($id_cliente) {
+            $cliente = \Establecimiento::obtenerClientePorId($id_cliente);
+            $razonSocialCliente = $cliente['razon_social'] ?? '';
+        }
 
         $headerPrincipalStyle = [
             'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 16],
@@ -465,7 +477,6 @@ class ReporteController
         ];
 
         if ($esGlobal) {
-            $id_cliente = SesionHelper::obtenerClienteActual();
             $cliente = \Establecimiento::obtenerClientePorId($id_cliente);
             $rucEstablecimiento = $cliente['ruc'] ?? '';
             $nombreEstablecimiento = $cliente['razon_social'] ?? '';
@@ -529,7 +540,6 @@ class ReporteController
             $header = '&C&"Arial,Bold,10"REPORTE EJECUTIVO DE CONCILIACIÓN DE VENTAS';
             $sheet->getHeaderFooter()->setOddHeader($header);
         } else if (empty($id_establecimientos)) {
-            $id_cliente = SesionHelper::obtenerClienteActual();
             $cliente = \Establecimiento::obtenerClientePorId($id_cliente);
             $rucEstablecimiento = $cliente['ruc'] ?? '';
             $nombreEstablecimiento = $cliente['razon_social'] ?? '';
@@ -666,12 +676,13 @@ class ReporteController
         }
         $spreadsheet->setActiveSheetIndex(0);
         if ($esGlobal) {
-            $nombreArchivo = 'Reporte_Global_' . $nombreMes . '_' . date('Y-m-d') . '.xlsx';
+            $nombreArchivo = "{$razonSocialCliente} - {$nombreMes}.xlsx";
         } else if (empty($id_establecimientos)) {
-            $nombreArchivo = 'Reporte_General_' . $nombreMes . '_' . date('Y-m-d') . '.xlsx';
+            $nombreArchivo = "{$razonSocialCliente} - {$nombreMes}.xlsx";
         } else {
-            $nombreArchivo = 'Reporte_' . $nombreMes . '_' . date('Y-m-d') . '.xlsx';
+            $nombreArchivo = "{$razonSocialCliente} - {$nombreMes}.xlsx";
         }
+
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment;filename="' . $nombreArchivo . '"');
         header('Cache-Control: max-age=0');
@@ -1066,93 +1077,141 @@ class ReporteController
         $row = max($maxRowNubox, $maxRowEdsuite, $maxRowSire) + 1;
     }
 
-    private function SeccionResumenComprobante($sheet, &$row, $totalesTipoDoc, $yellowHeaderStyle, $greenTotalStyle, $redStyle, $borderStyle)
+    private function SeccionResumenComprobante($sheet, &$row, $totalesTipoDoc, $yellowHeaderStyle, $greenTotalStyle, $redStyle, $borderStyle, $infoStyle = null)
     {
         $startRow = $row;
-        $monedaFormat = '"S/. "#,##0.00; "S/. -"#,##0.00;"S/. "0.00';
+        $monedaFormat = '"S/. "#,##0.00;"S/. -"#,##0.00;"S/. "0.00';
 
-        // FACTURAS (C-D)
+        // FACTURAS
         $sheet->setCellValue("C$startRow", "FACTURAS");
         $sheet->mergeCells("C$startRow:D$startRow");
         $sheet->getStyle("C$startRow:D$startRow")->applyFromArray($yellowHeaderStyle);
 
-        $sheet->setCellValue("C" . ($startRow + 1), "SIRE");
-        $valorSIREFact = isset($totalesTipoDoc[2][2]) ? $totalesTipoDoc[2][2] : 0;
-        $sheet->setCellValue("D" . ($startRow + 1), $valorSIREFact);
-        $sheet->getStyle("D" . ($startRow + 1))->getNumberFormat()->setFormatCode($monedaFormat);
-        $sheet->getStyle("C" . ($startRow + 1) . ":D" . ($startRow + 1))->applyFromArray($borderStyle);
+        $currentRow = $startRow + 1;
 
-        $sheet->setCellValue("C" . ($startRow + 2), "NUBOX");
-        $valorNUBOXFact = isset($totalesTipoDoc[2][1]) ? $totalesTipoDoc[2][1] : 0;
-        $sheet->setCellValue("D" . ($startRow + 2), $valorNUBOXFact);
-        $sheet->getStyle("D" . ($startRow + 2))->getNumberFormat()->setFormatCode($monedaFormat);
-        $sheet->getStyle("C" . ($startRow + 2) . ":D" . ($startRow + 2))->applyFromArray($borderStyle);
+        // SIRE
+        $facturaSIRE = isset($totalesTipoDoc[2][2]) ? $totalesTipoDoc[2][2] : 0;
+        $sheet->setCellValue("C$currentRow", "SIRE");
+        $sheet->setCellValue("D$currentRow", number_format($facturaSIRE, 2, '.', ''));
+        $sheet->getStyle("D$currentRow")->getNumberFormat()->setFormatCode($monedaFormat);
+        $sheet->getStyle("C$currentRow:D$currentRow")->applyFromArray($borderStyle);
+        $currentRow++;
 
-        $faltanteFact = $valorSIREFact - $valorNUBOXFact;
-        $sheet->setCellValue("C" . ($startRow + 3), "FALTANTE");
-        $sheet->setCellValue("D" . ($startRow + 3), $faltanteFact);
-        $sheet->getStyle("D" . ($startRow + 3))->getNumberFormat()->setFormatCode($monedaFormat);
-        if ($faltanteFact == 0) {
-            $sheet->getStyle("C" . ($startRow + 3) . ":D" . ($startRow + 3))->applyFromArray($greenTotalStyle);
+        // NUBOX
+        $facturaNUBOX = isset($totalesTipoDoc[2][1]) ? $totalesTipoDoc[2][1] : 0;
+        $sheet->setCellValue("C$currentRow", "NUBOX");
+        $sheet->setCellValue("D$currentRow", number_format($facturaNUBOX, 2, '.', ''));
+        $sheet->getStyle("D$currentRow")->getNumberFormat()->setFormatCode($monedaFormat);
+        $sheet->getStyle("C$currentRow:D$currentRow")->applyFromArray($borderStyle);
+        $currentRow++;
+
+        // EDSUITE
+        $facturaEDSUITE = isset($totalesTipoDoc[2][3]) ? $totalesTipoDoc[2][3] : 0;
+        $sheet->setCellValue("C$currentRow", "EDSUITE");
+        $sheet->setCellValue("D$currentRow", number_format($facturaEDSUITE, 2, '.', ''));
+        $sheet->getStyle("D$currentRow")->getNumberFormat()->setFormatCode($monedaFormat);
+        $sheet->getStyle("C$currentRow:D$currentRow")->applyFromArray($borderStyle);
+        $currentRow++;
+
+        // FALTANTE
+        $faltanteFact = $facturaSIRE - $facturaNUBOX;
+        $sheet->setCellValue("C$currentRow", "FALTANTE");
+        $sheet->setCellValue("D$currentRow", number_format($faltanteFact, 2, '.', ''));
+        $sheet->getStyle("D$currentRow")->getNumberFormat()->setFormatCode($monedaFormat);
+
+        if ($faltanteFact != 0) {
+            $sheet->getStyle("C$currentRow:D$currentRow")->applyFromArray($redStyle);
         } else {
-            $sheet->getStyle("C" . ($startRow + 3) . ":D" . ($startRow + 3))->applyFromArray($redStyle);
+            $sheet->getStyle("C$currentRow:D$currentRow")->applyFromArray($greenTotalStyle);
         }
 
-        // BOLETAS (G-H)
-        $sheet->setCellValue("G$startRow", "BOLETAS");
-        $sheet->mergeCells("G$startRow:H$startRow");
-        $sheet->getStyle("G$startRow:H$startRow")->applyFromArray($yellowHeaderStyle);
+        // BOLETAS (columnas F-G)
+        $sheet->setCellValue("F$startRow", "BOLETAS");
+        $sheet->mergeCells("F$startRow:G$startRow");
+        $sheet->getStyle("F$startRow:G$startRow")->applyFromArray($yellowHeaderStyle);
 
-        $sheet->setCellValue("G" . ($startRow + 1), "SIRE");
-        $valorSIREBol = isset($totalesTipoDoc[1][2]) ? $totalesTipoDoc[1][2] : 0;
-        $sheet->setCellValue("H" . ($startRow + 1), $valorSIREBol);
-        $sheet->getStyle("H" . ($startRow + 1))->getNumberFormat()->setFormatCode($monedaFormat);
-        $sheet->getStyle("G" . ($startRow + 1) . ":H" . ($startRow + 1))->applyFromArray($borderStyle);
+        $currentRowBoletas = $startRow + 1;
 
-        $sheet->setCellValue("G" . ($startRow + 2), "NUBOX");
-        $valorNUBOXBol = isset($totalesTipoDoc[1][1]) ? $totalesTipoDoc[1][1] : 0;
-        $sheet->setCellValue("H" . ($startRow + 2), $valorNUBOXBol);
-        $sheet->getStyle("H" . ($startRow + 2))->getNumberFormat()->setFormatCode($monedaFormat);
-        $sheet->getStyle("G" . ($startRow + 2) . ":H" . ($startRow + 2))->applyFromArray($borderStyle);
+        // SIRE Boletas
+        $boletaSIRE = isset($totalesTipoDoc[1][2]) ? $totalesTipoDoc[1][2] : 0;
+        $sheet->setCellValue("F$currentRowBoletas", "SIRE");
+        $sheet->setCellValue("G$currentRowBoletas", number_format($boletaSIRE, 2, '.', ''));
+        $sheet->getStyle("G$currentRowBoletas")->getNumberFormat()->setFormatCode($monedaFormat);
+        $sheet->getStyle("F$currentRowBoletas:G$currentRowBoletas")->applyFromArray($borderStyle);
+        $currentRowBoletas++;
 
-        $faltanteBoleta = $valorSIREBol - $valorNUBOXBol;
-        $sheet->setCellValue("G" . ($startRow + 3), "FALTANTE");
-        $sheet->setCellValue("H" . ($startRow + 3), $faltanteBoleta);
-        $sheet->getStyle("H" . ($startRow + 3))->getNumberFormat()->setFormatCode($monedaFormat);
-        if ($faltanteBoleta == 0) {
-            $sheet->getStyle("G" . ($startRow + 3) . ":H" . ($startRow + 3))->applyFromArray($greenTotalStyle);
+        // NUBOX Boletas
+        $boletaNUBOX = isset($totalesTipoDoc[1][1]) ? $totalesTipoDoc[1][1] : 0;
+        $sheet->setCellValue("F$currentRowBoletas", "NUBOX");
+        $sheet->setCellValue("G$currentRowBoletas", number_format($boletaNUBOX, 2, '.', ''));
+        $sheet->getStyle("G$currentRowBoletas")->getNumberFormat()->setFormatCode($monedaFormat);
+        $sheet->getStyle("F$currentRowBoletas:G$currentRowBoletas")->applyFromArray($borderStyle);
+        $currentRowBoletas++;
+
+        // EDSUITE Boletas
+        $boletaEDSUITE = isset($totalesTipoDoc[1][3]) ? $totalesTipoDoc[1][3] : 0;
+        $sheet->setCellValue("F$currentRowBoletas", "EDSUITE");
+        $sheet->setCellValue("G$currentRowBoletas", number_format($boletaEDSUITE, 2, '.', ''));
+        $sheet->getStyle("G$currentRowBoletas")->getNumberFormat()->setFormatCode($monedaFormat);
+        $sheet->getStyle("F$currentRowBoletas:G$currentRowBoletas")->applyFromArray($borderStyle);
+        $currentRowBoletas++;
+
+        // FALTANTE Boletas
+        $faltanteBol = $boletaSIRE - $boletaNUBOX;
+        $sheet->setCellValue("F$currentRowBoletas", "FALTANTE");
+        $sheet->setCellValue("G$currentRowBoletas", number_format($faltanteBol, 2, '.', ''));
+        $sheet->getStyle("G$currentRowBoletas")->getNumberFormat()->setFormatCode($monedaFormat);
+
+        if ($faltanteBol != 0) {
+            $sheet->getStyle("F$currentRowBoletas:G$currentRowBoletas")->applyFromArray($redStyle);
         } else {
-            $sheet->getStyle("G" . ($startRow + 3) . ":H" . ($startRow + 3))->applyFromArray($redStyle);
+            $sheet->getStyle("F$currentRowBoletas:G$currentRowBoletas")->applyFromArray($greenTotalStyle);
         }
 
-        // NOTAS DE CRÉDITO (K-L)
-        $sheet->setCellValue("K$startRow", "NOTAS DE CRÉDITO");
-        $sheet->mergeCells("K$startRow:L$startRow");
-        $sheet->getStyle("K$startRow:L$startRow")->applyFromArray($yellowHeaderStyle);
+        // NOTAS DE CRÉDITO (columnas I-J)
+        $sheet->setCellValue("I$startRow", "NOTAS DE CRÉDITO");
+        $sheet->mergeCells("I$startRow:J$startRow");
+        $sheet->getStyle("I$startRow:J$startRow")->applyFromArray($yellowHeaderStyle);
 
-        $sheet->setCellValue("K" . ($startRow + 1), "SIRE");
-        $valorSIRENota = isset($totalesTipoDoc[3][2]) ? $totalesTipoDoc[3][2] : 0;
-        $sheet->setCellValue("L" . ($startRow + 1), $valorSIRENota);
-        $sheet->getStyle("L" . ($startRow + 1))->getNumberFormat()->setFormatCode($monedaFormat);
-        $sheet->getStyle("K" . ($startRow + 1) . ":L" . ($startRow + 1))->applyFromArray($borderStyle);
+        $currentRowNotas = $startRow + 1;
 
-        $sheet->setCellValue("K" . ($startRow + 2), "NUBOX");
-        $valorNUBOXNota = isset($totalesTipoDoc[3][1]) ? $totalesTipoDoc[3][1] : 0;
-        $sheet->setCellValue("L" . ($startRow + 2), $valorNUBOXNota);
-        $sheet->getStyle("L" . ($startRow + 2))->getNumberFormat()->setFormatCode($monedaFormat);
-        $sheet->getStyle("K" . ($startRow + 2) . ":L" . ($startRow + 2))->applyFromArray($borderStyle);
+        // SIRE Notas
+        $notaSIRE = isset($totalesTipoDoc[3][2]) ? $totalesTipoDoc[3][2] : 0;
+        $sheet->setCellValue("I$currentRowNotas", "SIRE");
+        $sheet->setCellValue("J$currentRowNotas", number_format($notaSIRE, 2, '.', ''));
+        $sheet->getStyle("J$currentRowNotas")->getNumberFormat()->setFormatCode($monedaFormat);
+        $sheet->getStyle("I$currentRowNotas:J$currentRowNotas")->applyFromArray($borderStyle);
+        $currentRowNotas++;
 
-        $faltanteNota = $valorSIRENota - $valorNUBOXNota;
-        $sheet->setCellValue("K" . ($startRow + 3), "FALTANTE");
-        $sheet->setCellValue("L" . ($startRow + 3), $faltanteNota);
-        $sheet->getStyle("L" . ($startRow + 3))->getNumberFormat()->setFormatCode($monedaFormat);
-        if ($faltanteNota == 0) {
-            $sheet->getStyle("K" . ($startRow + 3) . ":L" . ($startRow + 3))->applyFromArray($greenTotalStyle);
+        // NUBOX Notas
+        $notaNUBOX = isset($totalesTipoDoc[3][1]) ? $totalesTipoDoc[3][1] : 0;
+        $sheet->setCellValue("I$currentRowNotas", "NUBOX");
+        $sheet->setCellValue("J$currentRowNotas", number_format($notaNUBOX, 2, '.', ''));
+        $sheet->getStyle("J$currentRowNotas")->getNumberFormat()->setFormatCode($monedaFormat);
+        $sheet->getStyle("I$currentRowNotas:J$currentRowNotas")->applyFromArray($borderStyle);
+        $currentRowNotas++;
+
+        // EDSUITE Notas
+        $notaEDSUITE = isset($totalesTipoDoc[3][3]) ? $totalesTipoDoc[3][3] : 0;
+        $sheet->setCellValue("I$currentRowNotas", "EDSUITE");
+        $sheet->setCellValue("J$currentRowNotas", number_format($notaEDSUITE, 2, '.', ''));
+        $sheet->getStyle("J$currentRowNotas")->getNumberFormat()->setFormatCode($monedaFormat);
+        $sheet->getStyle("I$currentRowNotas:J$currentRowNotas")->applyFromArray($borderStyle);
+        $currentRowNotas++;
+
+        // FALTANTE Notas
+        $faltanteNota = $notaSIRE - $notaNUBOX;
+        $sheet->setCellValue("I$currentRowNotas", "FALTANTE");
+        $sheet->setCellValue("J$currentRowNotas", number_format($faltanteNota, 2, '.', ''));
+        $sheet->getStyle("J$currentRowNotas")->getNumberFormat()->setFormatCode($monedaFormat);
+
+        if ($faltanteNota != 0) {
+            $sheet->getStyle("I$currentRowNotas:J$currentRowNotas")->applyFromArray($redStyle);
         } else {
-            $sheet->getStyle("K" . ($startRow + 3) . ":L" . ($startRow + 3))->applyFromArray($redStyle);
+            $sheet->getStyle("I$currentRowNotas:J$currentRowNotas")->applyFromArray($greenTotalStyle);
         }
 
-        $row = $startRow + 4;
+        $row = max($currentRow, $currentRowBoletas, $currentRowNotas) + 2;
     }
 
     private function SeccionReportesGlobales($sheet, &$row, $cuadresNUBOX, $seriesAjenas, $ventasGlobales, $mesSeleccionado, $seriesEdSuite, $yellowHeaderStyle, $blueHeaderStyle, $greenTotalStyle, $borderStyle, $redStyle)
@@ -1424,7 +1483,7 @@ class ReporteController
         $sheet->setCellValue($col++ . ($startRow + 1), "TOTAL SIRE");
         $sheet->setCellValue($col++ . ($startRow + 1), "TOTAL NUBOX");
         $sheet->setCellValue($col++ . ($startRow + 1), "ESTADO SIRE");
-        $sheet->setCellValue($col++ . ($startRow + 1), "ESTADO NUBOX");
+        $sheet->setCellValue($col++ . ($startRow + 1), "ESTADO NUBOX/SUNAT");
         $sheet->getStyle("C" . ($startRow + 1) . ":{$lastCol}" . ($startRow + 1))->applyFromArray($blueHeaderStyle);
 
         $currentRow = $startRow + 2;

@@ -526,6 +526,7 @@ date_default_timezone_set('America/Lima');
                                     <?php
                                     $facturaSIRE = isset($totalesTipoDoc[2][2]) ? (float)$totalesTipoDoc[2][2] : 0;
                                     $facturaNUBOX = isset($totalesTipoDoc[2][1]) ? (float)$totalesTipoDoc[2][1] : 0;
+                                    $facturaEDSUITE = isset($totalesTipoDoc[2][3]) ? (float)$totalesTipoDoc[2][3] : 0;
                                     $faltanteFact = $facturaSIRE - $facturaNUBOX;
                                     ?>
                                     <tr>
@@ -535,6 +536,10 @@ date_default_timezone_set('America/Lima');
                                     <tr>
                                         <th class="fw-bold" style="background:var(--color-azul-oscuro); color:var(--color-blanco);">NUBOX</th>
                                         <td class="text-right">S/. <?= number_format($facturaNUBOX, 2) ?></td>
+                                    </tr>
+                                    <tr>
+                                        <th class="fw-bold" style="background:var(--color-azul-oscuro); color:var(--color-blanco);">EDSUITE</th>
+                                        <td class="text-right">S/. <?= number_format($facturaEDSUITE, 2) ?></td>
                                     </tr>
                                     <tr>
                                         <th class="fw-bold" style="background:<?= ($faltanteFact != 0 ? '#E54B4B' : '#3F7D20') ?> !important; color:#fff !important;">FALTANTE</th>
@@ -553,6 +558,7 @@ date_default_timezone_set('America/Lima');
                                     <?php
                                     $boletaSIRE = isset($totalesTipoDoc[1][2]) ? (float)$totalesTipoDoc[1][2] : 0;
                                     $boletaNUBOX = isset($totalesTipoDoc[1][1]) ? (float)$totalesTipoDoc[1][1] : 0;
+                                    $boletaEDSUITE = isset($totalesTipoDoc[1][3]) ? (float)$totalesTipoDoc[1][3] : 0;
                                     $faltanteBoleta = $boletaSIRE - $boletaNUBOX;
                                     ?>
                                     <tr>
@@ -562,6 +568,10 @@ date_default_timezone_set('America/Lima');
                                     <tr>
                                         <th class="fw-bold" style="background:var(--color-azul-oscuro); color:var(--color-blanco);">NUBOX</th>
                                         <td class="text-right">S/. <?= number_format($boletaNUBOX, 2) ?></td>
+                                    </tr>
+                                    <tr>
+                                        <th class="fw-bold" style="background:var(--color-azul-oscuro); color:var(--color-blanco);">EDSUITE</th>
+                                        <td class="text-right">S/. <?= number_format($boletaEDSUITE, 2) ?></td>
                                     </tr>
                                     <tr>
                                         <th class="fw-bold" style="background:<?= ($faltanteBoleta != 0 ? '#E54B4B' : '#3F7D20') ?> !important; color:#fff !important;">FALTANTE</th>
@@ -580,6 +590,7 @@ date_default_timezone_set('America/Lima');
                                     <?php
                                     $notaSIRE = isset($totalesTipoDoc[3][2]) ? (float)$totalesTipoDoc[3][2] : 0;
                                     $notaNUBOX = isset($totalesTipoDoc[3][1]) ? (float)$totalesTipoDoc[3][1] : 0;
+                                    $notaEDSUITE = isset($totalesTipoDoc[3][3]) ? (float)$totalesTipoDoc[3][3] : 0;
                                     $faltanteNota = $notaSIRE - $notaNUBOX;
                                     ?>
                                     <tr>
@@ -589,6 +600,10 @@ date_default_timezone_set('America/Lima');
                                     <tr>
                                         <th class="fw-bold" style="background:var(--color-azul-oscuro); color:var(--color-blanco);">NUBOX</th>
                                         <td class="text-right">S/. <?= number_format($notaNUBOX, 2) ?></td>
+                                    </tr>
+                                    <tr>
+                                        <th class="fw-bold" style="background:var(--color-azul-oscuro); color:var(--color-blanco);">EDSUITE</th>
+                                        <td class="text-right">S/. <?= number_format($notaEDSUITE, 2) ?></td>
                                     </tr>
                                     <tr>
                                         <th class="fw-bold" style="background:<?= ($faltanteNota != 0 ? '#E54B4B' : '#3F7D20') ?> !important; color:#fff !important;">FALTANTE</th>
@@ -798,7 +813,7 @@ date_default_timezone_set('America/Lima');
                                 <th>Total SIRE</th>
                                 <th>Total NUBOX</th>
                                 <th>Estado SIRE</th>
-                                <th>Estado NUBOX</th>
+                                <th>Estado NUBOX/SUNAT</th>
                             </tr>
                         </thead>
                         <tbody>

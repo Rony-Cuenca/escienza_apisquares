@@ -208,6 +208,12 @@
                                                 </tr>
                                             <?php endforeach; ?>
                                         </tbody>
+                                        <tfoot class="bg-gray-100">
+                                            <tr>
+                                                <td class="border border-gray-300 px-3 py-2 text-gray-900 text-center font-bold whitespace-nowrap" colspan="3">Total:</td>
+                                                <td class="border border-gray-300 px-3 py-2 text-gray-900 text-center font-bold whitespace-nowrap">S/. <?php echo number_format(array_sum(array_column($ResultsValidarSeries, 'total')), 2); ?></td>
+                                            </tr>
+                                        </tfoot>
                                     </table>
                                 </div>
                             </div>
@@ -253,6 +259,15 @@
                                                 </tr>
                                             <?php endforeach; ?>
                                         </tbody>
+                                        <tfoot class="bg-gray-100">
+                                            <tr>
+                                                <td class="border border-gray-300 px-3 py-2 text-gray-900 text-center font-bold whitespace-nowrap" colspan="2">Total</td>
+                                                <td class="border border-gray-300 px-3 py-2 text-gray-900 text-center font-bold whitespace-nowrap">S/. <?php echo number_format(array_sum(array_map(function($item){return $item['sire']['total'] ?? 0;}, $diferenciaGlobales)), 2); ?></td>
+                                                <td class="border border-gray-300 px-3 py-2 text-gray-900 text-center font-bold whitespace-nowrap"></td>
+                                                <td class="border border-gray-300 px-3 py-2 text-gray-900 text-center font-bold whitespace-nowrap">S/. <?php echo number_format(array_sum(array_map(function($item){return $item['nubox']['total'] ?? 0;}, $diferenciaGlobales)), 2); ?></td>
+                                                <td class="border border-gray-300 px-3 py-2 text-gray-900 text-center font-bold whitespace-nowrap"></td>
+                                            </tr>
+                                        </tfoot>
                                     </table>
                                 </div>
                             </div>

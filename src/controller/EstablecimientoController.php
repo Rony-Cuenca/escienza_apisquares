@@ -382,7 +382,7 @@ class EstablecimientoController
 
     private function consultarApiFactiliza($ruc)
     {
-        if (empty(ApiConfig::FACTILIZA_TOKEN)) {
+        if (empty(ApiConfig::PERUDEV_TOKEN)) {
             return [
                 'success' => false,
                 'error' => 'Token de API no configurado. Contacte al administrador.'
@@ -438,7 +438,7 @@ class EstablecimientoController
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_CUSTOMREQUEST => "GET",
             CURLOPT_HTTPHEADER => [
-                "Authorization: Bearer " . ApiConfig::FACTILIZA_TOKEN,
+                "Authorization: Bearer " . ApiConfig::PERUDEV_TOKEN,
                 "Content-Type: application/json"
             ],
             CURLOPT_SSL_VERIFYPEER => false,

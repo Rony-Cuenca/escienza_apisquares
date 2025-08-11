@@ -232,26 +232,26 @@ unset($_SESSION['errores'], $_SESSION['form_data']);
                                                 </button>
                                             </div>
                                             <div>
-                                            <?php if ($cliente['estado'] != 3): ?>
-                                                <button type="button"
-                                                    class="inline-flex items-center gap-1 px-3 py-1.5 bg-red-700 hover:bg-red-800 text-white text-xs font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md w-full justify-center"
-                                                    title="Deshabilitar cliente"
-                                                    onclick="cambiarEstadoCliente(<?= $cliente['id'] ?>, 3)">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M18 6L6 18" />
-                                                        <circle cx="12" cy="12" r="9" />
-                                                    </svg>
-                                                </button>
-                                            <?php else: ?>
-                                                <button type="button"
-                                                    class="inline-flex items-center gap-1 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md w-full justify-center"
-                                                    title="Habilitar cliente"
-                                                    onclick="cambiarEstadoCliente(<?= $cliente['id'] ?>, 1)">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                                                    </svg>
-                                                </button>
-                                            <?php endif; ?>
+                                                <?php if ($cliente['estado'] != 3): ?>
+                                                    <button type="button"
+                                                        class="inline-flex items-center gap-1 px-3 py-1.5 bg-red-700 hover:bg-red-800 text-white text-xs font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md w-full justify-center"
+                                                        title="Deshabilitar cliente"
+                                                        onclick="cambiarEstadoCliente(<?= $cliente['id'] ?>, 3)">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M18 6L6 18" />
+                                                            <circle cx="12" cy="12" r="9" />
+                                                        </svg>
+                                                    </button>
+                                                <?php else: ?>
+                                                    <button type="button"
+                                                        class="inline-flex items-center gap-1 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md w-full justify-center"
+                                                        title="Habilitar cliente"
+                                                        onclick="cambiarEstadoCliente(<?= $cliente['id'] ?>, 1)">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                                        </svg>
+                                                    </button>
+                                                <?php endif; ?>
                                             </div>
                                         </div>
                                     </td>
@@ -457,20 +457,29 @@ unset($_SESSION['errores'], $_SESSION['form_data']);
                         </div>
                     </div>
 
-                    <!-- Información adicional -->
-                    <div id="infoEstablecimientos" class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                        <div class="flex">
-                            <div class="flex-shrink-0">
-                                <svg class="h-5 w-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m-1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
+                    <!-- Estado y Condición (Solo visual) -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Estado del Contribuyente
+                            </label>
+                            <div id="estadoContribuyente" class="flex items-center px-4 py-3 bg-gray-50 rounded-lg border border-gray-200">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-3 h-3 bg-gray-400 rounded-full"></div>
+                                    <span class="text-gray-500 font-medium">No consultado</span>
+                                </div>
                             </div>
-                            <div class="ml-3">
-                                <h3 class="text-sm font-medium text-blue-800">Información importante</h3>
-                                <p class="mt-1 text-sm text-blue-700">
-                                    • Use el botón 🔍 para consultar RUC y autocompletar datos básicos<br>
-                                    • Se creará automáticamente un <strong>establecimiento principal</strong> con código "0000"<br>
-                                </p>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Condición del Contribuyente
+                            </label>
+                            <div id="condicionContribuyente" class="flex items-center px-4 py-3 bg-gray-50 rounded-lg border border-gray-200">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-3 h-3 bg-gray-400 rounded-full"></div>
+                                    <span class="text-gray-500 font-medium">No consultado</span>
+                                </div>
                             </div>
                         </div>
                     </div>
