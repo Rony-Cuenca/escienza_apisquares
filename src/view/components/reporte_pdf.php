@@ -523,17 +523,27 @@ date_default_timezone_set('America/Lima');
                             <div class="tabla-titulo nubox-header">FACTURAS</div>
                             <table>
                                 <tbody>
+                                    <?php
+                                    $facturaSIRE = isset($totalesTipoDoc[2][2]) ? (float)$totalesTipoDoc[2][2] : 0;
+                                    $facturaNUBOX = isset($totalesTipoDoc[2][1]) ? (float)$totalesTipoDoc[2][1] : 0;
+                                    $facturaEDSUITE = isset($totalesTipoDoc[2][3]) ? (float)$totalesTipoDoc[2][3] : 0;
+                                    $faltanteFact = $facturaSIRE - $facturaNUBOX;
+                                    ?>
                                     <tr>
-                                        <td class="label-cell">SIRE</td>
-                                        <td class="value-cell">S/. <?= isset($totalesTipoDoc[2][2]) ? number_format($totalesTipoDoc[2][2], 2) : '0.00' ?></td>
+                                        <th class="fw-bold" style="background:var(--color-azul-oscuro); color:var(--color-blanco);">SIRE</th>
+                                        <td class="text-right">S/. <?= number_format($facturaSIRE, 2) ?></td>
                                     </tr>
                                     <tr>
-                                        <td class="label-cell">NUBOX</td>
-                                        <td class="value-cell">S/. <?= isset($totalesTipoDoc[2][1]) ? number_format($totalesTipoDoc[2][1], 2) : '0.00' ?></td>
+                                        <th class="fw-bold" style="background:var(--color-azul-oscuro); color:var(--color-blanco);">NUBOX</th>
+                                        <td class="text-right">S/. <?= number_format($facturaNUBOX, 2) ?></td>
                                     </tr>
                                     <tr>
-                                        <td class="label-cell">EDSUITE</td>
-                                        <td class="value-cell">S/. <?= isset($totalesTipoDoc[2][3]) ? number_format($totalesTipoDoc[2][3], 2) : '0.00' ?></td>
+                                        <th class="fw-bold" style="background:var(--color-azul-oscuro); color:var(--color-blanco);">EDSUITE</th>
+                                        <td class="text-right">S/. <?= number_format($facturaEDSUITE, 2) ?></td>
+                                    </tr>
+                                    <tr>
+                                        <th class="fw-bold" style="background:<?= ($faltanteFact != 0 ? '#E54B4B' : '#3F7D20') ?> !important; color:#fff !important;">FALTANTE</th>
+                                        <td class="text-right fw-bold" style="background:<?= ($faltanteFact != 0 ? '#E54B4B' : '#3F7D20') ?> !important; color:#fff !important;">S/. <?= number_format($faltanteFact, 2) ?></td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -545,17 +555,27 @@ date_default_timezone_set('America/Lima');
                             <div class="tabla-titulo nubox-header">BOLETAS</div>
                             <table>
                                 <tbody>
+                                    <?php
+                                    $boletaSIRE = isset($totalesTipoDoc[1][2]) ? (float)$totalesTipoDoc[1][2] : 0;
+                                    $boletaNUBOX = isset($totalesTipoDoc[1][1]) ? (float)$totalesTipoDoc[1][1] : 0;
+                                    $boletaEDSUITE = isset($totalesTipoDoc[1][3]) ? (float)$totalesTipoDoc[1][3] : 0;
+                                    $faltanteBoleta = $boletaSIRE - $boletaNUBOX;
+                                    ?>
                                     <tr>
-                                        <td class="label-cell">SIRE</td>
-                                        <td class="value-cell">S/. <?= isset($totalesTipoDoc[1][2]) ? number_format($totalesTipoDoc[1][2], 2) : '0.00' ?></td>
+                                        <th class="fw-bold" style="background:var(--color-azul-oscuro); color:var(--color-blanco);">SIRE</th>
+                                        <td class="text-right">S/. <?= number_format($boletaSIRE, 2) ?></td>
                                     </tr>
                                     <tr>
-                                        <td class="label-cell">NUBOX</td>
-                                        <td class="value-cell">S/. <?= isset($totalesTipoDoc[1][1]) ? number_format($totalesTipoDoc[1][1], 2) : '0.00' ?></td>
+                                        <th class="fw-bold" style="background:var(--color-azul-oscuro); color:var(--color-blanco);">NUBOX</th>
+                                        <td class="text-right">S/. <?= number_format($boletaNUBOX, 2) ?></td>
                                     </tr>
                                     <tr>
-                                        <td class="label-cell">EDSUITE</td>
-                                        <td class="value-cell">S/. <?= isset($totalesTipoDoc[1][3]) ? number_format($totalesTipoDoc[1][3], 2) : '0.00' ?></td>
+                                        <th class="fw-bold" style="background:var(--color-azul-oscuro); color:var(--color-blanco);">EDSUITE</th>
+                                        <td class="text-right">S/. <?= number_format($boletaEDSUITE, 2) ?></td>
+                                    </tr>
+                                    <tr>
+                                        <th class="fw-bold" style="background:<?= ($faltanteBoleta != 0 ? '#E54B4B' : '#3F7D20') ?> !important; color:#fff !important;">FALTANTE</th>
+                                        <td class="text-right fw-bold" style="background:<?= ($faltanteBoleta != 0 ? '#E54B4B' : '#3F7D20') ?> !important; color:#fff !important;">S/. <?= number_format($faltanteBoleta, 2) ?></td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -567,17 +587,27 @@ date_default_timezone_set('America/Lima');
                             <div class="tabla-titulo nubox-header">NOTAS DE CRÉDITO</div>
                             <table>
                                 <tbody>
+                                    <?php
+                                    $notaSIRE = isset($totalesTipoDoc[3][2]) ? (float)$totalesTipoDoc[3][2] : 0;
+                                    $notaNUBOX = isset($totalesTipoDoc[3][1]) ? (float)$totalesTipoDoc[3][1] : 0;
+                                    $notaEDSUITE = isset($totalesTipoDoc[3][3]) ? (float)$totalesTipoDoc[3][3] : 0;
+                                    $faltanteNota = $notaSIRE - $notaNUBOX;
+                                    ?>
                                     <tr>
-                                        <td class="label-cell">SIRE</td>
-                                        <td class="value-cell">S/. <?= isset($totalesTipoDoc[3][2]) ? number_format($totalesTipoDoc[3][2], 2) : '0.00' ?></td>
+                                        <th class="fw-bold" style="background:var(--color-azul-oscuro); color:var(--color-blanco);">SIRE</th>
+                                        <td class="text-right">S/. <?= number_format($notaSIRE, 2) ?></td>
                                     </tr>
                                     <tr>
-                                        <td class="label-cell">NUBOX</td>
-                                        <td class="value-cell">S/. <?= isset($totalesTipoDoc[3][1]) ? number_format($totalesTipoDoc[3][1], 2) : '0.00' ?></td>
+                                        <th class="fw-bold" style="background:var(--color-azul-oscuro); color:var(--color-blanco);">NUBOX</th>
+                                        <td class="text-right">S/. <?= number_format($notaNUBOX, 2) ?></td>
                                     </tr>
                                     <tr>
-                                        <td class="label-cell">EDSUITE</td>
-                                        <td class="value-cell">S/. <?= isset($totalesTipoDoc[3][3]) ? number_format($totalesTipoDoc[3][3], 2) : '0.00' ?></td>
+                                        <th class="fw-bold" style="background:var(--color-azul-oscuro); color:var(--color-blanco);">EDSUITE</th>
+                                        <td class="text-right">S/. <?= number_format($notaEDSUITE, 2) ?></td>
+                                    </tr>
+                                    <tr>
+                                        <th class="fw-bold" style="background:<?= ($faltanteNota != 0 ? '#E54B4B' : '#3F7D20') ?> !important; color:#fff !important;">FALTANTE</th>
+                                        <td class="text-right fw-bold" style="background:<?= ($faltanteNota != 0 ? '#E54B4B' : '#3F7D20') ?> !important; color:#fff !important;">S/. <?= number_format($faltanteNota, 2) ?></td>
                                     </tr>
                                 </tbody>
                             </table>
