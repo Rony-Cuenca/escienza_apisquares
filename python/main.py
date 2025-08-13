@@ -5,19 +5,24 @@ import os
 from datetime import datetime
 import tempfile
 import shutil
-import time
-import threading
 
 app = Flask(__name__)
 
-def limpiar_carpeta(carpeta, delay=10):
-    def limpiar():
-        time.sleep(delay)
+def limpiar_carpeta(carpeta):
+    if os.path.exists(carpeta):
         for archivo in os.listdir(carpeta):
             archivo_path = os.path.join(carpeta, archivo)
-            if os.path.isfile(archivo_path):
-                os.remove(archivo_path)
-    threading.Thread(target=limpiar).start()
+            try:
+                if os.path.isfile(archivo_path) or os.path.islink(archivo_path):
+                    os.unlink(archivo_path)
+                elif os.path.isdir(archivo_path):
+                    shutil.rmtree(archivo_path)
+            except Exception as e:
+                print(f"No se pudo eliminar {archivo_path}: {e}")
+
+EXTENSIONES_PERMITIDAS = {'xls', 'xlsx'}
+def extension_valida(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in EXTENSIONES_PERMITIDAS
 
 @app.route('/procesar', methods=['POST'])
 def procesar():
@@ -285,25 +290,33 @@ def procesar():
     except Exception as e:
         # Si algo falla, que lo capture acá también
         return jsonify({'status': 'error', 'message': f'Unexpected error: {str(e)}'}), 500
+
 @app.route('/unificar', methods=['POST'])
 def unificar_archivos():
-    archivos = [
-        request.files[key]
-        for key in request.files
-        if key.startswith('archivos[')
-    ]
-
-    if not archivos:
-        return jsonify({'error': 'No se enviaron archivos'}), 400
-
-    carpeta_destino = os.path.join(os.getcwd(), 'uploads/unificados')
-    os.makedirs(carpeta_destino, exist_ok=True)
-    temp_dir = tempfile.mkdtemp()
-    columnas_deseadas = ['Serie','Fecha', 'IGV', 'Total', 'Producto', 'Cantidad', 'api_almacen_id']
-
     try:
+        archivos = [
+            request.files[key]
+            for key in request.files
+            if key.startswith('archivos[')
+        ]
+
+        if not archivos:
+            return jsonify({'error': 'No se enviaron archivos'}), 400
+
+        carpeta_destino = os.path.join(os.getcwd(), 'uploads/unificados')
+        os.makedirs(carpeta_destino, exist_ok=True)
+        limpiar_carpeta(carpeta_destino)  # Limpia carpeta antes de guardar
+        temp_dir = tempfile.mkdtemp()
+        columnas_deseadas = ['Serie','Fecha', 'IGV', 'Total', 'Producto', 'Cantidad', 'api_almacen_id']
+
         dfs = []
         for archivo in archivos:
+            if not archivo.filename:
+                return jsonify({'error': 'Uno de los archivos no tiene nombre válido'}), 400
+
+            if not extension_valida(archivo.filename):
+                return jsonify({'error': f'El archivo {archivo.filename} tiene una extensión no permitida'}), 400
+
             nombre_seguro = secure_filename(archivo.filename)
             ruta_temporal = os.path.join(temp_dir, nombre_seguro)
             archivo.save(ruta_temporal)
@@ -313,7 +326,9 @@ def unificar_archivos():
             except Exception as e:
                 return jsonify({'error': f'No se pudo leer el archivo {archivo.filename}: {str(e)}'}), 400
 
-            # Filtrar solo las columnas deseadas (si existen en el archivo)
+            if df.empty:
+                return jsonify({'error': f'El archivo {archivo.filename} está vacío'}), 400
+
             columnas_presentes = [col for col in columnas_deseadas if col in df.columns]
             if not columnas_presentes:
                 return jsonify({'error': f'El archivo {archivo.filename} no tiene columnas válidas.'}), 400
@@ -322,9 +337,7 @@ def unificar_archivos():
             if df_filtrado.empty:
                 return jsonify({'error': f'El archivo {archivo.filename} no tiene datos válidos en las columnas seleccionadas.'}), 400
 
-
             df_filtrado["Archivo_Origen"] = archivo.filename
-
             dfs.append(df_filtrado)
 
         if not dfs:
@@ -337,20 +350,28 @@ def unificar_archivos():
         nombre_salida = f"excel_unificado_{int(datetime.now().timestamp())}.xlsx"
         ruta_salida = os.path.join(carpeta_destino, nombre_salida)
 
-        with pd.ExcelWriter(ruta_salida) as writer:
-            df_final.to_excel(writer, index=False, header=True, startrow=1)
+        try:
+            with pd.ExcelWriter(ruta_salida) as writer:
+                df_final.to_excel(writer, index=False, header=True, startrow=1)
+        except Exception as e:
+            return jsonify({'error': f'Error al guardar el archivo unificado: {str(e)}'}), 500
 
         return jsonify({'status': 'success', 'archivo': nombre_salida})
+
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        print(f"Error inesperado: {e}")
+        return jsonify({'error': f'Error interno del servidor: {str(e)}'}), 500
+
     finally:
-        shutil.rmtree(temp_dir, ignore_errors=True)  
+        shutil.rmtree(temp_dir, ignore_errors=True)
 
 @app.route('/descargas/<nombre_archivo>', methods=['GET'])
 def descargar_archivo(nombre_archivo):
-    carpeta_destino = os.path.join(os.getcwd(), 'uploads/unificados')
-    limpiar_carpeta(carpeta_destino)
-    return send_from_directory(carpeta_destino, nombre_archivo, as_attachment=True)
+    try:
+        carpeta_destino = os.path.join(os.getcwd(), 'uploads/unificados')
+        return send_from_directory(carpeta_destino, nombre_archivo, as_attachment=True)
+    except Exception as e:
+        return jsonify({'error': f'No se pudo descargar el archivo: {str(e)}'}), 500
 
 @app.route('/verificar', methods=['POST'])
 def verificar():
