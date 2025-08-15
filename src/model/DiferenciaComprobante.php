@@ -41,22 +41,27 @@ class DiferenciaComprobante
     public static function obtenerIncidencias($mes, $idEstablecimiento = null)
     {
         $conn = Conexion::conectar();
-        $params = [$mes];
+        $id_cliente = $_SESSION['id_cliente'] ?? null;
+
         $sql = "SELECT 
-        e.etiqueta AS establecimiento,
-        dc.serie,
-        dc.numero,
-        dc.total_sire,
-        dc.total_nubox,
-        dc.estado_sire,
-        dc.estado_nubox
-    FROM diferencia_comprobante dc
-    INNER JOIN establecimiento e ON e.id = dc.id_establecimiento
-    WHERE LEFT(dc.fecha_registro, 7) = ?";
-        if ($idEstablecimiento) {
+            e.etiqueta AS establecimiento,
+            dc.serie,
+            dc.numero,
+            dc.total_sire,
+            dc.total_nubox,
+            dc.estado_sire,
+            dc.estado_nubox
+        FROM diferencia_comprobante dc
+        INNER JOIN establecimiento e ON e.id = dc.id_establecimiento
+        WHERE LEFT(dc.fecha_registro, 7) = ? AND e.id_cliente = ?";
+
+        $params = [$mes, $id_cliente];
+
+        if ($idEstablecimiento !== null) {
             $sql .= " AND dc.id_establecimiento = ?";
             $params[] = $idEstablecimiento;
         }
+
         $sql .= " ORDER BY e.etiqueta, dc.serie, dc.numero";
         $stmt = $conn->prepare($sql);
         $stmt->execute($params);

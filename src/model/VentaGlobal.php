@@ -35,42 +35,52 @@ class VentaGlobal
     public static function obtenerPorMes($mesSeleccionado, $id_establecimiento)
     {
         $conn = Conexion::conectar();
+        $id_cliente = $_SESSION['id_cliente'] ?? null;
+
         if (empty($mesSeleccionado)) {
             $sql = "SELECT 
-                    producto,
-                    SUM(cantidad) as total_cantidad,
-                    SUM(total) as total_importe,
-                    COUNT(*) as cantidad_registros
-                FROM ventas_globales 
-                WHERE estado = 1";
-            if ($id_establecimiento) {
-                $sql .= " AND id_establecimiento = ?";
+                producto,
+                SUM(cantidad) as total_cantidad,
+                SUM(total) as total_importe,
+                COUNT(*) as cantidad_registros
+            FROM ventas_globales vg
+            INNER JOIN establecimiento e ON vg.id_establecimiento = e.id
+            WHERE vg.estado = 1 AND e.id_cliente = ?";
+
+            $params = [$id_cliente];
+
+            if ($id_establecimiento !== null) {
+                $sql .= " AND vg.id_establecimiento = ?";
+                $params[] = $id_establecimiento;
             }
+
             $sql .= " GROUP BY producto ORDER BY producto";
             $stmt = $conn->prepare($sql);
-            if ($id_establecimiento) {
-                $stmt->bind_param('i', $id_establecimiento);
-            }
+            $stmt->execute($params);
         } else {
             $sql = "SELECT 
-                    producto,
-                    SUM(cantidad) as total_cantidad,
-                    SUM(total) as total_importe,
-                    COUNT(*) as cantidad_registros
-                FROM ventas_globales 
-                WHERE DATE_FORMAT(fecha_registro, '%Y-%m') = ? AND estado = 1";
-            if ($id_establecimiento) {
-                $sql .= " AND id_establecimiento = ?";
-                $sql .= " GROUP BY producto ORDER BY producto";
-                $stmt = $conn->prepare($sql);
-                $stmt->bind_param('si', $mesSeleccionado, $id_establecimiento);
-            } else {
-                $sql .= " GROUP BY producto ORDER BY producto";
-                $stmt = $conn->prepare($sql);
-                $stmt->bind_param('s', $mesSeleccionado);
+                producto,
+                SUM(cantidad) as total_cantidad,
+                SUM(total) as total_importe,
+                COUNT(*) as cantidad_registros
+            FROM ventas_globales vg
+            INNER JOIN establecimiento e ON vg.id_establecimiento = e.id
+            WHERE DATE_FORMAT(vg.fecha_registro, '%Y-%m') = ? 
+            AND vg.estado = 1 
+            AND e.id_cliente = ?";
+
+            $params = [$mesSeleccionado, $id_cliente];
+
+            if ($id_establecimiento !== null) {
+                $sql .= " AND vg.id_establecimiento = ?";
+                $params[] = $id_establecimiento;
             }
+
+            $sql .= " GROUP BY producto ORDER BY producto";
+            $stmt = $conn->prepare($sql);
+            $stmt->execute($params);
         }
-        $stmt->execute();
+
         $result = $stmt->get_result();
         $datos = [];
         while ($row = $result->fetch_assoc()) {
