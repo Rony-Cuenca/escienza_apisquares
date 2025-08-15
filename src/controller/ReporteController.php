@@ -108,6 +108,8 @@ class ReporteController
         $diferenciasTipoDocNuboxSire = [];
         $seriesEdSuite = [];
         $id_establecimiento = $_GET['id_establecimiento'] ?? '';
+        $id_establecimiento = ($id_establecimiento === '' || $id_establecimiento === '0') ? null : (int)$id_establecimiento;
+
         $seriesEstablecimiento = [];
         $incidencias = [];
 
@@ -116,20 +118,22 @@ class ReporteController
             if ($id_establecimiento) {
                 $cuadres = array_filter($cuadres, fn($c) => $c['id_establecimiento'] == $id_establecimiento);
             }
-            list($cuadresSIRE, $cuadresNUBOX, $cuadresEDSUITE) = $this->separarCuadresPorSistemaExcluyendoAjenas($cuadres, $mesSeleccionado, $id_establecimiento ?: null);
+            list($cuadresSIRE, $cuadresNUBOX, $cuadresEDSUITE) = $this->separarCuadresPorSistemaExcluyendoAjenas($cuadres, $mesSeleccionado, $id_establecimiento);
 
             $cuadresNUBOX = $this->procesarSeriesConNotasCredito($cuadresNUBOX);
             $cuadresEDSUITE = $this->procesarSeriesConNotasCredito($cuadresEDSUITE);
             $cuadresSIRE = $this->procesarSeriesConNotasCredito($cuadresSIRE);
-            $totalesTipoDoc = Cuadre::obtenerTotalesPorTipoComprobanteExcluyendoAjenas($mesSeleccionado, $id_establecimiento ?: null);
-            $seriesTotales = Cuadre::obtenerTotalesPorSerieExcluyendoAjenas($mesSeleccionado, $id_establecimiento ?: null);
-            $seriesAjenas = SerieAjena::obtenerPorMes($mesSeleccionado, $id_establecimiento ?: null);
-            $ventasGlobales = VentaGlobal::obtenerPorMes($mesSeleccionado, $id_establecimiento ?: null);
+
+            $totalesTipoDoc = Cuadre::obtenerTotalesPorTipoComprobanteExcluyendoAjenas($mesSeleccionado, $id_establecimiento);
+            $seriesTotales = Cuadre::obtenerTotalesPorSerieExcluyendoAjenas($mesSeleccionado, $id_establecimiento);
+            $seriesAjenas = SerieAjena::obtenerPorMes($mesSeleccionado, $id_establecimiento);
+            $ventasGlobales = VentaGlobal::obtenerPorMes($mesSeleccionado, $id_establecimiento);
             $diferencias = $this->calcularDiferenciasNuboxSire($seriesTotales, $totalesTipoDoc);
             $diferenciasNuboxSire = $diferencias['diferenciasNuboxSire'];
             $diferenciasTipoDocNuboxSire = $diferencias['diferenciasTipoDocNuboxSire'];
+
             $seriesEdSuite = $this->calcularDiferenciasNuboxEdSuite($cuadresEDSUITE, $seriesTotales);
-            $incidencias = DiferenciaComprobante::obtenerIncidencias($mesSeleccionado, $id_establecimiento ?: null);
+            $incidencias = DiferenciaComprobante::obtenerIncidencias($mesSeleccionado, $id_establecimiento);
         }
 
         return compact(
@@ -289,7 +293,8 @@ class ReporteController
                     $nombreEstablecimiento = $cliente['razon_social'] ?? '';
                 }
             }
-            unset($_GET['id_establecimiento']);
+
+            $_GET['id_establecimiento'] = '';
             $datosReporte = $this->obtenerDatosReporte($mesSeleccionado);
             extract($datosReporte);
 
@@ -298,7 +303,9 @@ class ReporteController
             $htmlFinal = ob_get_clean();
             $nombreArchivo = "{$razonSocialCliente} - {$nombreMes}.pdf";
         } else if (empty($id_establecimientos)) {
-            $id_establecimiento = $_GET['id_establecimiento'] ?? '';
+            $id_establecimiento_raw = $_GET['id_establecimiento'] ?? '';
+            $id_establecimiento = ($id_establecimiento_raw === '' || $id_establecimiento_raw === '0') ? null : (int)$id_establecimiento_raw;
+
             $rucEstablecimiento = '';
             $nombreEstablecimiento = '';
 
@@ -322,6 +329,7 @@ class ReporteController
                 }
             }
 
+            $_GET['id_establecimiento'] = $id_establecimiento_raw;
             $datosReporte = $this->obtenerDatosReporte($mesSeleccionado);
             extract($datosReporte);
 
@@ -329,8 +337,8 @@ class ReporteController
             include __DIR__ . '/../view/components/reporte_pdf.php';
             $htmlFinal = ob_get_clean();
             $nombreArchivo = $id_establecimiento
-                ? "{$razonSocialCliente} - {$nombreMes}.pdf"
-                : "{$razonSocialCliente} - {$nombreMes}.pdf";
+                ? "{$razonSocialCliente} - {$nombreEstablecimiento} - {$nombreMes}.pdf"
+                : "{$razonSocialCliente} - Todos los Establecimientos - {$nombreMes}.pdf";
         } else {
             foreach ($id_establecimientos as $id_estab) {
                 $establecimiento = \Establecimiento::obtenerEstablecimiento($id_estab);
@@ -341,9 +349,11 @@ class ReporteController
                     $cliente = \Establecimiento::obtenerClientePorId($id_cliente);
                     $rucEstablecimiento = $cliente['ruc'] ?? '';
                 }
-                $_GET['id_establecimiento'] = $id_estab;
+
+                $_GET['id_establecimiento'] = (string)$id_estab;
                 $datosReporte = $this->obtenerDatosReporte($mesSeleccionado);
                 extract($datosReporte);
+
                 ob_start();
                 include __DIR__ . '/../view/components/reporte_pdf.php';
                 $htmlEstab = ob_get_clean();
@@ -357,7 +367,7 @@ class ReporteController
                     }
                 }
             }
-            $nombreArchivo = "{$razonSocialCliente} - {$nombreMes}.pdf";
+            $nombreArchivo = "{$razonSocialCliente} - Múltiples Establecimientos - {$nombreMes}.pdf";
         }
 
         $dompdf = new \Dompdf\Dompdf();
@@ -480,8 +490,9 @@ class ReporteController
             $cliente = \Establecimiento::obtenerClientePorId($id_cliente);
             $rucEstablecimiento = $cliente['ruc'] ?? '';
             $nombreEstablecimiento = $cliente['razon_social'] ?? '';
-            unset($_GET['id_establecimiento']);
+            $_GET['id_establecimiento'] = '';
             $datosReporte = $this->obtenerDatosReporte($mesSeleccionado);
+
             $cuadresSIRE = $datosReporte['cuadresSIRE'];
             $cuadresNUBOX = $datosReporte['cuadresNUBOX'];
             $cuadresEDSUITE = $datosReporte['cuadresEDSUITE'];
@@ -540,9 +551,19 @@ class ReporteController
             $header = '&C&"Arial,Bold,10"REPORTE EJECUTIVO DE CONCILIACIÓN DE VENTAS';
             $sheet->getHeaderFooter()->setOddHeader($header);
         } else if (empty($id_establecimientos)) {
+            $id_establecimiento_raw = $_GET['id_establecimiento'] ?? '';
+            $id_establecimiento = ($id_establecimiento_raw === '' || $id_establecimiento_raw === '0') ? null : (int)$id_establecimiento_raw;
             $cliente = \Establecimiento::obtenerClientePorId($id_cliente);
             $rucEstablecimiento = $cliente['ruc'] ?? '';
-            $nombreEstablecimiento = $cliente['razon_social'] ?? '';
+
+            if ($id_establecimiento) {
+                $establecimiento = \Establecimiento::obtenerEstablecimiento($id_establecimiento);
+                $nombreEstablecimiento = $establecimiento['etiqueta'] ?? 'Establecimiento';
+            } else {
+                $nombreEstablecimiento = $cliente['razon_social'] ?? '';
+            }
+
+            $_GET['id_establecimiento'] = $id_establecimiento_raw;
             $datosReporte = $this->obtenerDatosReporte($mesSeleccionado);
             $cuadresSIRE = $datosReporte['cuadresSIRE'];
             $cuadresNUBOX = $datosReporte['cuadresNUBOX'];
@@ -554,8 +575,8 @@ class ReporteController
             $ventasGlobales = $datosReporte['ventasGlobales'];
             $seriesEdSuite = $datosReporte['seriesEdSuite'];
             $incidencias = $datosReporte['incidencias'];
-
-            $sheet = new \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet($spreadsheet, 'Reporte General');
+            $sheetName = $id_establecimiento ? 'Reporte Específico' : 'Reporte General';
+            $sheet = new \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet($spreadsheet, $sheetName);
             $spreadsheet->addSheet($sheet);
             $row = 6;
             $this->SeccionCabecera($sheet, $nombreMes, $nombreEstablecimiento ?? '', $rucEstablecimiento ?? '', $usuarioNombre, $headerPrincipalStyle, $headerSecundarioStyle);
@@ -611,7 +632,8 @@ class ReporteController
                     $cliente = \Establecimiento::obtenerClientePorId($id_cliente);
                     $rucEstablecimiento = $cliente['ruc'] ?? '';
                 }
-                $_GET['id_establecimiento'] = $id_estab;
+
+                $_GET['id_establecimiento'] = (string)$id_estab;
                 $datosReporte = $this->obtenerDatosReporte($mesSeleccionado);
                 $cuadresSIRE = $datosReporte['cuadresSIRE'];
                 $cuadresNUBOX = $datosReporte['cuadresNUBOX'];
@@ -623,7 +645,6 @@ class ReporteController
                 $ventasGlobales = $datosReporte['ventasGlobales'];
                 $seriesEdSuite = $datosReporte['seriesEdSuite'];
                 $incidencias = $datosReporte['incidencias'];
-
                 $nombreHoja = $this->limpiarNombreHoja($nombreEstablecimiento);
                 $sheet = new \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet($spreadsheet, $nombreHoja);
                 $spreadsheet->addSheet($sheet);
