@@ -356,10 +356,7 @@ def unificar_archivos():
         except Exception as e:
             return jsonify({'error': f'Error al guardar el archivo unificado: {str(e)}'}), 500
 
-        return jsonify({
-            "status": "success",
-            "archivo": f"http://{request.host}/descargas/{nombre_salida}"
-        })
+        return jsonify({'status': 'success', 'archivo': nombre_salida})
 
     except Exception as e:
         print(f"Error inesperado: {e}")
