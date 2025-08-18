@@ -222,7 +222,7 @@
                         modal.classList.add('hidden');
 
                         const enlaceDescarga = document.createElement('a');
-                        enlaceDescarga.href = "http://localhost:5000/descargas/<?php echo urlencode($_GET['archivo']); ?>";
+                        enlaceDescarga.href = "<?php echo $_GET['archivo']; ?>";
                         enlaceDescarga.download = "<?php echo basename($_GET['archivo']); ?>";
                         document.body.appendChild(enlaceDescarga);
                         enlaceDescarga.click();
