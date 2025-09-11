@@ -329,7 +329,16 @@ class CuadreService
                 }
             }
         }
-        $ResultsValidarSeries = $ResultsValidarSeries;
+
+        $ResultsValidarSeriesDepurados = [];
+
+        foreach ($ResultsValidarSeries as $registro) {
+            if ($registro['total'] >= 0) {
+                $ResultsValidarSeriesDepurados[] = $registro;
+            }
+        }
+
+        $ResultsValidarSeries = $ResultsValidarSeriesDepurados;
         return compact('ErrorValidarSeries', 'ResultsValidarSeries');
     }
 
