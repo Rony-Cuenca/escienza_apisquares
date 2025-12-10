@@ -1,9 +1,9 @@
 <?php return array(
     'root' => array(
         'name' => 'escienza/apisquares',
-        'pretty_version' => 'dev-main',
-        'version' => 'dev-main',
-        'reference' => 'ad3dcf3b381d3415f152f8d11f3c25c43cd82d51',
+        'pretty_version' => '1.0.0+no-version-set',
+        'version' => '1.0.0.0',
+        'reference' => null,
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -56,9 +56,9 @@
             'dev_requirement' => false,
         ),
         'escienza/apisquares' => array(
-            'pretty_version' => 'dev-main',
-            'version' => 'dev-main',
-            'reference' => 'ad3dcf3b381d3415f152f8d11f3c25c43cd82d51',
+            'pretty_version' => '1.0.0+no-version-set',
+            'version' => '1.0.0.0',
+            'reference' => null,
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
